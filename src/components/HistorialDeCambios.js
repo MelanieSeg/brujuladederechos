@@ -5,7 +5,7 @@ export default function HistorialDeCambios() {
         { comentario: "Se añadió nueva funcionalidad.", sitio: "example.com", fecha: "2024-09-20", motivo: "Mejora", usuario: "Usuario1", detalles: "Se mejoró la interfaz." },
         { comentario: "Se corrigió un error en la carga.", sitio: "example2.com", fecha: "2024-09-19", motivo: "Corrección", usuario: "Usuario2", detalles: "Error en la carga de datos solucionado." },
     ];
-
+  
     return (
         <div className="p-8" >
             <h2 className="text-3xl font-bold my-8" > Historial de Cambios </h2>
