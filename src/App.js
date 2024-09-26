@@ -5,6 +5,7 @@ import BarraDeNotificaciones from './components/BarraDeNotificaciones';
 import ComentariosPendientes from './components/ComentariosPendientes';
 import ComentariosClasificados from './components/ComentariosClasificados'; // Importar la vista de comentarios clasificados
 import HistorialDeCambios from './components/HistorialDeCambios';
+import ComentariosRecolectados from './components/ComentariosRecolectados';
 
 function App() {
   // Estado para manejar la vista activa
@@ -24,7 +25,7 @@ function App() {
       case 'Resumen':
         return <Dashboard />;
       case 'Comentarios recolectados':
-        return <div className="p-8">Contenido de Comentarios recolectados</div>;
+        return <ComentariosRecolectados/>;// Renderizar la vista de comentarios pendientes
       case 'Comentarios pendientes':
         return <ComentariosPendientes />; // Renderizar la vista de comentarios pendientes
       case 'Comentarios clasificados':

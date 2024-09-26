@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { PlusIcon } from '@heroicons/react/16/solid';
 
 export default function ComentariosClasificados() {
   const [comentarios] = useState([
@@ -228,7 +229,7 @@ export default function ComentariosClasificados() {
             onClick={toggleCalendar}
             className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
           >
-            <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">📅</span>
+            <PlusIcon className="w-5 h-5 text-gray-500" />
             <span>{selectedDate ? `Fecha: ${selectedDate}` : 'Fecha'}</span>
           </button>
 
@@ -241,7 +242,7 @@ export default function ComentariosClasificados() {
               onClick={handleGravedadClick} // Cambiar la función para alternar columnas detalladas y abrir dropdown
               className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
             >
-              <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">⚠️</span>
+              <PlusIcon className="w-5 h-5 text-gray-500" />
               <span>Gravedad</span>
             </button>
             {isDropdownOpen && renderDropdown()}
