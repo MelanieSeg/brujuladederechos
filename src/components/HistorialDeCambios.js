@@ -4,7 +4,6 @@ export default function HistorialDeCambios() {
     const cambios = [
         { comentario: "Se añadió nueva funcionalidad.", sitio: "example.com", fecha: "2024-09-20", motivo: "Mejora", usuario: "Usuario1", detalles: "Se mejoró la interfaz." },
         { comentario: "Se corrigió un error en la carga.", sitio: "example2.com", fecha: "2024-09-19", motivo: "Corrección", usuario: "Usuario2", detalles: "Error en la carga de datos solucionado." },
-        // Agrega más cambios según sea necesario
     ];
 
     return (
