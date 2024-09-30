@@ -1,57 +1,46 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import BarraLateral from './components/BarraLateral';
 import Dashboard from './components/Dashboard';
 import BarraDeNotificaciones from './components/BarraDeNotificaciones';
 import ComentariosPendientes from './components/ComentariosPendientes';
-import ComentariosClasificados from './components/ComentariosClasificados'; // Importar la vista de comentarios clasificados
+import ComentariosClasificados from './components/ComentariosClasificados';
 import HistorialDeCambios from './components/HistorialDeCambios';
 import ComentariosRecolectados from './components/ComentariosRecolectados';
 
 function App() {
-  // Estado para manejar la vista activa
-  const [vistaActiva, cambiarVistaActiva] = useState('Resumen');
-
   // Estado para manejar si la barra de notificaciones está visible o no
-  const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
+  const [mostrarNotificaciones, setMostrarNotificaciones] = React.useState(false);
 
   // Función para alternar la visibilidad de las notificaciones
   const alternarNotificaciones = () => {
     setMostrarNotificaciones(!mostrarNotificaciones);
   };
 
-  // Función para renderizar la vista según el estado de vistaActiva
-  const renderizarVista = () => {
-    switch (vistaActiva) {
-      case 'Resumen':
-        return <Dashboard />;
-      case 'Comentarios recolectados':
-        return <ComentariosRecolectados/>;// Renderizar la vista de comentarios pendientes
-      case 'Comentarios pendientes':
-        return <ComentariosPendientes />; // Renderizar la vista de comentarios pendientes
-      case 'Comentarios clasificados':
-        return <ComentariosClasificados />; // Renderizar la nueva vista de comentarios clasificados
-      case 'Historial de cambios':
-        return <HistorialDeCambios />; // Renderizar la vista de historial de cambios
-      case 'Configuración':
-        return <div className="p-8">Contenido de Configuración</div>;
-      default:
-        return <Dashboard />;
-    }
-  };
-
   return (
-    <div className="relative flex bg-gray-50">
-      {/* Barra lateral que recibe el estado de vista activa y la función para alternar notificaciones */}
-      <BarraLateral vistaActiva={vistaActiva} cambiarVistaActiva={cambiarVistaActiva} alternarNotificaciones={alternarNotificaciones} />
+    <Router>
+      <div className="relative flex bg-gray-50">
+        {/* Barra lateral que ahora usa Link en lugar de cambiar el estado */}
+        <BarraLateral alternarNotificaciones={alternarNotificaciones} />
 
-      <div className="flex-1">
-        {/* Mostramos la barra de notificaciones si mostrarNotificaciones es true */}
-        {mostrarNotificaciones && <BarraDeNotificaciones />}
+        <div className="flex-1">
+          {/* Mostramos la barra de notificaciones si mostrarNotificaciones es true */}
+          {mostrarNotificaciones && <BarraDeNotificaciones />}
 
-        {/* Renderizamos la vista según la opción seleccionada */}
-        {renderizarVista()}
+          {/* Configuramos las rutas para las diferentes vistas */}
+          <Routes>
+            <Route path="/resumen" element={<Dashboard />} />
+            <Route path="/comentarios-recolectados" element={<ComentariosRecolectados />} />
+            <Route path="/comentarios-pendientes" element={<ComentariosPendientes />} />
+            <Route path="/comentarios-clasificados" element={<ComentariosClasificados />} />
+            <Route path="/historial-de-cambios" element={<HistorialDeCambios />} />
+            <Route path="/configuracion" element={<div className="p-8">Contenido de Configuración</div>} />
+            {/* Ruta por defecto */}
+            <Route path="/" element={<Dashboard />} />
+          </Routes>
+        </div>
       </div>
-    </div>
+    </Router>
   );
 }
 

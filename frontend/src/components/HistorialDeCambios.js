@@ -8,7 +8,7 @@ export default function HistorialDeCambios() {
   
     return (
         <div className="p-8" >
-            <h2 className="text-3xl font-bold my-8" > Historial de Cambios </h2>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-800" > Historial de cambios </h2>
 
             { /* Tabla de cambios */}
             < div className="mt-8 bg-white shadow-md p-6 rounded-lg" >

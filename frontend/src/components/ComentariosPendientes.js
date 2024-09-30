@@ -123,7 +123,7 @@ export default function ComentariosPendientes() {
 
   return (
     <div className="p-8">
-      <h2 className="text-3xl font-bold my-8">Comentarios Pendientes</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800">Comentarios pendientes</h2>
 
       <div className="relative inline-block text-left mb-4">
         <div>

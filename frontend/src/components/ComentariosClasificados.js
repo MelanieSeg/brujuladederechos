@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/16/solid';
+import { TrashIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export default function ComentariosClasificados() {
   const [comentarios] = useState([
@@ -14,7 +15,6 @@ export default function ComentariosClasificados() {
     { comentario: 'Decepcionante, muy mal hecho.', gravedad: 'Alta', sitio: 'latercera.com', fecha: 'Jul 4, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
     { comentario: 'Es lo peor que he leído.', gravedad: 'Baja', sitio: 'latercera.com', fecha: 'Jul 4, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
     { comentario: 'Inaceptable, una total pérdida de tiempo.', gravedad: 'Moderada', sitio: 'latercera.com', fecha: 'Jul 4, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-
     { comentario: 'Excelente servicio.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 5, 2024', t: 1, ePrivacidad: 1, pi: 2, pf: 3, oi: 0.5, eLibertad: 1 },
     { comentario: 'Muy útil y fácil de usar.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 6, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
     { comentario: 'Buena calidad.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 7, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
@@ -35,31 +35,7 @@ export default function ComentariosClasificados() {
     { comentario: 'Tiempo de entrega rápido.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 11, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
     { comentario: 'El producto no coincide con la descripción.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 12, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
     { comentario: 'Muy satisfecho con la compra.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 13, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'La interfaz es confusa.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 14, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Excelente relación calidad-precio.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 15, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Excelente servicio.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 5, 2024', t: 1, ePrivacidad: 1, pi: 2, pf: 3, oi: 0.5, eLibertad: 1 },
-    { comentario: 'Muy útil y fácil de usar.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 6, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Buena calidad.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 7, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'No cumple con las expectativas.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 8, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Servicio al cliente deficiente.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 9, 2024', t: 3, ePrivacidad: 1, pi: 0, pf: 3, oi: -0.5, eLibertad: 0 },
-    { comentario: 'Producto llegó dañado.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 10, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Tiempo de entrega rápido.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 11, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'El producto no coincide con la descripción.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 12, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Muy satisfecho con la compra.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 13, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'La interfaz es confusa.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 14, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Excelente relación calidad-precio.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 15, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Excelente servicio.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 5, 2024', t: 1, ePrivacidad: 1, pi: 2, pf: 3, oi: 0.5, eLibertad: 1 },
-    { comentario: 'Muy útil y fácil de usar.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 6, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Buena calidad.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 7, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'No cumple con las expectativas.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 8, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Servicio al cliente deficiente.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 9, 2024', t: 3, ePrivacidad: 1, pi: 0, pf: 3, oi: -0.5, eLibertad: 0 },
-    { comentario: 'Producto llegó dañado.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 10, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Tiempo de entrega rápido.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 11, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'El producto no coincide con la descripción.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 12, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Muy satisfecho con la compra.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 13, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'La interfaz es confusa.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 14, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Excelente relación calidad-precio.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 15, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-  
+    { comentario: 'La interfaz es confusa.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 14, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 }
   ]);
 
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -386,12 +362,13 @@ export default function ComentariosClasificados() {
               <td className="px-6 py-4">{comentario.sitio}</td>
               <td className="px-6 py-4">{comentario.fecha}</td>
               <td className="px-6 py-4 flex justify-end space-x-2">
-                <button className="text-gray-500 hover:text-red-600">
-                  🗑️
-                </button>
-                <button className="text-gray-500 hover:text-blue-600">
-                  ✏️
-                </button>
+              <button className="text-gray-500 hover:text-red-600">
+                <TrashIcon className="h-5 w-5" /> {/* Icono de eliminar más neutro */}
+              </button>
+
+              <button className="text-gray-500 hover:text-blue-600">
+                <PencilIcon className="h-5 w-5" /> {/* Icono de editar más neutro */}
+              </button>
               </td>
             </tr>
           ))}
@@ -405,8 +382,10 @@ export default function ComentariosClasificados() {
           disabled={currentPage === 1}
           className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">⬅️</span>
-          <span>Anterior</span>
+          <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
+            <ChevronLeftIcon className="w-4 h-4" /> {/* Ícono de Heroicons */}
+            </span>
+            <span>Anterior</span>
         </button>
         
         <div className="flex space-x-2">
@@ -426,8 +405,10 @@ export default function ComentariosClasificados() {
           disabled={currentPage === totalPages}
           className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">➡️</span>
           <span>Siguiente</span>
+          <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
+          <ChevronRightIcon className="w-4 h-4" /> {/* Ícono de Heroicons */}
+          </span>
         </button>
       </div>
     </div>

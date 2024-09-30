@@ -166,7 +166,7 @@ export default function ComentariosRecolectados() {
 
     return (
         <div className="p-8 bg-[#FAF9F8] flex-1 relative">
-            <h2 className="text-3xl font-bold my-8">Comentarios recolectados</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-800">Comentarios recolectados</h2>
 
             <div className="flex items-center justify-between mb-6">
                 <div className="flex space-x-4">
