@@ -1,0 +1,270 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ComentarioScraped {
+  id                 String    @id @default(cuid())
+  comentario         String
+  sourceUrl          String
+  scrapingId         String    @unique
+  autor              String?
+  fechaComentario    DateTime?
+  fechaScraping      DateTime
+  fechaClasificacion DateTime?
+  clasificado        Boolean   @default(false)
+
+  ibfScore               Float?
+  privacyScore           Float?
+  expressionScore        Float?
+  vulnerabilidad         Float  @default(1)
+  intensidadPrivacidad   Int?
+  elementoTiempo         Int?
+  interesPublico         Int?
+  caracterPersonaPublico Int?
+  origenInformacion      Int?
+  empatiaPrivacidad      Float?
+  empatiaExpresion       Float?
+
+  estado EstadoComentario @default(PENDIENTE_CLASIFICACION)
+
+  // clasificadoPorID String?
+
+  sitioWebId String
+  sitioWeb   SitioWeb @relation(fields: [sitioWebId], references: [id])
+
+  // user User? @relation(fields: [clasificadoPorID],references: [id])
+
+  comentarios ComentarioClasificado[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([sitioWebId])
+  @@index([estado])
+}
+
+model ComentarioClasificado {
+  id                  String   @id @default(cuid())
+  comentarioScrapedId String
+  clasificadorId      String
+  fechaClasificacion  DateTime @default(now())
+  notas               String?
+  clasificacion       String?
+
+  comentario   ComentarioScraped @relation(fields: [comentarioScrapedId], references: [id])
+  clasificador User              @relation(fields: [clasificadorId], references: [id])
+
+  @@index([comentarioScrapedId])
+  @@index([clasificadorId])
+  @@index([clasificacion])
+}
+
+model User {
+  id                      String                  @id @default(cuid())
+  name                    String?
+  email                   String                  @unique
+  emailVerified           DateTime?
+  image                   String?
+  password                String
+  rol                     Roles                   @default(MODERADOR)
+  // comentariosScrapped ComentariosScrapped[]
+  comentariosClasificados ComentarioClasificado[]
+  logAuditorias           LogAuditoria[]
+  auditoriasRealizadas    Auditoria[]
+
+  refreshToken RefreshToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+  expireAt  DateTime
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([expireAt])
+}
+
+model Token {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  expireAt  DateTime
+
+  @@index([expireAt])
+}
+
+model ResetPassowrdToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  expireAt  DateTime
+
+  @@index([expireAt])
+}
+
+model ConfigScraping {
+  id                 String    @id @default(cuid())
+  sitioWebId         String    @unique
+  sitioWeb           SitioWeb  @relation(fields: [sitioWebId], references: [id])
+  frecuenciaScraping Int // en minutos
+  activo             Boolean   @default(true)
+  ultimaEjecucion    DateTime?
+  proximaEjecucion   DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model SitioWeb {
+  id             String              @id @default(cuid())
+  url            String              @unique
+  nombre         String
+  comentarios    ComentarioScraped[]
+  configScraping ConfigScraping?
+  logScraping    LogScraping[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+model Reporte {
+  id             String         @id @default(cuid())
+  nombre         String
+  descripcion    String?
+  tipo           TipoReporte
+  query          String
+  formato        FormatoReporte @default(CSV)
+  ultimoGenerado DateTime?
+  proximoGenerar DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model LogScraping {
+  id                    String   @id @default(cuid())
+  sitioWebId            String
+  sitioWeb              SitioWeb @relation(fields: [sitioWebId], references: [id])
+  fechaInicio           DateTime
+  fechaFin              DateTime
+  comentariosScrapeados Int
+  estado                Estado
+  mensajeError          String?
+  createdAt             DateTime @default(now())
+
+  @@index([sitioWebId])
+  @@index([estado])
+}
+
+model LogClasificacionIA {
+  id             String   @id @default(cuid())
+  fecha          DateTime @default(now())
+  modelo_version String
+  duracion       Int // en segundos
+  estado         Estado
+  mensaje_error  String?
+
+  @@index([estado])
+}
+
+model LogAuditoria {
+  id        String   @id @default(cuid())
+  fecha     DateTime @default(now())
+  usuarioId String
+  accion    String
+  entidad   String
+  entidadId String
+  detalles  Json
+
+  usuario User @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@index([entidad, entidadId])
+}
+
+model Auditoria {
+  id                 String             @id @default(cuid())
+  fecha              DateTime           @default(now())
+  usuarioId          String
+  tipoAccion         TipoAccion
+  motivoModificacion MotivoModificacion
+  cambiosAnteriores  Json?
+  cambiosNuevos      Json?
+  detalles           String?
+
+  usuario User @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@index([tipoAccion])
+}
+
+enum TipoAccion {
+  MODIFICACION
+  ELIMINACION
+}
+
+enum MotivoModificacion {
+  REVISION_MANUAL
+  ERROR_CORRECCION
+  ACTUALIZACION_RUTINARIA
+  RECLASIFICACION_IA
+  CAMBIO_POLITICA
+  REVISION_LEGAL
+  CORRECCION_DATOS
+  OTRO
+}
+
+enum Estado {
+  EXITOSO
+  FALLIDO
+}
+
+enum TipoReporte {
+  DIARIO
+  SEMANAL
+  MENSUAL
+  PERSONALIZADO
+}
+
+enum FormatoReporte {
+  CSV
+  EXCEL
+}
+
+enum Gravedad {
+  LEVE
+  MODERADA
+  GRAVE
+}
+
+enum Sentimiento {
+  POSITIVO
+  NEUTRO
+  NEGATIVO
+}
+
+enum EstadoComentario {
+  PENDIENTE_CLASIFICACION
+  CLASIFICADO
+}
+
+enum Roles {
+  ADMIN
+  MODERADOR
+}
