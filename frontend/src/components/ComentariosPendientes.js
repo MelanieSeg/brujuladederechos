@@ -1,21 +1,27 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { PlusIcon } from '@heroicons/react/20/solid';
+import React, { useState, useRef, useEffect } from "react";
+import { PlusIcon } from "@heroicons/react/20/solid";
+import api from "../services/axios";
+import { truncateComentario } from "../utils/truncarComentario";
+import { format, parseISO } from "date-fns";
 
 export default function ComentariosPendientes() {
+  const [comentarios, setComentarios] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1); // Estado para la página actual
   const [comentariosPorPagina] = useState(10); // Número de comentarios por página
-  const [fechaDesde, setFechaDesde] = useState('');
-  const [fechaHasta, setFechaHasta] = useState('');
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
   const [comentariosFiltrados, setComentariosFiltrados] = useState([]);
   const [mostrarSelectorFecha, setMostrarSelectorFecha] = useState(false);
   const [isCalendarOpenDesde, setIsCalendarOpenDesde] = useState(false);
   const [isCalendarOpenHasta, setIsCalendarOpenHasta] = useState(false);
-  const [selectedDateDesde, setSelectedDateDesde] = useState('');
-  const [selectedDateHasta, setSelectedDateHasta] = useState('');
-  const [mostrarBarraClasificacion, setMostrarBarraClasificacion] = useState(false); // Estado para mostrar barra de clasificación
+  const [selectedDateDesde, setSelectedDateDesde] = useState("");
+  const [selectedDateHasta, setSelectedDateHasta] = useState("");
+  const [mostrarBarraClasificacion, setMostrarBarraClasificacion] =
+    useState(false); // Estado para mostrar barra de clasificación
   const calendarDesdeRef = useRef(null);
   const calendarHastaRef = useRef(null);
-  const [barraClasificacionVisible, setBarraClasificacionVisible] = useState(false);
+  const [barraClasificacionVisible, setBarraClasificacionVisible] =
+    useState(false);
   const [comentarioSeleccionado, setComentarioSeleccionado] = useState(null);
 
   const clasificarComentario = (comentario) => {
@@ -23,28 +29,71 @@ export default function ComentariosPendientes() {
     setBarraClasificacionVisible(true);
   };
 
-  const comentarios = [
-    { texto: 'No me gustó mucho', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
-    { texto: 'Podría ser mejor.', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
-    { texto: 'No estoy satisfecho', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
-    { texto: 'Hay muchos errores aquí', sitio: 'quora.com', fecha: 'Jul 4, 2024' },
-    { texto: 'No es lo que esperaba', sitio: 'quora.com', fecha: 'Jul 4, 2024' },
-    { texto: 'Esto es completamente inútil.', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
-    { texto: 'Terrible experiencia, no lo recomiendo.', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
-    { texto: 'Decepcionante, muy mal hecho.', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
-    { texto: 'Es lo peor que he leído.', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
-    { texto: 'Inaceptable, una total pérdida de tiempo.', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
+  const defaultComentarios = [
+    {
+      autor: "Desconocido",
+      comentario: "No estoy de acuerdo.",
+      sourceUrl: "example.com",
+      fechaScraping: "2024-09-23",
+    },
+    {
+      autor: "Desconocido",
+      comentario: "Me encanta esta publicacion.",
+      sourceUrl: "example2.com",
+      fechaScraping: "2024-09-22",
+    },
+    {
+      autor: "Desconocido",
+      comentario: "Buen trabajo, seguir asi.",
+      sourceUrl: "example3.com",
+      fechaScraping: "2024-09-21",
+    },
+    {
+      autor: "Desconocido",
+      comentario: "Esto no es util.",
+      sourceUrl: "example4.com",
+      fechaScraping: "2024-09-20",
+    },
+    {
+      autor: "Desconocido",
+      comentario: "Fantastico",
+      sourceUrl: "example5.com",
+      fechaScraping: "2024-09-19",
+    },
   ];
+
+  useEffect(() => {
+    const fetchComentarios = async () => {
+      try {
+        const response = await api.get("/comments/get-all");
+        setComentarios(response.data.data.slice(3, 13)); //el slice provisorio
+      } catch (err) {
+        //este set es para que no se tenga que inciar el server para ver comentarios Pendientes , es mas que nada para evitar errores pero eso solo para produccion
+        setComentarios(defaultComentarios);
+        console.log("Error al obtener los comentarios", err);
+      }
+    };
+
+    fetchComentarios();
+  }, []);
+
+  console.log(comentarios);
 
   // Paginación: Cálculo de los comentarios a mostrar en función de la página
   const indiceUltimoComentario = paginaActual * comentariosPorPagina;
   const indicePrimerComentario = indiceUltimoComentario - comentariosPorPagina;
-  const comentariosAMostrar = comentariosFiltrados.length > 0
-    ? comentariosFiltrados.slice(indicePrimerComentario, indiceUltimoComentario)
-    : comentarios.slice(indicePrimerComentario, indiceUltimoComentario);
+  const comentariosAMostrar =
+    comentariosFiltrados.length > 0
+      ? comentariosFiltrados.slice(
+          indicePrimerComentario,
+          indiceUltimoComentario,
+        )
+      : comentarios;
 
   const totalPaginas = Math.ceil(
-    (comentariosFiltrados.length > 0 ? comentariosFiltrados.length : comentarios.length) / comentariosPorPagina
+    (comentariosFiltrados.length > 0
+      ? comentariosFiltrados.length
+      : comentarios.length) / comentariosPorPagina,
   );
 
   const cambiarPagina = (numeroPagina) => {
@@ -62,10 +111,10 @@ export default function ComentariosPendientes() {
   };
 
   const eliminarFiltro = () => {
-    setFechaDesde('');
-    setFechaHasta('');
-    setSelectedDateDesde('');
-    setSelectedDateHasta('');
+    setFechaDesde("");
+    setFechaHasta("");
+    setSelectedDateDesde("");
+    setSelectedDateHasta("");
     setComentariosFiltrados([]); // Restablecer a todos los comentarios
   };
 
@@ -79,7 +128,7 @@ export default function ComentariosPendientes() {
 
   const handleDateClickDesde = (day) => {
     const today = new Date();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Mes actual con ceros a la izquierda
+    const month = (today.getMonth() + 1).toString().padStart(2, "0"); // Mes actual con ceros a la izquierda
     const year = today.getFullYear();
     setSelectedDateDesde(`${day}/${month}/${year}`); // Formato: día/mes/año
     setFechaDesde(`${year}-${month}-${day}`); // Para la comparación
@@ -88,7 +137,7 @@ export default function ComentariosPendientes() {
 
   const handleDateClickHasta = (day) => {
     const today = new Date();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Mes actual con ceros a la izquierda
+    const month = (today.getMonth() + 1).toString().padStart(2, "0"); // Mes actual con ceros a la izquierda
     const year = today.getFullYear();
     setSelectedDateHasta(`${day}/${month}/${year}`); // Formato: día/mes/año
     setFechaHasta(`${year}-${month}-${day}`); // Para la comparación
@@ -108,16 +157,23 @@ export default function ComentariosPendientes() {
     return (
       <div className="absolute mt-2 bg-white p-4 rounded shadow-lg z-10 w-64">
         <div className="text-center font-bold mb-2">
-          {today.toLocaleString('default', { month: 'long' })} {today.getFullYear()}
+          {today.toLocaleString("default", { month: "long" })}{" "}
+          {today.getFullYear()}
         </div>
         <div className="grid grid-cols-7 gap-2">
-          {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'].map((day, index) => (
-            <div key={index} className="text-gray-500 text-sm">{day}</div>
+          {["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"].map((day, index) => (
+            <div key={index} className="text-gray-500 text-sm">
+              {day}
+            </div>
           ))}
           {days.map((day) => (
             <button
               key={day}
-              onClick={isDesde ? () => handleDateClickDesde(day) : () => handleDateClickHasta(day)}
+              onClick={
+                isDesde
+                  ? () => handleDateClickDesde(day)
+                  : () => handleDateClickHasta(day)
+              }
               className={`w-full p-2 rounded-full hover:bg-gray-200 text-gray-800`}
             >
               {day}
@@ -146,9 +202,9 @@ export default function ComentariosPendientes() {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isCalendarOpenDesde, isCalendarOpenHasta]);
 
@@ -159,11 +215,12 @@ export default function ComentariosPendientes() {
   return (
     <div className="p-8 flex flex-col">
       <div className="flex-grow">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800">Comentarios pendientes</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+          Comentarios pendientes
+        </h2>
 
         {/* Contenedor principal que contiene el botón Fecha y el conjunto de inputs y botón Descargar */}
         <div className="flex justify-between items-center mb-4">
-
           {/* Botón Fecha alineado a la izquierda */}
           <button
             onClick={() => setMostrarSelectorFecha(!mostrarSelectorFecha)}
@@ -188,11 +245,13 @@ export default function ComentariosPendientes() {
               onChange={(e) => setFechaHasta(e.target.value)}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
-            <button className="bg-black text-white px-4 py-2 rounded-md">Descargar</button>
+            <button className="bg-black text-white px-4 py-2 rounded-md">
+              Descargar
+            </button>
           </div>
 
           {mostrarSelectorFecha && (
-           <div className="absolute mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+            <div className="absolute mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10">
               <div className="rounded-md bg-white shadow-xs">
                 <div className="py-1">
                   <button
@@ -244,9 +303,14 @@ export default function ComentariosPendientes() {
             <tbody>
               {comentariosAMostrar.map((comentario, index) => (
                 <tr key={index} className="border-b">
-                  <td className="p-2">{comentario.texto}</td>
-                  <td className="p-2">{comentario.sitio}</td>
-                  <td className="p-2">{comentario.fecha}</td>
+                  <td className="p-2">
+                    {truncateComentario(comentario.comentario)}
+                  </td>
+                  {/*TODO: Cambiar la consulta de backend para que envie el nombre del sitio en la response*/}
+                  <td className="p-2">{"emol.com"}</td>
+                  <td className="p-2">
+                    {format(parseISO(comentario.fechaScraping), "dd/MM/yyyy")}
+                  </td>
                   <td className="p-2">
                     <button
                       className="bg-blue-600 text-white py-2 px-4 rounded-lg"
@@ -258,7 +322,6 @@ export default function ComentariosPendientes() {
                 </tr>
               ))}
             </tbody>
-
           </table>
 
           {/* (tu código de paginación aquí) */}
@@ -269,7 +332,9 @@ export default function ComentariosPendientes() {
       {barraClasificacionVisible && (
         <div className="fixed right-[0px] top-0 h-[1070px] w-[430px] bg-white shadow-lg p-6 opacity-100 border-l border-l-gray-300">
           <div className="flex justify-between items-start">
-            <h2 className="text-xl font-bold">Clasificación manual de comentario</h2>
+            <h2 className="text-xl font-bold">
+              Clasificación manual de comentario
+            </h2>
             <button
               onClick={() => setBarraClasificacionVisible(false)}
               className="text-gray-500 hover:text-gray-700 text-lg"
@@ -278,7 +343,9 @@ export default function ComentariosPendientes() {
             </button>
           </div>
           <br />
-          <p><strong>Comentario:</strong></p>
+          <p>
+            <strong>Comentario:</strong>
+          </p>
           <p>{comentarioSeleccionado?.texto}</p>
 
           <div className="mt-4">
@@ -292,7 +359,9 @@ export default function ComentariosPendientes() {
                 className="border rounded w-full mt-1 p-1"
               />
             </label>
-            <p className="text-gray-500 text-sm mt-1">Grado de intrusión en la privacidad. Valor de 1 a 3.</p>
+            <p className="text-gray-500 text-sm mt-1">
+              Grado de intrusión en la privacidad. Valor de 1 a 3.
+            </p>
 
             <label className="block mt-4">
               Tiempo (0-1):
@@ -305,7 +374,10 @@ export default function ComentariosPendientes() {
                 className="border rounded w-full mt-1 p-1"
               />
             </label>
-            <p className="text-gray-500 text-sm mt-1">Tiempo relacionado con la información (antigüedad). Valor de 0 a 1.</p>
+            <p className="text-gray-500 text-sm mt-1">
+              Tiempo relacionado con la información (antigüedad). Valor de 0 a
+              1.
+            </p>
 
             <label className="block mt-4">
               Empatía hacia la privacidad (0-1):
@@ -317,7 +389,9 @@ export default function ComentariosPendientes() {
                 className="border rounded w-full mt-1 p-1"
               />
             </label>
-            <p className="text-gray-500 text-sm mt-1">Empatía hacia la privacidad de la persona. Valor de 0 a 1.</p>
+            <p className="text-gray-500 text-sm mt-1">
+              Empatía hacia la privacidad de la persona. Valor de 0 a 1.
+            </p>
 
             <label className="block mt-4">
               Interés público (1-3):
@@ -329,7 +403,9 @@ export default function ComentariosPendientes() {
                 className="border rounded w-full mt-1 p-1"
               />
             </label>
-            <p className="text-gray-500 text-sm mt-1">Nivel de interés público sobre el asunto. Valor de 1 a 3.</p>
+            <p className="text-gray-500 text-sm mt-1">
+              Nivel de interés público sobre el asunto. Valor de 1 a 3.
+            </p>
 
             <label className="block mt-4">
               Figura pública (1-2):
@@ -341,7 +417,9 @@ export default function ComentariosPendientes() {
                 className="border rounded w-full mt-1 p-1"
               />
             </label>
-            <p className="text-gray-500 text-sm mt-1">Indica si es una figura pública sobre el asunto. Valor de 1 a 2.</p>
+            <p className="text-gray-500 text-sm mt-1">
+              Indica si es una figura pública sobre el asunto. Valor de 1 a 2.
+            </p>
 
             <label className="block mt-4">
               Origen de la información (-0.75 - 0):
@@ -354,7 +432,10 @@ export default function ComentariosPendientes() {
                 className="border rounded w-full mt-1 p-1"
               />
             </label>
-            <p className="text-gray-500 text-sm mt-1">Origen de la información, si es legal o cuestionable. Valor de -0.75 a 0.</p>
+            <p className="text-gray-500 text-sm mt-1">
+              Origen de la información, si es legal o cuestionable. Valor de
+              -0.75 a 0.
+            </p>
 
             <label className="block mt-4">
               Empatía hacia la libertad de expresión (0-1):
@@ -366,8 +447,9 @@ export default function ComentariosPendientes() {
                 className="border rounded w-full mt-1 p-1"
               />
             </label>
-            <p className="text-gray-500 text-sm mt-1">Empatía hacia la libertad de expresión. Valor de 0 a 1.</p>
-
+            <p className="text-gray-500 text-sm mt-1">
+              Empatía hacia la libertad de expresión. Valor de 0 a 1.
+            </p>
           </div>
 
           <div className="flex mt-6 justify-between">
@@ -379,7 +461,7 @@ export default function ComentariosPendientes() {
             </button>
             <button
               className="bg-blue-600 text-white py-2 px-4 rounded w-[48%]"
-            /*onClick={ Aquí puedes agregar la funcionalidad para completar }*/
+              /*onClick={ Aquí puedes agregar la funcionalidad para completar }*/
             >
               Completar
             </button>
@@ -387,5 +469,5 @@ export default function ComentariosPendientes() {
         </div>
       )}
     </div>
-  )
+  );
 }
