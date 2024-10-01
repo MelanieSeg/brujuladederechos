@@ -183,7 +183,6 @@ export default function ComentariosClasificados() {
         <div className="py-1">
           <div className="px-4 py-2 text-sm text-gray-700 font-semibold flex items-center">
             {/* Icono de lupa */}
-            <span className="mr-2">🔍</span>
             Prioridad
           </div>
           <div className="px-4 py-2">
