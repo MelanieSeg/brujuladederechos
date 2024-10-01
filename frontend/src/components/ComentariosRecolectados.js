@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { TrashIcon, PlusIcon } from '@heroicons/react/20/solid';
+import { TrashIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/20/solid';
+
 
 export default function ComentariosRecolectados() {
     const [comentarios] = useState([
@@ -7,6 +8,24 @@ export default function ComentariosRecolectados() {
         { comentario: 'Podría ser mejor.', gravedad: 'Clasificado', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
         { comentario: 'No estoy satisfecho', gravedad: 'Pendiente', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
         // Añadir más comentarios según sea necesario
+        // ...
+        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 4, 2024' },
+        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
+        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
+        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 4, 2024' },
+        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
+        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
+        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 4, 2024' },
+        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
+        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
+        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 4, 2024' },
+        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
+        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
+        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 4, 2024' },
+        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
+        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
+        // Puedes seguir añadiendo comentarios para hacer más pruebas
+
     ]);
 
     const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -20,8 +39,19 @@ export default function ComentariosRecolectados() {
     const gravedadButtonRef = useRef(null);
     const calendarRef = useRef(null);
     const calendarButtonRef = useRef(null);
+
     const [fechaDesde, setFechaDesde] = useState('');
     const [fechaHasta, setFechaHasta] = useState('');
+
+    const [currentPage, setCurrentPage] = useState(1);  // Página actual
+    const commentsPerPage = 10;  // Número de comentarios por página
+
+    // Calcular los índices de inicio y final según la página actual
+    const indexOfLastComment = currentPage * commentsPerPage;
+    const indexOfFirstComment = indexOfLastComment - commentsPerPage;
+    const currentComments = comentarios.slice(indexOfFirstComment, indexOfLastComment);
+
+    const totalPages = Math.ceil(comentarios.length / commentsPerPage);  // Total de páginas
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -51,9 +81,6 @@ export default function ComentariosRecolectados() {
         };
     }, [isDropdownOpen, isCalendarOpen]);
 
-    const toggleDropdown = () => {
-        setDropdownOpen(!isDropdownOpen);
-    };
 
     const handleGravedadClick = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -83,9 +110,24 @@ export default function ComentariosRecolectados() {
                 return 'bg-gray-500 text-white'; // Color predeterminado
         }
     };
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
 
     const toggleCalendar = () => {
         setIsCalendarOpen(!isCalendarOpen);
+    };
+
+    const handlePageClick = (pageNumber) => {
+        setCurrentPage(pageNumber);
     };
 
     const handleDateClick = (day) => {
@@ -221,7 +263,7 @@ export default function ComentariosRecolectados() {
                     </tr>
                 </thead>
                 <tbody>
-                    {comentarios.map((comentario, index) => (
+                    {currentComments.map((comentario, index) => (
                         <tr key={index} className="border-b border-gray-200">
                             <td className="px-6 py-4">{comentario.comentario}</td>
                             <td className="px-12 py-4">
@@ -237,7 +279,48 @@ export default function ComentariosRecolectados() {
                         </tr>
                     ))}
                 </tbody>
+
             </table>
+            {/* Paginación */}
+            {/* Controles de Paginación */}
+            <div className="flex justify-between items-center mt-4">
+                <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                    <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
+                        <ChevronLeftIcon className="w-4 h-4" />
+                    </span>
+                    <span>Anterior</span>
+                </button>
+
+                <div className="flex space-x-2">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+                        <button
+                            key={num}
+                            onClick={() => handlePageClick(num)}
+                            className={`px-4 py-2 rounded-full ${num === currentPage ? 'bg-gray-300' : 'bg-gray-200 hover:bg-gray-300'}`}
+                        >
+                            {num}
+                        </button>
+                    ))}
+                </div>
+
+                <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                    <span>Siguiente</span>
+                    <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
+                        <ChevronRightIcon className="w-4 h-4" />
+                    </span>
+                </button>
+
+            </div>
+
+
         </div>
     );
 }
