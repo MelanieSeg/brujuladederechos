@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon } from "@heroicons/react/20/solid";
+<<<<<<< HEAD
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+=======
+>>>>>>> 80ffbe3a9ffedbfd0792732f4246bd5ee986e04b
 import api from "../services/axios";
 import { truncateComentario } from "../utils/truncarComentario";
 import { format, parseISO } from "date-fns";
@@ -49,6 +52,21 @@ export default function ComentariosPendientes() {
       sourceUrl: "example3.com",
       fechaScraping: "2024-09-21",
     },
+<<<<<<< HEAD
+=======
+    {
+      autor: "Desconocido",
+      comentario: "Esto no es util.",
+      sourceUrl: "example4.com",
+      fechaScraping: "2024-09-20",
+    },
+    {
+      autor: "Desconocido",
+      comentario: "Fantastico",
+      sourceUrl: "example5.com",
+      fechaScraping: "2024-09-19",
+    },
+>>>>>>> 80ffbe3a9ffedbfd0792732f4246bd5ee986e04b
   ];
 
   useEffect(() => {
@@ -85,6 +103,13 @@ export default function ComentariosPendientes() {
       : comentarios.length) / comentariosPorPagina,
   );
 
+<<<<<<< HEAD
+=======
+  const cambiarPagina = (numeroPagina) => {
+    setPaginaActual(numeroPagina);
+  };
+
+>>>>>>> 80ffbe3a9ffedbfd0792732f4246bd5ee986e04b
   const filtrarComentarios = () => {
     const desde = new Date(fechaDesde);
     const hasta = new Date(fechaHasta);
@@ -110,6 +135,7 @@ export default function ComentariosPendientes() {
   const toggleCalendarHasta = () => {
     setIsCalendarOpenHasta(!isCalendarOpenHasta);
   };
+<<<<<<< HEAD
   // Funciones para manejar la paginación
   const handlePrevPage = () => {
     if (paginaActual > 1) {
@@ -127,6 +153,8 @@ export default function ComentariosPendientes() {
     setPaginaActual(num);
   };
 
+=======
+>>>>>>> 80ffbe3a9ffedbfd0792732f4246bd5ee986e04b
 
   const handleDateClickDesde = (day) => {
     const today = new Date();
@@ -158,11 +186,19 @@ export default function ComentariosPendientes() {
 
     return (
       <div className="absolute mt-2 bg-white p-4 rounded shadow-lg z-10 w-64">
+<<<<<<< HEAD
         <div className="text-center font-bold mb-2" >
           {today.toLocaleString("default", { month: "long" })}{" "}
           {today.getFullYear()}
         </div>
         <div className="grid grid-cols-7 gap-2" >
+=======
+        <div className="text-center font-bold mb-2">
+          {today.toLocaleString("default", { month: "long" })}{" "}
+          {today.getFullYear()}
+        </div>
+        <div className="grid grid-cols-7 gap-2">
+>>>>>>> 80ffbe3a9ffedbfd0792732f4246bd5ee986e04b
           {["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"].map((day, index) => (
             <div key={index} className="text-gray-500 text-sm">
               {day}
@@ -226,7 +262,11 @@ export default function ComentariosPendientes() {
           {/* Botón Fecha alineado a la izquierda */}
           <button
             onClick={() => setMostrarSelectorFecha(!mostrarSelectorFecha)}
+<<<<<<< HEAD
             className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm" 
+=======
+            className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
+>>>>>>> 80ffbe3a9ffedbfd0792732f4246bd5ee986e04b
           >
             <PlusIcon className="w-5 h-5 text-gray-500" />
             <span>Fecha</span>
@@ -253,7 +293,11 @@ export default function ComentariosPendientes() {
           </div>
 
           {mostrarSelectorFecha && (
+<<<<<<< HEAD
             <div className="absolute mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10" style={{ marginTop: '220px' }}> {/*Aqui es donde pones el margen para que no tape la fecha*/}
+=======
+            <div className="absolute mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+>>>>>>> 80ffbe3a9ffedbfd0792732f4246bd5ee986e04b
               <div className="rounded-md bg-white shadow-xs">
                 <div className="py-1">
                   <button
@@ -326,6 +370,7 @@ export default function ComentariosPendientes() {
             </tbody>
           </table>
 
+<<<<<<< HEAD
           {/* Controles de Paginación */}
         <div className="flex items-center justify-between mt-4">
           <button
@@ -363,12 +408,19 @@ export default function ComentariosPendientes() {
           </button>
         </div>
 
+=======
+          {/* (tu código de paginación aquí) */}
+>>>>>>> 80ffbe3a9ffedbfd0792732f4246bd5ee986e04b
         </div>
       </div>
 
       {/* Barra lateral para clasificación */}
       {barraClasificacionVisible && (
+<<<<<<< HEAD
         <div className="fixed right-[0px] top-0 h-screen w-[430px] bg-white shadow-lg p-6 opacity-100 border-l border-l-gray-300 overflow-y-auto">
+=======
+        <div className="fixed right-[0px] top-0 h-[1070px] w-[430px] bg-white shadow-lg p-6 opacity-100 border-l border-l-gray-300">
+>>>>>>> 80ffbe3a9ffedbfd0792732f4246bd5ee986e04b
           <div className="flex justify-between items-start">
             <h2 className="text-xl font-bold">
               Clasificación manual de comentario
