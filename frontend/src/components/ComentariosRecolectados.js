@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { TrashIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/20/solid';
+import { TrashIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 
 export default function ComentariosRecolectados() {
     const [comentarios, setComentarios] = useState([
@@ -10,33 +10,11 @@ export default function ComentariosRecolectados() {
         { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: '2024-07-05' },
         { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: '2024-07-06' },
         // ... (más comentarios)
-
-
-        { comentario: 'No me gustó mucho', gravedad: 'Pendiente', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
-        { comentario: 'Podría ser mejor.', gravedad: 'Clasificado', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
-        { comentario: 'No estoy satisfecho', gravedad: 'Pendiente', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
-        // Añadir más comentarios según sea necesario
-        // ...
-        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 4, 2024' },
-        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
-        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
-        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 4, 2024' },
-        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
-        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
-        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 4, 2024' },
-        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
-        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
-        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 4, 2024' },
-        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
-        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
-        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 4, 2024' },
-        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
-        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
-        // Puedes seguir añadiendo comentarios para hacer más pruebas
     ]);
 
     const [isDropdownOpen, setDropdownOpen] = useState(false);
     const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
     const [selectedGravedad, setSelectedGravedad] = useState({
         Pendiente: true,
         Clasificado: true,
@@ -44,12 +22,15 @@ export default function ComentariosRecolectados() {
     const [fechaDesde, setFechaDesde] = useState('');
     const [fechaHasta, setFechaHasta] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDateType, setSelectedDateType] = useState('');
     const commentsPerPage = 10;
 
     const dropdownRef = useRef(null);
     const gravedadButtonRef = useRef(null);
     const dateDropdownRef = useRef(null);
     const dateButtonRef = useRef(null);
+    const calendarRef = useRef(null);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -59,13 +40,16 @@ export default function ComentariosRecolectados() {
             if (isDateDropdownOpen && dateDropdownRef.current && !dateDropdownRef.current.contains(event.target) && dateButtonRef.current && !dateButtonRef.current.contains(event.target)) {
                 setIsDateDropdownOpen(false);
             }
+            if (isCalendarOpen && calendarRef.current && !calendarRef.current.contains(event.target)) {
+                setIsCalendarOpen(false);
+            }
         }
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isDropdownOpen, isDateDropdownOpen]);
+    }, [isDropdownOpen, isDateDropdownOpen, isCalendarOpen]);
 
     const handleGravedadClick = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -110,41 +94,79 @@ export default function ComentariosRecolectados() {
 
     const toggleDateDropdown = () => {
         setIsDateDropdownOpen(!isDateDropdownOpen);
+        setIsCalendarOpen(false);
     };
 
     const handlePageClick = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
-    const handleDateClick = (option) => {
-        switch (option) {
-            case 'Desde':
-                const desdeDate = prompt('Ingrese la fecha desde (YYYY-MM-DD):');
-                if (desdeDate) setFechaDesde(desdeDate);
-                break;
-            case 'Hasta':
-                const hastaDate = prompt('Ingrese la fecha hasta (YYYY-MM-DD):');
-                if (hastaDate) setFechaHasta(hastaDate);
-                break;
-            case 'Filtrar':
-                // La filtración se realiza automáticamente en el cálculo de filteredComments
-                break;
-            case 'Eliminar Filtro':
-                setFechaDesde('');
-                setFechaHasta('');
-                break;
+    const handleDateOptionClick = (option) => {
+        if (option === 'desde' || option === 'hasta') {
+            setSelectedDateType(option);
+            setIsCalendarOpen(true);
+        } else if (option === 'eliminar') {
+            setFechaDesde('');
+            setFechaHasta('');
+            setIsDateDropdownOpen(false);
+            setIsCalendarOpen(false);
         }
+    };
+
+    const handleDateClick = (day) => {
+        const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+        const formattedDate = selectedDate.toISOString().split('T')[0];
+        if (selectedDateType === 'desde') {
+            setFechaDesde(formattedDate);
+        } else if (selectedDateType === 'hasta') {
+            setFechaHasta(formattedDate);
+        }
+        setIsCalendarOpen(false);
         setIsDateDropdownOpen(false);
     };
 
-    const renderDateDropdown = () => {
+    const renderCalendar = () => {
+        const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+        const days = [];
+        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            days.push(<div key={`empty-${i}`} className="text-center py-2"></div>);
+        }
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            days.push(
+                <button
+                    key={i}
+                    onClick={() => handleDateClick(i)}
+                    className="text-center py-2 hover:bg-gray-200 rounded-full w-10 h-10"
+                >
+                    {i}
+                </button>
+            );
+        }
+
         return (
-            <div ref={dateDropdownRef} className="absolute mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                <div className="py-1">
-                    <button onClick={() => handleDateClick('Desde')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Desde</button>
-                    <button onClick={() => handleDateClick('Hasta')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Hasta</button>
-                    <button onClick={() => handleDateClick('Filtrar')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Filtrar</button>
-                    <button onClick={() => handleDateClick('Eliminar Filtro')} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Eliminar Filtro</button>
+            <div ref={calendarRef} className="absolute mt-2 p-4 bg-white rounded-lg shadow-xl z-20 w-80">
+                <div className="flex justify-between items-center mb-4">
+                    <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="p-1 rounded-full hover:bg-gray-200">
+                        <ChevronLeftIcon className="w-6 h-6" />
+                    </button>
+                    <span className="font-bold text-lg">
+                        {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                    </span>
+                    <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="p-1 rounded-full hover:bg-gray-200">
+                        <ChevronRightIcon className="w-6 h-6" />
+                    </button>
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                    {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'].map((day) => (
+                        <div key={day} className="text-center font-bold text-gray-500 mb-2">
+                            {day}
+                        </div>
+                    ))}
+                    {days}
                 </div>
             </div>
         );
@@ -211,8 +233,35 @@ export default function ComentariosRecolectados() {
                         >
                             <PlusIcon className="w-5 h-5 text-gray-500" />
                             <span>Fecha</span>
+                            <ChevronDownIcon className="w-5 h-5 text-gray-500" />
                         </button>
-                        {isDateDropdownOpen && renderDateDropdown()}
+                        {isDateDropdownOpen && (
+                            <div ref={dateDropdownRef} className="absolute mt-2 w-48 bg-white rounded-md shadow-lg z-20">
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
+                                    onClick={() => handleDateOptionClick('desde')}
+                                >
+                                    Desde
+                                </button>
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
+                                    onClick={() => handleDateOptionClick('hasta')}
+                                >
+                                    Hasta
+                                </button>
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-base text-red-600 hover:bg-gray-100"
+                                    onClick={() => handleDateOptionClick('eliminar')}
+                                >
+                                    Eliminar Filtro
+                                </button>
+                            </div>
+                        )}
+                        {isCalendarOpen && (
+                            <div className="absolute left-0 mt-2">
+                                {renderCalendar()}
+                            </div>
+                        )}
                     </div>
 
                     {/* Gravedad button with dropdown */}
