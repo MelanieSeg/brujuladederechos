@@ -1,9 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TrashIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon } from '@heroicons/react/20/solid';
 
-
 export default function ComentariosRecolectados() {
-    const [comentarios] = useState([
+    const [comentarios, setComentarios] = useState([
+        { comentario: 'No me gustó mucho', gravedad: 'Pendiente', sitio: 'latercera.com', fecha: '2024-07-04' },
+        { comentario: 'Podría ser mejor.', gravedad: 'Clasificado', sitio: 'latercera.com', fecha: '2024-07-04' },
+        { comentario: 'No estoy satisfecho', gravedad: 'Pendiente', sitio: 'latercera.com', fecha: '2024-07-04' },
+        { comentario: 'Este es el comentario 11', gravedad: 'Pendiente', sitio: 'example.com', fecha: '2024-07-04' },
+        { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: '2024-07-05' },
+        { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: '2024-07-06' },
+        // ... (más comentarios)
+
+
         { comentario: 'No me gustó mucho', gravedad: 'Pendiente', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
         { comentario: 'Podría ser mejor.', gravedad: 'Clasificado', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
         { comentario: 'No estoy satisfecho', gravedad: 'Pendiente', sitio: 'latercera.com', fecha: 'Jul 4, 2024' },
@@ -25,53 +33,31 @@ export default function ComentariosRecolectados() {
         { comentario: 'Este es el comentario 12', gravedad: 'Clasificado', sitio: 'example.com', fecha: 'Jul 5, 2024' },
         { comentario: 'Este es el comentario 13', gravedad: 'Pendiente', sitio: 'example.com', fecha: 'Jul 6, 2024' },
         // Puedes seguir añadiendo comentarios para hacer más pruebas
-
     ]);
 
     const [isDropdownOpen, setDropdownOpen] = useState(false);
-    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
     const [selectedGravedad, setSelectedGravedad] = useState({
         Pendiente: true,
         Clasificado: true,
     });
-    const [selectedDate, setSelectedDate] = useState('');
-    const dropdownRef = useRef(null);
-    const gravedadButtonRef = useRef(null);
-    const calendarRef = useRef(null);
-    const calendarButtonRef = useRef(null);
-
     const [fechaDesde, setFechaDesde] = useState('');
     const [fechaHasta, setFechaHasta] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const commentsPerPage = 10;
 
-    const [currentPage, setCurrentPage] = useState(1);  // Página actual
-    const commentsPerPage = 10;  // Número de comentarios por página
-
-    // Calcular los índices de inicio y final según la página actual
-    const indexOfLastComment = currentPage * commentsPerPage;
-    const indexOfFirstComment = indexOfLastComment - commentsPerPage;
-    const currentComments = comentarios.slice(indexOfFirstComment, indexOfLastComment);
-
-    const totalPages = Math.ceil(comentarios.length / commentsPerPage);  // Total de páginas
+    const dropdownRef = useRef(null);
+    const gravedadButtonRef = useRef(null);
+    const dateDropdownRef = useRef(null);
+    const dateButtonRef = useRef(null);
 
     useEffect(() => {
         function handleClickOutside(event) {
-            if (
-                isDropdownOpen &&
-                dropdownRef.current &&
-                !dropdownRef.current.contains(event.target) &&
-                gravedadButtonRef.current &&
-                !gravedadButtonRef.current.contains(event.target)
-            ) {
+            if (isDropdownOpen && dropdownRef.current && !dropdownRef.current.contains(event.target) && gravedadButtonRef.current && !gravedadButtonRef.current.contains(event.target)) {
                 setDropdownOpen(false);
             }
-            if (
-                isCalendarOpen &&
-                calendarRef.current &&
-                !calendarRef.current.contains(event.target) &&
-                calendarButtonRef.current &&
-                !calendarButtonRef.current.contains(event.target)
-            ) {
-                setIsCalendarOpen(false);
+            if (isDateDropdownOpen && dateDropdownRef.current && !dateDropdownRef.current.contains(event.target) && dateButtonRef.current && !dateButtonRef.current.contains(event.target)) {
+                setIsDateDropdownOpen(false);
             }
         }
 
@@ -79,8 +65,7 @@ export default function ComentariosRecolectados() {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isDropdownOpen, isCalendarOpen]);
-
+    }, [isDropdownOpen, isDateDropdownOpen]);
 
     const handleGravedadClick = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -95,21 +80,22 @@ export default function ComentariosRecolectados() {
 
     const limpiarSeleccion = () => {
         setSelectedGravedad({
-            Pendiente: false,
-            Clasificado: false,
+            Pendiente: true,
+            Clasificado: true,
         });
     };
 
     const getBadgeColor = (estado) => {
         switch (estado) {
             case 'Pendiente':
-                return 'bg-gray-300 text-gray-800'; // Color más claro para Pendiente
+                return 'bg-gray-300 text-gray-800';
             case 'Clasificado':
-                return 'bg-gray-200 text-gray-800'; // Color más claro para Clasificado
+                return 'bg-gray-200 text-gray-800';
             default:
-                return 'bg-gray-500 text-white'; // Color predeterminado
+                return 'bg-gray-500 text-white';
         }
     };
+
     const handlePrevPage = () => {
         if (currentPage > 1) {
             setCurrentPage(currentPage - 1);
@@ -122,50 +108,43 @@ export default function ComentariosRecolectados() {
         }
     };
 
-    const toggleCalendar = () => {
-        setIsCalendarOpen(!isCalendarOpen);
+    const toggleDateDropdown = () => {
+        setIsDateDropdownOpen(!isDateDropdownOpen);
     };
 
     const handlePageClick = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
-    const handleDateClick = (day) => {
-        const today = new Date();
-        const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Obtiene el mes actual con ceros a la izquierda
-        const year = today.getFullYear();
-        setSelectedDate(`${day}/${month}/${year}`); // Formato: día/mes/año
-        setIsCalendarOpen(false); // Cerrar calendario después de seleccionar la fecha
+    const handleDateClick = (option) => {
+        switch (option) {
+            case 'Desde':
+                const desdeDate = prompt('Ingrese la fecha desde (YYYY-MM-DD):');
+                if (desdeDate) setFechaDesde(desdeDate);
+                break;
+            case 'Hasta':
+                const hastaDate = prompt('Ingrese la fecha hasta (YYYY-MM-DD):');
+                if (hastaDate) setFechaHasta(hastaDate);
+                break;
+            case 'Filtrar':
+                // La filtración se realiza automáticamente en el cálculo de filteredComments
+                break;
+            case 'Eliminar Filtro':
+                setFechaDesde('');
+                setFechaHasta('');
+                break;
+        }
+        setIsDateDropdownOpen(false);
     };
 
-    const renderCalendar = () => {
-        const days = [];
-        const today = new Date();
-        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-        for (let i = 1; i <= monthEnd.getDate(); i++) {
-            days.push(i);
-        }
-
+    const renderDateDropdown = () => {
         return (
-            <div ref={calendarRef} className="absolute mt-2 bg-white p-4 rounded shadow-lg z-10 w-64">
-                <div className="text-center font-bold mb-2">{today.toLocaleString('default', { month: 'long' })} {today.getFullYear()}</div>
-                <div className="grid grid-cols-7 gap-2">
-                    {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'].map((day, index) => (
-                        <div key={index} className="text-gray-500 text-sm">{day}</div>
-                    ))}
-                    {days.map((day) => (
-                        <button
-                            key={day}
-                            onClick={() => handleDateClick(day)}
-                            className={`w-full p-2 rounded-full ${selectedDate === day
-                                ? 'bg-black text-white'
-                                : 'hover:bg-gray-200 text-gray-800'
-                                }`}
-                        >
-                            {day}
-                        </button>
-                    ))}
+            <div ref={dateDropdownRef} className="absolute mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                <div className="py-1">
+                    <button onClick={() => handleDateClick('Desde')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Desde</button>
+                    <button onClick={() => handleDateClick('Hasta')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Hasta</button>
+                    <button onClick={() => handleDateClick('Filtrar')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Filtrar</button>
+                    <button onClick={() => handleDateClick('Eliminar Filtro')} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Eliminar Filtro</button>
                 </div>
             </div>
         );
@@ -206,24 +185,37 @@ export default function ComentariosRecolectados() {
         );
     };
 
+    const filteredComments = comentarios.filter(comentario => {
+        const gravedadMatch = selectedGravedad[comentario.gravedad];
+        const dateMatch = (!fechaDesde || comentario.fecha >= fechaDesde) && (!fechaHasta || comentario.fecha <= fechaHasta);
+        return gravedadMatch && dateMatch;
+    });
+
+    const indexOfLastComment = currentPage * commentsPerPage;
+    const indexOfFirstComment = indexOfLastComment - commentsPerPage;
+    const currentComments = filteredComments.slice(indexOfFirstComment, indexOfLastComment);
+    const totalPages = Math.ceil(filteredComments.length / commentsPerPage);
+
     return (
         <div className="p-8 bg-[#FAF9F8] flex-1 relative">
             <h2 className="text-2xl font-semibold mb-6 text-gray-800">Comentarios recolectados</h2>
 
             <div className="flex items-center justify-between mb-6">
                 <div className="flex space-x-4">
-                    {/* Botón para abrir el calendario */}
-                    <button
-                        ref={calendarButtonRef}
-                        onClick={toggleCalendar}
-                        className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
-                    >
-                        <PlusIcon className="w-5 h-5 text-gray-500" />
-                        <span>{selectedDate ? `Fecha: ${selectedDate}` : 'Fecha'}</span>
-                    </button>
-                    {isCalendarOpen && renderCalendar()}
+                    {/* Date button with dropdown */}
+                    <div className="relative">
+                        <button
+                            ref={dateButtonRef}
+                            onClick={toggleDateDropdown}
+                            className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
+                        >
+                            <PlusIcon className="w-5 h-5 text-gray-500" />
+                            <span>Fecha</span>
+                        </button>
+                        {isDateDropdownOpen && renderDateDropdown()}
+                    </div>
 
-                    {/* Botón de Gravedad con Dropdown */}
+                    {/* Gravedad button with dropdown */}
                     <div className="relative">
                         <button ref={gravedadButtonRef} onClick={handleGravedadClick} className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm">
                             <PlusIcon className="w-5 h-5 text-gray-500" />
@@ -233,7 +225,7 @@ export default function ComentariosRecolectados() {
                     </div>
                 </div>
 
-                {/* Inputs de fecha y botón Descargar */}
+                {/* Date inputs and Download button */}
                 <div className="flex items-center space-x-4">
                     <input
                         type="date"
@@ -279,10 +271,9 @@ export default function ComentariosRecolectados() {
                         </tr>
                     ))}
                 </tbody>
-
             </table>
-            {/* Paginación */}
-            {/* Controles de Paginación */}
+
+            {/* Pagination controls */}
             <div className="flex justify-between items-center mt-4">
                 <button
                     onClick={handlePrevPage}
@@ -317,10 +308,7 @@ export default function ComentariosRecolectados() {
                         <ChevronRightIcon className="w-4 h-4" />
                     </span>
                 </button>
-
             </div>
-
-
         </div>
     );
 }
