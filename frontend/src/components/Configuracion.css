@@ -7,9 +7,9 @@
     padding: 20px;
     max-width: 1200px;
     margin: auto;
-  }
-  
-  .section {
+}
+
+.section {
     width: 100%;
     max-width: 800px;
     margin-bottom: 20px;
@@ -17,88 +17,88 @@
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .section h2 {
-    font-weight: bold; /* Negrita para el título */
-    text-align: center; /* Opcional: centra el texto */
-  }
-  
-  /* Centrar botón */
-  .button-center {
+}
+
+.section h2 {
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Centrar botón */
+.button-center {
     display: flex;
     justify-content: center;
     margin-top: 10px;
-  }
-  
-  /* Botón activado (verde) */
-  .button-active {
+}
+
+/* Botón activado (verde) */
+.button-active {
     background-color: #28a745;
     color: white;
     border: none;
-    padding: 15px 30px; /* Botón más grande */
+    padding: 15px 30px;
     font-size: 18px;
-    border-radius: 50px; /* Bordes redondeados */
+    border-radius: 50px;
     cursor: pointer;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  /* Botón desactivado (rojo) */
-  .button-inactive {
+}
+
+/* Botón desactivado (rojo) */
+.button-inactive {
     background-color: #dc3545;
     color: white;
     border: none;
-    padding: 15px 30px; /* Botón más grande */
+    padding: 15px 30px;
     font-size: 18px;
-    border-radius: 50px; /* Bordes redondeados */
+    border-radius: 50px;
     cursor: pointer;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  /* Efecto hover */
-  .button-active:hover, .button-inactive:hover {
+}
+
+/* Efecto hover */
+.button-active:hover, .button-inactive:hover {
     transform: translateY(-3px);
-  }
-  
-  /* Cambiar el color de fondo cuando se presiona el botón */
-  .button-active:active, .button-inactive:active {
-    background-color: #218838; /* Verde oscuro para botón activo */
+}
+
+/* Cambiar el color de fondo cuando se presiona el botón */
+.button-active:active, .button-inactive:active {
+    background-color: #218838;
     transform: translateY(1px);
-  }
-  
-  .button-inactive:active {
-    background-color: #c82333; /* Rojo oscuro para botón inactivo */
-  }
-  
-  /* Formato de grupo de formularios */
-  .form-group {
+}
+
+.button-inactive:active {
+    background-color: #c82333;
+}
+
+/* Formato de grupo de formularios */
+.form-group {
     display: flex;
     flex-direction: column;
     margin-bottom: 15px;
-  }
-  
-  .form-group label {
+}
+
+.form-group label {
     margin-bottom: 5px;
     font-weight: bold;
-  }
-  
-  .form-group input,
-  .form-group select {
+}
+
+.form-group input,
+.form-group select {
     padding: 10px;
     font-size: 1em;
     border: 1px solid #ccc;
     border-radius: 5px;
     width: 100%;
-  }
-  
-  .form-group input[type="file"] {
+}
+
+.form-group input[type="file"] {
     padding: 5px;
-  }
-  
-  /* Botones estándar */
-  .button {
+}
+
+/* Botones estándar */
+.button {
     padding: 10px 15px;
     font-size: 1em;
     background-color: #4CAF50;
@@ -106,22 +106,88 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
-  }
-  
-  .button:hover {
+}
+
+.button:hover {
     background-color: #45a049;
-  }
-  
-  /* Espaciado entre botones */
-  .button-group {
+}
+
+/* Espaciado entre botones */
+.button-group {
     display: flex;
     gap: 10px;
     justify-content: space-between;
-  }
-  
-  /* Checkbox y radio inputs alineados */
-  .checkbox-group, .radio-group {
+}
+
+/* Checkbox y radio inputs alineados */
+.checkbox-group, .radio-group {
     display: flex;
     flex-direction: column;
     gap: 10px;
-  }  
+}
+
+/* Estilos para el modo oscuro y claro */
+body.light-mode {
+    background-color: white;
+    color: black;
+}
+
+body.light-mode .section {
+    background-color: #f7f7f7;
+}
+
+body.light-mode .button {
+    background-color: #007bff; /* Azul claro */
+    color: white;
+}
+
+body.light-mode .button:hover {
+    background-color: #0056b3;
+}
+
+body.dark-mode {
+    background-color: #121212;
+    color: white;
+}
+
+body.dark-mode .section {
+    background-color: #333;
+}
+
+body.dark-mode .button {
+    background-color: #444; /* Gris oscuro */
+    color: white;
+}
+
+body.dark-mode .button:hover {
+    background-color: #666;
+}
+
+/* Botón Animado */
+.button {
+    padding: 12px 20px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.button:hover {
+    transform: scale(1.05);
+}
+
+/* Botones Activos e Inactivos */
+.button-active {
+    background-color: green;
+}
+
+.button-inactive {
+    background-color: red;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}

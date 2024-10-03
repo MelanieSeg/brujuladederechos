@@ -3,10 +3,17 @@ import './Configuracion.css';
 
 const Configuracion = () => {
   const [webScrapingActivo, setWebScrapingActivo] = useState(false); // Estado para manejar si el web scraping está activado
+  const [modoOscuro, setModoOscuro] = useState(false); // Estado para manejar el modo oscuro
 
   // Función para alternar el estado de web scraping
   const alternarWebScraping = () => {
     setWebScrapingActivo(!webScrapingActivo);
+  };
+
+  // Función para alternar el modo oscuro y claro
+  const alternarModo = () => {
+    setModoOscuro(!modoOscuro);
+    document.body.className = modoOscuro ? 'light-mode' : 'dark-mode'; // Aplica la clase de modo oscuro o claro
   };
 
   return (
@@ -44,8 +51,9 @@ const Configuracion = () => {
       <div className="section">
         <h2>Cambio de Modo</h2>
         <div className="button-group">
-          <button className="button">Activar Modo Oscuro</button>
-          <button className="button">Activar Modo Blanco</button>
+          <button onClick={alternarModo} className="button">
+            {modoOscuro ? 'Activar Modo Claro' : 'Activar Modo Oscuro'}
+          </button>
         </div>
       </div>
 
