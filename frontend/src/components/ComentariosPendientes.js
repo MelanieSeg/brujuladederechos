@@ -66,7 +66,6 @@ export default function ComentariosPendientes() {
     fetchComentarios();
   }, []);
 
-  console.log(comentarios);
 
   // Paginación: Cálculo de los comentarios a mostrar en función de la página
   const indiceUltimoComentario = paginaActual * comentariosPorPagina;
