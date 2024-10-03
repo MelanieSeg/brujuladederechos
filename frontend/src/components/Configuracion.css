@@ -1,0 +1,78 @@
+/* Estructura general */
+.page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+  }
+  
+  .section {
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 20px;
+    background-color: #f7f7f7;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .section h2 {
+    margin-bottom: 10px;
+    font-size: 1.5em;
+    text-align: center;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .form-group input,
+  .form-group select {
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+  }
+  
+  .form-group input[type="file"] {
+    padding: 5px;
+  }
+  
+  .button {
+    padding: 10px 15px;
+    font-size: 1em;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .button:hover {
+    background-color: #45a049;
+  }
+  
+  /* Espaciado entre botones */
+  .button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+  }
+  
+  /* Checkbox y radio inputs alineados */
+  .checkbox-group, .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }  

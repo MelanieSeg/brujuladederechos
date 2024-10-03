@@ -7,6 +7,7 @@ import ComentariosPendientes from './components/ComentariosPendientes';
 import ComentariosClasificados from './components/ComentariosClasificados';
 import HistorialDeCambios from './components/HistorialDeCambios';
 import ComentariosRecolectados from './components/ComentariosRecolectados';
+import Configuracion from './components/Configuracion'; // Importación correcta del componente
 
 function App() {
   // Estado para manejar si la barra de notificaciones está visible o no
@@ -34,7 +35,10 @@ function App() {
             <Route path="/comentarios-pendientes" element={<ComentariosPendientes />} />
             <Route path="/comentarios-clasificados" element={<ComentariosClasificados />} />
             <Route path="/historial-de-cambios" element={<HistorialDeCambios />} />
-            <Route path="/configuracion" element={<div className="p-8">Contenido de Configuración</div>} />
+            
+            {/* Ruta para el componente de configuraciones */}
+            <Route path="/configuracion" element={<Configuracion />} />
+
             {/* Ruta por defecto */}
             <Route path="/" element={<Dashboard />} />
           </Routes>
