@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Configuracion.css';
 
 const Configuracion = () => {
+  const [webScrapingActivo, setWebScrapingActivo] = useState(false); // Estado para manejar si el web scraping está activado
+
+  // Función para alternar el estado de web scraping
+  const alternarWebScraping = () => {
+    setWebScrapingActivo(!webScrapingActivo);
+  };
+
   return (
     <div className="page-container">
       {/* Sección: Frecuencia de Web Scraping */}
@@ -21,7 +28,16 @@ const Configuracion = () => {
             <input type="radio" name="scrapingFrequency" value="24hr" /> Cada 24 horas
           </label>
         </div>
-        <button className="button">Activar Web Scraping</button>
+
+        {/* Botón para activar/desactivar el Web Scraping */}
+        <div className="button-center">
+          <button
+            onClick={alternarWebScraping}
+            className={webScrapingActivo ? 'button-active' : 'button-inactive'}
+          >
+            {webScrapingActivo ? 'Activado Web Scraping' : 'Desactivado Web Scraping'}
+          </button>
+        </div>
       </div>
 
       {/* Sección: Cambio de Modo */}
