@@ -1,0 +1,21 @@
+
+- [ ] - Probar la confirmacion de email via pasando el token en la url via params.
+Descripción: Confirma el email del usuario utilizando un token de verificación enviado por email.
+
+-Método HTTP: GET
+-URL: {{baseUrl}}/auth/confirm-email?token={{verificationToken}}
+-Headers: Ninguno
+-Cuerpo de la Solicitud: Ninguno 
+
+EXPECT: 
+{
+  "success": true,
+  "msg": "Email verificado exitosamente."
+}
+
+ERROR:
+{
+  "success": false,
+  "msg": "El token es inválido o ha expirado."
+}
+

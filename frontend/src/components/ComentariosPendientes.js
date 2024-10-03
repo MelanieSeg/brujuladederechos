@@ -55,7 +55,7 @@ export default function ComentariosPendientes() {
     const fetchComentarios = async () => {
       try {
         const response = await api.get("/comments/get-all");
-        setComentarios(response.data.data.slice(3, 13)); //el slice provisorio
+        setComentarios(response.data.data); //el slice provisorio
       } catch (err) {
         //este set es para que no se tenga que inciar el server para ver comentarios Pendientes , es mas que nada para evitar errores pero eso solo para produccion
         setComentarios(defaultComentarios);
@@ -77,7 +77,7 @@ export default function ComentariosPendientes() {
           indicePrimerComentario,
           indiceUltimoComentario,
         )
-      : comentarios;
+      : comentarios.slice(indicePrimerComentario, indiceUltimoComentario);
 
   const totalPaginas = Math.ceil(
     (comentariosFiltrados.length > 0
