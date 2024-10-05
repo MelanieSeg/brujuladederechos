@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon } from "@heroicons/react/20/solid";
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import api from "../services/axios";
 import { truncateComentario } from "../utils/truncarComentario";
 import { format, parseISO } from "date-fns";
+import Calendario from './Calendario';
+import Paginacion from "./Paginacion";
 
 export default function ComentariosPendientes() {
   const [comentarios, setComentarios] = useState([]);
@@ -71,29 +72,47 @@ export default function ComentariosPendientes() {
   const indiceUltimoComentario = paginaActual * comentariosPorPagina;
   const indicePrimerComentario = indiceUltimoComentario - comentariosPorPagina;
   const comentariosAMostrar =
-    comentariosFiltrados.length > 0
-      ? comentariosFiltrados.slice(
-          indicePrimerComentario,
-          indiceUltimoComentario,
-        )
-      : comentarios.slice(indicePrimerComentario, indiceUltimoComentario);
-
+  comentariosFiltrados.length > 0
+    ? comentariosFiltrados.slice(
+        indicePrimerComentario,
+        indiceUltimoComentario
+      )
+    : comentarios.slice(indicePrimerComentario, indiceUltimoComentario);
   const totalPaginas = Math.ceil(
     (comentariosFiltrados.length > 0
       ? comentariosFiltrados.length
       : comentarios.length) / comentariosPorPagina,
   );
 
-  const filtrarComentarios = () => {
-    const desde = new Date(fechaDesde);
-    const hasta = new Date(fechaHasta);
-    const filtrados = comentarios.filter((comentario) => {
-      const fechaComentario = new Date(comentario.fecha);
-      return fechaComentario >= desde && fechaComentario <= hasta;
-    });
-    setComentariosFiltrados(filtrados);
-  };
+  useEffect(() => {
+    filtrarComentarios();
+  }, [fechaDesde, fechaHasta, comentarios]); 
 
+  const filtrarComentarios = () => {
+    if (!fechaDesde && !fechaHasta) {
+      setComentariosFiltrados(comentarios);
+      return;
+    }
+  
+    const desde = fechaDesde ? new Date(fechaDesde) : null;
+    const hasta = fechaHasta ? new Date(fechaHasta) : null;
+  
+    const comentariosFiltrados = comentarios.filter((comentario) => {
+      const fechaComentario = new Date(comentario.fechaScraping);
+      if (desde && hasta) {
+        return fechaComentario >= desde && fechaComentario <= hasta;
+      } else if (desde) {
+        return fechaComentario >= desde;
+      } else if (hasta) {
+        return fechaComentario <= hasta;
+      }
+      return true;
+    });
+  
+    setComentariosFiltrados(comentariosFiltrados); // Actualizar el estado con los comentarios filtrados
+    console.log("Comentarios filtrados:", comentariosFiltrados); // Verifica el filtrado
+  };
+  
   const eliminarFiltro = () => {
     setFechaDesde("");
     setFechaHasta("");
@@ -105,84 +124,19 @@ export default function ComentariosPendientes() {
   const toggleCalendarDesde = () => {
     setIsCalendarOpenDesde(!isCalendarOpenDesde);
   };
-
+  
   const toggleCalendarHasta = () => {
     setIsCalendarOpenHasta(!isCalendarOpenHasta);
   };
-  // Funciones para manejar la paginación
-  const handlePrevPage = () => {
-    if (paginaActual > 1) {
-      setPaginaActual(paginaActual - 1);
-    }
+  
+  const handleDateSelectDesde = (date) => {
+    setFechaDesde(format(date, "yyyy-MM-dd"));  // Guarda la fecha seleccionada en formato YYYY-MM-DD
+    setIsCalendarOpenDesde(false);  // Cierra el calendario después de seleccionar la fecha
   };
-
-  const handleNextPage = () => {
-    if (paginaActual < totalPaginas) {
-      setPaginaActual(paginaActual + 1);
-    }
-  };
-
-  const handlePageClick = (num) => {
-    setPaginaActual(num);
-  };
-
-
-  const handleDateClickDesde = (day) => {
-    const today = new Date();
-    const month = (today.getMonth() + 1).toString().padStart(2, "0"); // Mes actual con ceros a la izquierda
-    const year = today.getFullYear();
-    setSelectedDateDesde(`${day}/${month}/${year}`); // Formato: día/mes/año
-    setFechaDesde(`${year}-${month}-${day}`); // Para la comparación
-    setIsCalendarOpenDesde(false);
-  };
-
-  const handleDateClickHasta = (day) => {
-    const today = new Date();
-    const month = (today.getMonth() + 1).toString().padStart(2, "0"); // Mes actual con ceros a la izquierda
-    const year = today.getFullYear();
-    setSelectedDateHasta(`${day}/${month}/${year}`); // Formato: día/mes/año
-    setFechaHasta(`${year}-${month}-${day}`); // Para la comparación
+  
+  const handleDateSelectHasta = (date) => {
+    setFechaHasta(format(date, "yyyy-MM-dd"));
     setIsCalendarOpenHasta(false);
-  };
-
-  const renderCalendar = (isDesde) => {
-    const days = [];
-    const today = new Date();
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    for (let i = 1; i <= monthEnd.getDate(); i++) {
-      days.push(i);
-    }
-
-    return (
-      <div className="absolute mt-2 bg-white p-4 rounded shadow-lg z-10 w-64">
-        <div className="text-center font-bold mb-2" >
-          {today.toLocaleString("default", { month: "long" })}{" "}
-          {today.getFullYear()}
-        </div>
-        <div className="grid grid-cols-7 gap-2" >
-          {["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"].map((day, index) => (
-            <div key={index} className="text-gray-500 text-sm">
-              {day}
-            </div>
-          ))}
-          {days.map((day) => (
-            <button
-              key={day}
-              onClick={
-                isDesde
-                  ? () => handleDateClickDesde(day)
-                  : () => handleDateClickHasta(day)
-              }
-              className={`w-full p-2 rounded-full hover:bg-gray-200 text-gray-800`}
-            >
-              {day}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
   };
 
   useEffect(() => {
@@ -262,7 +216,7 @@ export default function ComentariosPendientes() {
                     Desde {selectedDateDesde && `(${selectedDateDesde})`}
                   </button>
                   {isCalendarOpenDesde && (
-                    <div ref={calendarDesdeRef}>{renderCalendar(true)}</div>
+                    <Calendario onDateSelect={handleDateSelectDesde} />
                   )}
                   <button
                     onClick={toggleCalendarHasta}
@@ -271,7 +225,7 @@ export default function ComentariosPendientes() {
                     Hasta {selectedDateHasta && `(${selectedDateHasta})`}
                   </button>
                   {isCalendarOpenHasta && (
-                    <div ref={calendarHastaRef}>{renderCalendar(false)}</div>
+                    <Calendario onDateSelect={handleDateSelectHasta} />
                   )}
                 </div>
                 <button
@@ -291,26 +245,25 @@ export default function ComentariosPendientes() {
           )}
         </div>
 
-        <div className="mt-8 bg-white shadow-md p-6 rounded-lg">
+        <div className="min-w-full bg-white shadow-md rounded-lg border-collapse">
           <table className="min-w-full">
             <thead>
               <tr>
-                <th className="p-2 text-left">Comentario</th>
-                <th className="p-2 text-left">Sitio web</th>
-                <th className="p-2 text-left">Fecha de clasificación</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Comentario</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Sitio web</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Fecha de clasificación</th>
                 <th className="p-2 text-left"></th>
               </tr>
             </thead>
             <tbody>
               {comentariosAMostrar.map((comentario, index) => (
                 <tr key={index} className="border-b">
-                  <td className="p-2">
+                  <td className="px-6 py-4 text-left font-medium text-gray-500">
                     {truncateComentario(comentario.comentario)}
                   </td>
-                  {/*TODO: Cambiar la consulta de backend para que envie el nombre del sitio en la response*/}
-                  <td className="p-2">{"emol.com"}</td>
+                  <td className="p-2">{comentario.sourceUrl}</td> {/* Asegúrate de que use la URL correcta */}
                   <td className="p-2">
-                    {format(parseISO(comentario.fechaScraping), "dd/MM/yyyy")}
+                    {format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")}
                   </td>
                   <td className="p-2">
                     <button
@@ -324,45 +277,12 @@ export default function ComentariosPendientes() {
               ))}
             </tbody>
           </table>
-
-          {/* Controles de Paginación */}
-        <div className="flex items-center justify-between mt-4">
-          <button
-            onClick={handlePrevPage}
-            disabled={paginaActual === 1}
-            className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${paginaActual === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
-              <ChevronLeftIcon className="w-4 h-4" /> {/* Ícono de Heroicons */}
-            </span>
-            <span>Anterior</span>
-          </button>
-          
-          <div className="flex space-x-2">
-            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((num) => (
-              <button
-                key={num}
-                onClick={() => handlePageClick(num)}
-                className={`px-4 py-2 rounded-full ${num === paginaActual ? 'bg-gray-300' : 'bg-gray-200 hover:bg-gray-300'}`}
-              >
-                {num}
-              </button>
-            ))}
-          </div>
-          
-          <button
-            onClick={handleNextPage}
-            disabled={paginaActual === totalPaginas}
-            className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${paginaActual === totalPaginas ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <span>Siguiente</span>
-            <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
-              <ChevronRightIcon className="w-4 h-4" /> {/* Ícono de Heroicons */}
-            </span>
-          </button>
         </div>
-
-        </div>
+        <Paginacion
+            paginaActual={paginaActual}
+            totalPaginas={totalPaginas}
+            onPageChange={setPaginaActual}
+          />
       </div>
 
       {/* Barra lateral para clasificación */}

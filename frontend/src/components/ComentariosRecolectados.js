@@ -1,17 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  TrashIcon,
-  PlusIcon,
-  ChevronRightIcon,
-  ChevronLeftIcon,
-  ChevronDownIcon,
-} from "@heroicons/react/20/solid";
+import {PlusIcon} from "@heroicons/react/20/solid";
+import { TrashIcon} from '@heroicons/react/24/outline';
 import api from "../services/axios";
 import { format, parseISO } from "date-fns";
 import { truncateComentario } from "../utils/truncarComentario";
+import Calendario from "./Calendario";
+import Paginacion from "./Paginacion";
 
 export default function ComentariosRecolectados() {
-  const [defaultComentarios, setDefaultComentarios] = useState([
+  const [defaultComentarios] = useState([
     {
       comentario: "No me gustó mucho",
       estado: "CLASIFICADO",
@@ -63,7 +60,6 @@ export default function ComentariosRecolectados() {
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDateType, setSelectedDateType] = useState("");
   const commentsPerPage = 10;
 
@@ -157,18 +153,6 @@ export default function ComentariosRecolectados() {
     }
   };
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
   const toggleDateDropdown = () => {
     setIsDateDropdownOpen(!isDateDropdownOpen);
     setIsCalendarOpen(false);
@@ -190,114 +174,16 @@ export default function ComentariosRecolectados() {
     }
   };
 
-  const handleDateClick = (day) => {
-    const selectedDate = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      day
-    );
-    const formattedDate = selectedDate.toISOString().split("T")[0];
+  const handleDateClick = (date) => {
+    const formattedDate = date.toISOString().split("T")[0]; // Formateamos la fecha como "YYYY-MM-DD"
     if (selectedDateType === "desde") {
       setFechaDesde(formattedDate);
     } else if (selectedDateType === "hasta") {
       setFechaHasta(formattedDate);
     }
-    setIsCalendarOpen(false);
-    setIsDateDropdownOpen(false);
+    setIsCalendarOpen(false); // Cerramos el calendario después de seleccionar la fecha
   };
 
-  const renderCalendar = () => {
-    const daysInMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() + 1,
-      0
-    ).getDate();
-    const firstDayOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1
-    ).getDay();
-    const days = [];
-    const monthNames = [
-      "Enero",
-      "Febrero",
-      "Marzo",
-      "Abril",
-      "Mayo",
-      "Junio",
-      "Julio",
-      "Agosto",
-      "Septiembre",
-      "Octubre",
-      "Noviembre",
-      "Diciembre",
-    ];
-
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<div key={`empty-${i}`} className="text-center py-2"></div>);
-    }
-
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(
-        <button
-          key={i}
-          onClick={() => handleDateClick(i)}
-          className="text-center py-2 hover:bg-gray-200 rounded-full w-10 h-10"
-        >
-          {i}
-        </button>
-      );
-    }
-
-    return (
-      <div
-        ref={calendarRef}
-        className="absolute mt-2 p-4 bg-white rounded-lg shadow-xl z-20 w-80"
-      >
-        <div className="flex justify-between items-center mb-4">
-          <button
-            onClick={() =>
-              setCurrentDate(
-                new Date(
-                  currentDate.getFullYear(),
-                  currentDate.getMonth() - 1,
-                  1
-                )
-              )
-            }
-            className="p-1 rounded-full hover:bg-gray-200"
-          >
-            <ChevronLeftIcon className="w-6 h-6" />
-          </button>
-          <span className="font-bold text-lg">
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-          </span>
-          <button
-            onClick={() =>
-              setCurrentDate(
-                new Date(
-                  currentDate.getFullYear(),
-                  currentDate.getMonth() + 1,
-                  1
-                )
-              )
-            }
-            className="p-1 rounded-full hover:bg-gray-200"
-          >
-            <ChevronRightIcon className="w-6 h-6" />
-          </button>
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"].map((day) => (
-            <div key={day} className="text-center font-bold text-gray-500 mb-2">
-              {day}
-            </div>
-          ))}
-          {days}
-        </div>
-      </div>
-    );
-  };
 
   const renderDropdown = () => {
     return (
@@ -345,12 +231,15 @@ export default function ComentariosRecolectados() {
   };
 
   const filteredComments = comentarios.filter((comentario) => {
-    const gravedadMatch = selectedGravedad[comentario.estado];
+    const gravedadMatch = selectedGravedad[comentario.estado]; // Usar "estado" en lugar de "gravedad"
+    
     const dateMatch =
-      (!fechaDesde || format(parseISO(comentario.fechaScraping)) >= fechaDesde) &&
-      (!fechaHasta || format(parseISO(comentario.fechaScraping)) <= fechaHasta);
+      (!fechaDesde || format(parseISO(comentario.fechaScraping), "yyyy-MM-dd") >= fechaDesde) &&
+      (!fechaHasta || format(parseISO(comentario.fechaScraping), "yyyy-MM-dd") <= fechaHasta);
+      
     return gravedadMatch && dateMatch;
   });
+  
 
   const indexOfLastComment = currentPage * commentsPerPage;
   const indexOfFirstComment = indexOfLastComment - commentsPerPage;
@@ -377,7 +266,6 @@ export default function ComentariosRecolectados() {
             >
               <PlusIcon className="w-5 h-5 text-gray-500" />
               <span>Fecha</span>
-              <ChevronDownIcon className="w-5 h-5 text-gray-500" />
             </button>
             {isDateDropdownOpen && (
               <div
@@ -405,7 +293,9 @@ export default function ComentariosRecolectados() {
               </div>
             )}
             {isCalendarOpen && (
-              <div className="absolute left-0 mt-2">{renderCalendar()}</div>
+              <div className="absolute left-0 mt-2 calendario-container z-50">
+                <Calendario onDateSelect={handleDateClick} />
+              </div>
             )}
           </div>
 
@@ -476,7 +366,7 @@ export default function ComentariosRecolectados() {
                 </span>
               </td>
               <td className="px-6 py-4">{"emol.com"}</td>
-              <td className="px-6 py-4">{format(parseISO(comentario.fechaScraping),"dd,MM,yyyy")}</td>
+              <td className="px-6 py-4">{format(parseISO(comentario.fechaScraping),"dd-MM-yyyy")}</td>
               <td className="px-6 py-4 text-right">
                 <TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer" />
               </td>
@@ -484,51 +374,12 @@ export default function ComentariosRecolectados() {
           ))}
         </tbody>
       </table>
-
-      {/* Pagination controls */}
-      <div className="flex justify-between items-center mt-4">
-        <button
-          onClick={handlePrevPage}
-          disabled={currentPage === 1}
-          className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${
-            currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
-            <ChevronLeftIcon className="w-4 h-4" />
-          </span>
-          <span>Anterior</span>
-        </button>
-
-        <div className="flex space-x-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
-            <button
-              key={num}
-              onClick={() => handlePageClick(num)}
-              className={`px-4 py-2 rounded-full ${
-                num === currentPage
-                  ? "bg-gray-300"
-                  : "bg-gray-200 hover:bg-gray-300"
-              }`}
-            >
-              {num}
-            </button>
-          ))}
-        </div>
-
-        <button
-          onClick={handleNextPage}
-          disabled={currentPage === totalPages}
-          className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${
-            currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          <span>Siguiente</span>
-          <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
-            <ChevronRightIcon className="w-4 h-4" />
-          </span>
-        </button>
-      </div>
+      
+      <Paginacion
+        paginaActual={currentPage}
+        totalPaginas={totalPages}
+        onPageChange={handlePageClick}  // Este callback manejará el cambio de página
+      />
     </div>
   );
 }
