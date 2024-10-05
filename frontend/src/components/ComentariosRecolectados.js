@@ -4,8 +4,8 @@ import { TrashIcon} from '@heroicons/react/24/outline';
 import api from "../services/axios";
 import { format, parseISO } from "date-fns";
 import { truncateComentario } from "../utils/truncarComentario";
-import Calendario from "./Calendario";
-import Paginacion from "./Paginacion";
+import Calendario from "./Objects/Calendario";
+import Paginacion from "./Objects/Paginacion";
 
 export default function ComentariosRecolectados() {
   const [defaultComentarios] = useState([

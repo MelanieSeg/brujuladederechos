@@ -3,8 +3,8 @@ import { PlusIcon } from "@heroicons/react/20/solid";
 import api from "../services/axios";
 import { truncateComentario } from "../utils/truncarComentario";
 import { format, parseISO } from "date-fns";
-import Calendario from './Calendario';
-import Paginacion from "./Paginacion";
+import Calendario from './Objects/Calendario';
+import Paginacion from "./Objects/Paginacion";
 
 export default function ComentariosPendientes() {
   const [comentarios, setComentarios] = useState([]);
