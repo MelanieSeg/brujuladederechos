@@ -251,135 +251,137 @@ export default function ComentariosRecolectados() {
 
   return (
     <div className="p-8 bg-[#FAF9F8] flex-1 relative">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-        Comentarios recolectados
-      </h2>
+      <div className="flex-grow">
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+          Comentarios recolectados
+        </h2>
 
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex space-x-4">
-          {/* Date button with dropdown */}
-          <div className="relative">
-            <button
-              ref={dateButtonRef}
-              onClick={toggleDateDropdown}
-              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
-            >
-              <PlusIcon className="w-5 h-5 text-gray-500" />
-              <span>Fecha</span>
-            </button>
-            {isDateDropdownOpen && (
-              <div
-                ref={dateDropdownRef}
-                className="absolute mt-2 w-48 bg-white rounded-md shadow-lg z-20"
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex space-x-4">
+            {/* Date button with dropdown */}
+            <div className="relative">
+              <button
+                ref={dateButtonRef}
+                onClick={toggleDateDropdown}
+                className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
               >
-                <button
-                  className="block w-full text-left px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
-                  onClick={() => handleDateOptionClick("desde")}
+                <PlusIcon className="w-5 h-5 text-gray-500" />
+                <span>Fecha</span>
+              </button>
+              {isDateDropdownOpen && (
+                <div
+                  ref={dateDropdownRef}
+                  className="absolute mt-2 w-48 bg-white rounded-md shadow-lg z-20"
                 >
-                  Desde
-                </button>
-                <button
-                  className="block w-full text-left px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
-                  onClick={() => handleDateOptionClick("hasta")}
-                >
-                  Hasta
-                </button>
-                <button
-                  className="block w-full text-left px-4 py-2 text-base text-red-600 hover:bg-gray-100"
-                  onClick={() => handleDateOptionClick("eliminar")}
-                >
-                  Eliminar Filtro
-                </button>
-              </div>
-            )}
-            {isCalendarOpen && (
-              <div className="absolute left-0 mt-2 calendario-container z-50">
-                <Calendario onDateSelect={handleDateClick} />
-              </div>
-            )}
+                  <button
+                    className="block w-full text-left px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
+                    onClick={() => handleDateOptionClick("desde")}
+                  >
+                    Desde
+                  </button>
+                  <button
+                    className="block w-full text-left px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
+                    onClick={() => handleDateOptionClick("hasta")}
+                  >
+                    Hasta
+                  </button>
+                  <button
+                    className="block w-full text-left px-4 py-2 text-base text-red-600 hover:bg-gray-100"
+                    onClick={() => handleDateOptionClick("eliminar")}
+                  >
+                    Eliminar Filtro
+                  </button>
+                </div>
+              )}
+              {isCalendarOpen && (
+                <div className="absolute left-0 mt-2 calendario-container z-50">
+                  <Calendario onDateSelect={handleDateClick} />
+                </div>
+              )}
+            </div>
+
+            {/* Gravedad button with dropdown */}
+            <div className="relative">
+              <button
+                ref={gravedadButtonRef}
+                onClick={handleGravedadClick}
+                className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
+              >
+                <PlusIcon className="w-5 h-5 text-gray-500" />
+                <span>Gravedad</span>
+              </button>
+              {isDropdownOpen && renderDropdown()}
+            </div>
           </div>
 
-          {/* Gravedad button with dropdown */}
-          <div className="relative">
-            <button
-              ref={gravedadButtonRef}
-              onClick={handleGravedadClick}
-              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
-            >
-              <PlusIcon className="w-5 h-5 text-gray-500" />
-              <span>Gravedad</span>
+          {/* Date inputs and Download button */}
+          <div className="flex items-center space-x-4">
+            <input
+              type="date"
+              value={fechaDesde}
+              onChange={(e) => setFechaDesde(e.target.value)}
+              className="border border-gray-300 rounded px-4 py-2 bg-white"
+            />
+            <span>-</span>
+            <input
+              type="date"
+              value={fechaHasta}
+              onChange={(e) => setFechaHasta(e.target.value)}
+              className="border border-gray-300 rounded px-4 py-2 bg-white"
+            />
+            <button className="bg-black text-white px-4 py-2 rounded-md">
+              Descargar
             </button>
-            {isDropdownOpen && renderDropdown()}
           </div>
         </div>
 
-        {/* Date inputs and Download button */}
-        <div className="flex items-center space-x-4">
-          <input
-            type="date"
-            value={fechaDesde}
-            onChange={(e) => setFechaDesde(e.target.value)}
-            className="border border-gray-300 rounded px-4 py-2 bg-white"
-          />
-          <span>-</span>
-          <input
-            type="date"
-            value={fechaHasta}
-            onChange={(e) => setFechaHasta(e.target.value)}
-            className="border border-gray-300 rounded px-4 py-2 bg-white"
-          />
-          <button className="bg-black text-white px-4 py-2 rounded-md">
-            Descargar
-          </button>
-        </div>
-      </div>
-
-      <table className="min-w-full bg-white shadow-md rounded-lg border-collapse">
-        <thead>
-          <tr>
-            <th className="px-6 py-4 text-left font-medium text-gray-500">
-              Comentario
-            </th>
-            <th className="px-12 py-4 text-left font-medium text-gray-500">
-              Estado
-            </th>
-            <th className="px-6 py-4 text-left font-medium text-gray-500">
-              Sitio Web
-            </th>
-            <th className="px-6 py-4 text-left font-medium text-gray-500">
-              Fecha
-            </th>
-            <th className="px-6 py-4"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentComments.map((comentario, index) => (
-            <tr key={index} className="border-b border-gray-200">
-              <td className="px-6 py-4">{truncateComentario(comentario.comentario)}</td>
-              <td className="px-12 py-4">
-                <span
-                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColor(
-                    comentario.gravedad
-                  )}`}
-                >
-                  {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
-                </span>
-              </td>
-              <td className="px-6 py-4">{"emol.com"}</td>
-              <td className="px-6 py-4">{format(parseISO(comentario.fechaScraping),"dd-MM-yyyy")}</td>
-              <td className="px-6 py-4 text-right">
-                <TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer" />
-              </td>
+        <table className="min-w-full bg-white shadow-md rounded-lg border-collapse">
+          <thead>
+            <tr>
+              <th className="px-6 py-4 text-left font-medium text-gray-500">
+                Comentario
+              </th>
+              <th className="px-12 py-4 text-left font-medium text-gray-500">
+                Estado
+              </th>
+              <th className="px-6 py-4 text-left font-medium text-gray-500">
+                Sitio Web
+              </th>
+              <th className="px-6 py-4 text-left font-medium text-gray-500">
+                Fecha
+              </th>
+              <th className="px-6 py-4"></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      
-      <Paginacion
-        paginaActual={currentPage}
-        totalPaginas={totalPages}
-        onPageChange={handlePageClick}  // Este callback manejará el cambio de página
-      />
+          </thead>
+          <tbody>
+            {currentComments.map((comentario, index) => (
+              <tr key={index} className="border-b border-gray-200">
+                <td className="px-6 py-4">{truncateComentario(comentario.comentario)}</td>
+                <td className="px-12 py-4">
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColor(
+                      comentario.gravedad
+                    )}`}
+                  >
+                    {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
+                  </span>
+                </td>
+                <td className="px-6 py-4">{"emol.com"}</td>
+                <td className="px-6 py-4">{format(parseISO(comentario.fechaScraping),"dd-MM-yyyy")}</td>
+                <td className="px-6 py-4 text-right">
+                  <TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        
+        <Paginacion
+          paginaActual={currentPage}
+          totalPaginas={totalPages}
+          onPageChange={handlePageClick}  // Este callback manejará el cambio de página
+        />
+        </div>
     </div>
   );
 }

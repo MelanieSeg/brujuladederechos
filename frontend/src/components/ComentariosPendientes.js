@@ -258,7 +258,7 @@ export default function ComentariosPendientes() {
             <tbody>
               {comentariosAMostrar.map((comentario, index) => (
                 <tr key={index} className="border-b">
-                  <td className="px-6 py-4 text-left font-medium text-gray-500">
+                  <td className="p-2">
                     {truncateComentario(comentario.comentario)}
                   </td>
                   <td className="p-2">{comentario.sourceUrl}</td> {/* Asegúrate de que use la URL correcta */}
