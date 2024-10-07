@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import {
@@ -11,6 +11,7 @@ import {
   PointElement,
   Tooltip,
   Legend,
+  Filler
 } from 'chart.js';
 
 // Registrar los componentes de Chart.js necesarios
@@ -22,14 +23,35 @@ ChartJS.register(
   LineElement,
   PointElement,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 export default function Dashboard() {
   // Estado inicial con datos temporales
   const [periodo, setPeriodo] = useState('Diario');
   const [selectedMetric, setSelectedMetric] = useState('Total de comentarios analizados');
+  const [totalComentarios, setTotalComentarios] = useState(0);
+  const [tasaAprobacion, setTasaAprobacion] = useState(0);
+  const [barThickness, setBarThickness] = useState(30);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setBarThickness(20);
+      } else {
+        setBarThickness(30);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
 
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+  
   // Datos temporales para demostración (serán reemplazados por datos del backend)
   const datosTemporales = {
     totalComentarios: 573,
@@ -48,6 +70,25 @@ export default function Dashboard() {
     datosCircular: [40, 25, 15, 10, 10],
   };
 
+  const datosTemporalesPorPeriodo = {
+    Diario: {
+      totalComentarios: 100,
+      tasaAprobacion: 85,
+    },
+    Semanal: {
+      totalComentarios: 700,
+      tasaAprobacion: 90,
+    },
+    Mensual: {
+      totalComentarios: 3000,
+      tasaAprobacion: 88,
+    },
+    Anual: {
+      totalComentarios: 36000,
+      tasaAprobacion: 87,
+    }
+  };
+
   // Datos para los gráficos
   const labelsHoras = [
     '00:00', '02:00', '04:00', '06:00', '08:00', '10:00',
@@ -59,40 +100,7 @@ export default function Dashboard() {
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
   ];
 
-  const datosLineaTotalComentarios = {
-    labels: labelsHoras,
-    datasets: [
-      {
-        label: 'Total de comentarios analizados',
-        data: datosTemporales.datosLineaClasificaciones,
-        fill: true,
-        borderColor: '#4F46E5',
-        backgroundColor: 'rgba(79, 70, 229, 0.2)',
-        pointBackgroundColor: '#4F46E5',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: '#4F46E5',
-      },
-    ],
-  };
-
-  const datosLineaTasaAprobacion = {
-    labels: labelsHoras,
-    datasets: [
-      {
-        label: 'Tasa de aprobación',
-        data: datosTemporales.datosLineaTasaAprobacion,
-        fill: true,
-        borderColor: '#4F46E5',
-        backgroundColor: 'rgba(79, 70, 229, 0.2)',
-        pointBackgroundColor: '#4F46E5',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: '#4F46E5',
-      },
-    ],
-  };
-
+  const labelsDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
   const datosBarra = {
     labels: labelsMeses,
     datasets: [
@@ -104,7 +112,6 @@ export default function Dashboard() {
         hoverBackgroundColor: '#6366F1',
         hoverBorderColor: '#6366F1',
         data: datosTemporales.datosBarra,
-        barThickness: 30,
       },
     ],
   };
@@ -158,10 +165,14 @@ export default function Dashboard() {
     plugins: {
       legend: { display: false },
     },
+    responsive: true,
+    barThickness: barThickness,
   };
 
   const opcionesLinea = {
     maintainAspectRatio: false,
+    responsive: true,
+    width: '100%',
     scales: {
       y: {
         beginAtZero: true,
@@ -183,42 +194,144 @@ export default function Dashboard() {
 
   const opcionesCircular = {
     maintainAspectRatio: false,
+    responsive: true,  // Asegurar que sea responsivo
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: false,  // Desactiva la leyenda dentro del gráfico
+      },
     },
   };
+  
 
-  // Función para obtener los datos y opciones según la métrica seleccionada
-  const getLineChartData = () => {
+  useEffect(() => {
+    const datos = datosTemporalesPorPeriodo[periodo];
+    setTotalComentarios(datos.totalComentarios);
+    setTasaAprobacion(datos.tasaAprobacion);
+  }, [periodo]);
+
+  const getChartData = () => {
     switch (selectedMetric) {
       case 'Total de comentarios analizados':
-        return { data: datosLineaTotalComentarios, options: opcionesLinea };
+        switch (periodo) {
+          case 'Diario':
+            return {
+              data: {
+                labels: labelsHoras, // Usar horas para el gráfico diario
+                datasets: [
+                  {
+                    label: 'Total de comentarios analizados',
+                    data: datosTemporales.datosLineaClasificaciones,
+                    fill: true,
+                    borderColor: '#4F46E5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                  },
+                ],
+              },
+            };
+          case 'Semanal':
+            return {
+              data: {
+                labels: labelsDias, // Cambia a días de la semana
+                datasets: [
+                  {
+                    label: 'Total de comentarios analizados (Semanal)',
+                    data: datosTemporales.datosLineaClasificaciones.slice(0, 7), // Usa datos semanales
+                    fill: true,
+                    borderColor: '#4F46E5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                  },
+                ],
+              },
+            };
+          case 'Mensual':
+            return {
+              data: {
+                labels: labelsMeses, // Cambia a meses del año
+                datasets: [
+                  {
+                    label: 'Total de comentarios analizados (Mensual)',
+                    data: datosTemporales.datosBarra, // Usa datos mensuales
+                    fill: true,
+                    borderColor: '#4F46E5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                  },
+                ],
+              },
+            };
+          default:
+            return null;
+        }
       case 'Tasa de aprobación':
-        return { data: datosLineaTasaAprobacion, options: opcionesLinea };
+        switch (periodo) {
+          case 'Diario':
+            return {
+              data: {
+                labels: labelsHoras, // Usar horas para el gráfico diario
+                datasets: [
+                  {
+                    label: 'Tasa de aprobación',
+                    data: datosTemporales.datosLineaTasaAprobacion,
+                    fill: true,
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                  },
+                ],
+              },
+            };
+          case 'Semanal':
+            return {
+              data: {
+                labels: labelsDias, // Usar días de la semana
+                datasets: [
+                  {
+                    label: 'Tasa de aprobación (Semanal)',
+                    data: datosTemporales.datosLineaTasaAprobacion.slice(0, 7), // Datos semanales
+                    fill: true,
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                  },
+                ],
+              },
+            };
+          case 'Mensual':
+            return {
+              data: {
+                labels: labelsMeses, // Usar meses para el gráfico mensual
+                datasets: [
+                  {
+                    label: 'Tasa de aprobación (Mensual)',
+                    data: datosTemporales.datosBarra, // Datos mensuales
+                    fill: true,
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                  },
+                ],
+              },
+            };
+          default:
+            return null;
+        }
       default:
-        return { data: datosLineaTotalComentarios, options: opcionesLinea };
+        return null;
     }
   };
+  
 
-  const { data: datosLineaActual, options: opcionesLineaActual } = getLineChartData();
+  const { data } = getChartData() || {};
+
+  // Función para obtener los datos y opciones según la métrica seleccionada
 
   return (
-    <div className="p-8 bg-gray-100 flex-1">
+    <div className="p-8 bg-gray-100 flex-1 w-full">
       {/* Botones de selección de período */}
       <div className="mb-6 flex space-x-2">
         {['Diario', 'Semanal', 'Mensual', 'Anual'].map((period) => (
           <button
             key={period}
             onClick={() => {
-              setPeriodo(period);
-              if (period === 'Diario') {
-                setSelectedMetric('Total de comentarios analizados');
-              } else {
-                setSelectedMetric(null);
-              }
-            }}
+              setPeriodo(period); }}
             className={`px-4 py-2 rounded-full text-gray-600 border ${
-              periodo === period ? 'bg-gray-300' : 'bg-white hover:bg-gray-200'
+              periodo === period ? 'bg-gray-300 ring-2 ring-indigo-500' : 'bg-white hover:bg-gray-200'
             }`}
           >
             {period}
@@ -226,8 +339,8 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Mostrar métricas cuando el período es "Diario" */}
-      {periodo === 'Diario' && (
+      {/* Selección de métrica (para Diario, Semanal y Mensual) */}
+      {periodo !== 'Anual' && (
         <div className="grid grid-cols-2 gap-6 mb-8">
           <div
             onClick={() => setSelectedMetric('Total de comentarios analizados')}
@@ -236,7 +349,7 @@ export default function Dashboard() {
             }`}
           >
             <h2 className="text-gray-500 text-sm">Total de comentarios analizados</h2>
-            <p className="text-3xl font-bold mt-2">{datosTemporales.totalComentarios}</p>
+            <p className="text-3xl font-bold mt-2">{totalComentarios}</p>
           </div>
           <div
             onClick={() => setSelectedMetric('Tasa de aprobación')}
@@ -245,11 +358,21 @@ export default function Dashboard() {
             }`}
           >
             <h2 className="text-gray-500 text-sm">Tasa de aprobación</h2>
-            <p className="text-3xl font-bold mt-2">{datosTemporales.tasaAprobacion}%</p>
+            <p className="text-3xl font-bold mt-2">{tasaAprobacion}%</p>
           </div>
         </div>
       )}
 
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {data && periodo !== 'Anual' && (
+          <div className="bg-white shadow-md p-6 rounded-lg col-span-2">
+            <h2 className="text-lg font-bold mb-4">{selectedMetric}</h2>
+            <div className="h-[300px] w-full"> {/* Ajuste aquí */}
+              <Line data={data} options={opcionesLinea} />
+            </div>
+          </div>
+        )}
+      </div>
       {/* Mostrar estadísticas cuando el período es "Anual" */}
       {periodo === 'Anual' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -277,48 +400,38 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico de línea para "Diario" */}
-        {periodo === 'Diario' && selectedMetric && (
-          <div className="bg-white shadow-md p-6 rounded-lg col-span-2">
-            <h2 className="text-lg font-bold mb-4">{selectedMetric}</h2>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Gráfico de barras para "Anual" */}
+      {periodo === 'Anual' && (
+        <div className="bg-white shadow-md p-6 rounded-lg">
+          <h2 className="text-lg font-bold mb-4">Total de comentarios clasificados</h2>
+          <div className="h-64">
+            <Bar data={datosBarra} options={opcionesBarra} />
+          </div>
+        </div>
+      )}
+
+      {/* Gráfico circular con leyenda personalizada para "Anual" */}
+      {periodo === 'Anual' && (
+        <div className="bg-white shadow-md p-6 rounded-lg flex">
+          <div className="w-2/3">
+            <h2 className="text-lg font-bold mb-4">Comentarios por sitio web</h2>
             <div className="h-64">
-              <Line data={datosLineaActual} options={opcionesLineaActual} />
+              <Pie data={datosCircular} options={opcionesCircular} />
             </div>
           </div>
-        )}
-
-        {/* Gráfico de barras para "Anual" */}
-        {periodo === 'Anual' && (
-          <div className="bg-white shadow-md p-6 rounded-lg">
-            <h2 className="text-lg font-bold mb-4">Total de comentarios clasificados</h2>
-            <div className="h-64">
-              <Bar data={datosBarra} options={opcionesBarra} />
-            </div>
-          </div>
-        )}
-
-        {/* Gráfico circular con leyenda personalizada */}
-        {periodo === 'Anual' && (
-          <div className="bg-white shadow-md p-6 rounded-lg flex">
-            <div className="w-2/3">
-              <h2 className="text-lg font-bold mb-4">Comentarios por sitio web</h2>
-              <div className="h-64">
-                <Pie data={datosCircular} options={opcionesCircular} />
+          <div className="w-1/3 flex flex-col justify-center ml-8 flex-wrap overflow-hidden">
+            {leyendaCircular.map((item, index) => (
+              <div key={index} className="flex items-center mb-4">
+                <div className="w-4 h-4" style={{ backgroundColor: item.color }}></div>
+                <span className="ml-2 text-sm">{item.label}</span>
               </div>
-            </div>
-            <div className="w-1/3 flex flex-col justify-center ml-8">
-              {leyendaCircular.map((item, index) => (
-                <div key={index} className="flex items-center mb-4">
-                  <div className="w-4 h-4" style={{ backgroundColor: item.color }}></div>
-                  <span className="ml-2 text-sm">{item.label}</span>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
+
 
       {/* Tabla de últimos comentarios */}
       <div className="mt-8 bg-white shadow-md p-6 rounded-lg">

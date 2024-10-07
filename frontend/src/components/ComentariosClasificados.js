@@ -1,10 +1,15 @@
+// components/ComentariosClasificados.js
 import React, { useState, useRef, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/16/solid';
-import { TrashIcon, PencilIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { format } from 'date-fns';
+import Calendario from './Objects/Calendario';
+import Paginacion from './Objects/Paginacion';
 
 export default function ComentariosClasificados() {
   const [comentarios] = useState([
-    // Comentarios originales (10)
+    { comentario: 'No me gustó mucho', gravedad: 'Baja', sitio: 'latercera.com', fecha: 'Jul 4, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
+    { comentario: 'La interfaz es confusa.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 14, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
     { comentario: 'No me gustó mucho', gravedad: 'Baja', sitio: 'latercera.com', fecha: 'Jul 4, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
     { comentario: 'Podría ser mejor.', gravedad: 'Baja', sitio: 'latercera.com', fecha: 'Jul 4, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
     { comentario: 'No estoy satisfecho', gravedad: 'Alta', sitio: 'latercera.com', fecha: 'Jul 4, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
@@ -35,7 +40,8 @@ export default function ComentariosClasificados() {
     { comentario: 'Tiempo de entrega rápido.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 11, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
     { comentario: 'El producto no coincide con la descripción.', gravedad: 'Alta', sitio: 'ejemplo.com', fecha: 'Jul 12, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
     { comentario: 'Muy satisfecho con la compra.', gravedad: 'Baja', sitio: 'ejemplo.com', fecha: 'Jul 13, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'La interfaz es confusa.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 14, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 }
+    { comentario: 'La interfaz es confusa.', gravedad: 'Moderada', sitio: 'ejemplo.com', fecha: 'Jul 14, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
+    { comentario: 'No me gustó mucho', gravedad: 'Baja', sitio: 'latercera.com', fecha: 'Jul 4, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
   ]);
 
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -46,24 +52,23 @@ export default function ComentariosClasificados() {
   });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
-  
-  // Nuevo estado para alternar entre columnas básicas y detalladas
+
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+
   const [showDetailedColumns, setShowDetailedColumns] = useState(false);
 
   // Estados para paginación
-  const [currentPage, setCurrentPage] = useState(1);
-  const commentsPerPage = 10; // Número de comentarios por página
+  const [paginaActual, setPaginaActual] = useState(1);
+  const commentsPerPage = 10;
 
-  // Refs para detectar clics fuera
   const calendarRef = useRef(null);
   const calendarButtonRef = useRef(null);
   const dropdownRef = useRef(null);
   const gravedadButtonRef = useRef(null);
 
-  // Manejar clics fuera del calendario y dropdown
   useEffect(() => {
     function handleClickOutside(event) {
-      // Si el calendario está abierto y el clic no está dentro del calendario ni en el botón
       if (
         isCalendarOpen &&
         calendarRef.current &&
@@ -74,7 +79,6 @@ export default function ComentariosClasificados() {
         setIsCalendarOpen(false);
       }
 
-      // Si el dropdown está abierto y el clic no está dentro del dropdown ni en el botón de gravedad
       if (
         isDropdownOpen &&
         dropdownRef.current &&
@@ -92,11 +96,7 @@ export default function ComentariosClasificados() {
     };
   }, [isCalendarOpen, isDropdownOpen]);
 
-  const toggleDropdown = () => {
-    setDropdownOpen(!isDropdownOpen);
-  };
 
-  // Cambiar la visibilidad de las columnas detalladas y abrir el dropdown al hacer clic en Gravedad
   const handleGravedadClick = () => {
     setShowDetailedColumns(!showDetailedColumns);
     setDropdownOpen(!isDropdownOpen);
@@ -107,7 +107,7 @@ export default function ComentariosClasificados() {
       ...prevState,
       [gravedad]: !prevState[gravedad],
     }));
-    setCurrentPage(1); // Reiniciar a la primera página al cambiar filtros
+    setPaginaActual(1);
   };
 
   const limpiarSeleccion = () => {
@@ -116,7 +116,7 @@ export default function ComentariosClasificados() {
       Moderada: false,
       Alta: false,
     });
-    setCurrentPage(1); // Reiniciar a la primera página al limpiar filtros
+    setPaginaActual(1);
   };
 
   const getBadgeColor = (gravedad) => {
@@ -136,55 +136,28 @@ export default function ComentariosClasificados() {
     setIsCalendarOpen(!isCalendarOpen);
   };
 
-  const handleDateClick = (day) => {
-    setSelectedDate(day);
-    setIsCalendarOpen(false); // Cerrar calendario después de seleccionar la fecha
-    setCurrentPage(1); // Reiniciar a la primera página al seleccionar una fecha
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+    setIsCalendarOpen(false);
+    setPaginaActual(1);
   };
 
   const renderCalendar = () => {
-    const days = [];
-    const today = new Date();
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    for (let i = 1; i <= monthEnd.getDate(); i++) {
-      days.push(i);
-    }
-
     return (
-      <div ref={calendarRef} className="absolute mt-2 bg-white p-4 rounded shadow-lg z-10 w-64">
-        <div className="text-center font-bold mb-2">{today.toLocaleString('default', { month: 'long' })} {today.getFullYear()}</div>
-        <div className="grid grid-cols-7 gap-2">
-          {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'].map((day, index) => (
-            <div key={index} className="text-gray-500 text-sm">{day}</div>
-          ))}
-          {days.map((day) => (
-            <button
-              key={day}
-              onClick={() => handleDateClick(day)}
-              className={`w-full p-2 rounded-full ${
-                selectedDate === day
-                  ? 'bg-black text-white'
-                  : 'hover:bg-gray-200 text-gray-800'
-              }`}
-            >
-              {day}
-            </button>
-          ))}
-        </div>
+      <div ref={calendarRef} className="absolute">
+        <Calendario onDateSelect={handleDateSelect} />
       </div>
     );
   };
+  
 
   const renderDropdown = () => {
     return (
-      <div ref={dropdownRef} className="absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+      <div
+        ref={dropdownRef}
+        className="absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+      >
         <div className="py-1">
-          <div className="px-4 py-2 text-sm text-gray-700 font-semibold flex items-center">
-            {/* Icono de lupa */}
-            Prioridad
-          </div>
           <div className="px-4 py-2">
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
@@ -194,7 +167,6 @@ export default function ComentariosClasificados() {
                 className="form-checkbox text-green-500"
               />
               <span className="flex items-center">
-                {/* Flecha hacia abajo */}
                 <span className="mr-2">↓</span>
                 <span className="text-gray-700">Baja</span>
               </span>
@@ -210,7 +182,6 @@ export default function ComentariosClasificados() {
                 className="form-checkbox text-yellow-500"
               />
               <span className="flex items-center">
-                {/* Flecha derecha */}
                 <span className="mr-2">→</span>
                 <span className="text-gray-700">Moderada</span>
               </span>
@@ -226,7 +197,6 @@ export default function ComentariosClasificados() {
                 className="form-checkbox text-red-500"
               />
               <span className="flex items-center">
-                {/* Flecha hacia arriba */}
                 <span className="mr-2">↑</span>
                 <span className="text-gray-700">Alta</span>
               </span>
@@ -246,92 +216,221 @@ export default function ComentariosClasificados() {
     );
   };
 
-  // Cálculos para la paginación
-  const filteredComentarios = comentarios.filter(comentario => selectedGravedad[comentario.gravedad]);
+  const filteredComentarios = comentarios.filter((comentario) => {
+    const gravedadMatch = selectedGravedad[comentario.gravedad];
 
-  const totalPages = Math.ceil(filteredComentarios.length / commentsPerPage);
+    let dateMatch = true;
+    if (selectedDate) {
+      const comentarioDate = new Date(comentario.fecha);
+      comentarioDate.setHours(0, 0, 0, 0);
+      const selectedDateOnly = new Date(selectedDate);
+      selectedDateOnly.setHours(0, 0, 0, 0);
+      dateMatch = comentarioDate.getTime() >= selectedDateOnly.getTime();
+    }
 
-  const indexOfLastComment = currentPage * commentsPerPage;
+    return gravedadMatch && dateMatch;
+  });
+
+  const totalPaginas = Math.ceil(filteredComentarios.length / commentsPerPage);
+
+  const indexOfLastComment = paginaActual * commentsPerPage;
   const indexOfFirstComment = indexOfLastComment - commentsPerPage;
-  const currentComentarios = filteredComentarios.slice(indexOfFirstComment, indexOfLastComment);
+  const currentComentarios = filteredComentarios.slice(
+    indexOfFirstComment,
+    indexOfLastComment
+  );
 
-  // Manejadores de paginación
-  const handlePrevPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
+  const handlePageChange = (pageNumber) => {
+    setPaginaActual(pageNumber);
   };
 
-  const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  };
+  const handleDownload = () => {
+    if (!startDate || !endDate) {
+      alert('Por favor, seleccione ambas fechas para descargar el reporte.');
+      return;
+    }
 
-  const handlePageClick = (pageNumber) => {
-    setCurrentPage(pageNumber);
+    if (startDate > endDate) {
+      alert('La fecha de inicio debe ser anterior o igual a la fecha de fin.');
+      return;
+    }
+
+    const commentsToDownload = comentarios.filter((comentario) => {
+      const comentarioDate = new Date(comentario.fecha);
+      comentarioDate.setHours(0, 0, 0, 0);
+
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(endDate);
+      end.setHours(0, 0, 0, 0);
+
+      return (
+        comentarioDate.getTime() >= start.getTime() &&
+        comentarioDate.getTime() <= end.getTime()
+      );
+    });
+
+    if (commentsToDownload.length === 0) {
+      alert('No hay comentarios en el rango de fechas seleccionado.');
+      return;
+    }
+
+    const headers = ['Comentario', 'Gravedad', 'Sitio web', 'Fecha de clasificación'];
+    const rows = commentsToDownload.map((comment) => [
+      `"${comment.comentario.replace(/"/g, '""')}"`,
+      comment.gravedad,
+      comment.sitio,
+      comment.fecha,
+    ]);
+
+    let csvContent =
+      headers.join(',') + '\n' + rows.map((e) => e.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.href = url;
+    link.setAttribute('download', 'reporte_comentarios.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
     <div className="p-8 bg-[#FAF9F8] flex-1 relative">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">Comentarios clasificados</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+        Comentarios clasificados
+      </h2>
 
       <div className="flex items-center justify-between mb-6">
-        <div className="flex space-x-4">
+        <div className="flex items-center space-x-4 md:flex-row flex-col">
           {/* Botón para el calendario */}
-          <button
-            ref={calendarButtonRef}
-            onClick={toggleCalendar}
-            className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
-          >
-            <PlusIcon className="w-5 h-5 text-gray-500" />
-            <span>{selectedDate ? `Fecha: ${selectedDate}` : 'Fecha'}</span>
-          </button>
+        <button
+          ref={calendarButtonRef}
+          onClick={toggleCalendar}
+          className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm md:my-4 my-2 relative"
+        >
+          <PlusIcon className="w-5 h-5 text-gray-500" />
+          <span>
+            {selectedDate ? (
+              <span>
+                Fecha: <span className="ml-2 mx-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full">
+                  {format(new Date(selectedDate), 'dd/MM/yyyy')}
+                </span>
+              </span>
+            ) : (
+              'Fecha'
+            )}
+          </span>
+          {isCalendarOpen && (
+            <div
+              ref={calendarRef}
+              className="absolute top-full left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+            >
+              <Calendario onDateSelect={handleDateSelect} />
+            </div>
+          )}
+        </button>
 
-          {isCalendarOpen && renderCalendar()}
 
           {/* Botón de Gravedad con Dropdown y funcionalidad de mostrar columnas detalladas */}
           <div className="relative">
             <button
               ref={gravedadButtonRef}
               onClick={handleGravedadClick}
-              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
+              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm md:my-4 my-2"
             >
               <PlusIcon className="w-5 h-5 text-gray-500" />
               <span>Gravedad</span>
             </button>
             {isDropdownOpen && renderDropdown()}
           </div>
+          
+          <button
+          className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm md:my-4 my-2"
+          onClick={() => {
+            setSelectedDate(null);
+            setSelectedGravedad({
+              Baja: true,
+              Moderada: true,
+              Alta: true,
+            });
+          }}
+        >
+          Quitar filtros
+          <XMarkIcon className="w-5 h-5 stroke-2 text-gray-500 mx-1" />
+        </button>
         </div>
 
         <div className="flex items-center space-x-4">
           <input
             type="date"
             className="border border-gray-300 rounded px-4 py-2 bg-white"
+            value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+            onChange={(e) => {
+              const date = e.target.value ? new Date(e.target.value) : null;
+              setStartDate(date);
+            }}
           />
           <span>-</span>
           <input
             type="date"
             className="border border-gray-300 rounded px-4 py-2 bg-white"
+            value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+            onChange={(e) => {
+              const date = e.target.value ? new Date(e.target.value) : null;
+              setEndDate(date);
+            }}
           />
-          <button className="bg-black text-white px-4 py-2 rounded-md">Descargar</button>
+          <button
+            className="bg-black text-white px-4 py-2 rounded-md"
+            onClick={handleDownload}
+          >
+            Descargar
+          </button>
         </div>
       </div>
 
       <table className="min-w-full bg-white shadow-md rounded-lg border-collapse">
         <thead>
           <tr>
-            <th className="px-6 py-4 text-left font-medium text-gray-500">Comentario</th>
+            <th className="px-6 py-4 text-left font-medium text-gray-500">
+              Comentario
+            </th>
             {/* Renderizar las columnas adicionales si showDetailedColumns es true */}
             {showDetailedColumns && (
               <>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">T</th>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">E.Privacidad</th>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">PI</th>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">PF</th>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">OI</th>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">E.Libertad</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">
+                  T
+                </th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">
+                  E.Privacidad
+                </th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">
+                  PI
+                </th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">
+                  PF
+                </th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">
+                  OI
+                </th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">
+                  E.Libertad
+                </th>
               </>
             )}
-            <th className="px-6 py-4 text-left font-medium text-gray-500">Gravedad</th>
-            <th className="px-6 py-4 text-left font-medium text-gray-500">Sitio web</th>
-            <th className="px-6 py-4 text-left font-medium text-gray-500">Fecha de clasificación</th>
+            <th className="px-6 py-4 text-left font-medium text-gray-500">
+              Gravedad
+            </th>
+            <th className="px-6 py-4 text-left font-medium text-gray-500">
+              Sitio web
+            </th>
+            <th className="px-6 py-4 text-left font-medium text-gray-500">
+              Fecha de clasificación
+            </th>
             <th className="px-6 py-4"></th>
           </tr>
         </thead>
@@ -354,61 +453,37 @@ export default function ComentariosClasificados() {
                 </>
               )}
               <td className="px-6 py-4">
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${getBadgeColor(comentario.gravedad)}`}>
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${getBadgeColor(
+                    comentario.gravedad
+                  )}`}
+                >
                   {comentario.gravedad}
                 </span>
               </td>
               <td className="px-6 py-4">{comentario.sitio}</td>
               <td className="px-6 py-4">{comentario.fecha}</td>
               <td className="px-6 py-4 flex justify-end space-x-2">
-              <button className="text-gray-500 hover:text-red-600">
-                <TrashIcon className="h-5 w-5" /> {/* Icono de eliminar más neutro */}
-              </button>
+                <button className="text-gray-500 hover:text-red-600">
+                  <TrashIcon className="h-5 w-5" />
+                </button>
 
-              <button className="text-gray-500 hover:text-blue-600">
-                <PencilIcon className="h-5 w-5" /> {/* Icono de editar más neutro */}
-              </button>
+                <button className="text-gray-500 hover:text-blue-600">
+                  <PencilIcon className="h-5 w-5" />
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Controles de Paginación */}
-      <div className="flex items-center justify-between mt-4">
-        <button
-          onClick={handlePrevPage}
-          disabled={currentPage === 1}
-          className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
-            <ChevronLeftIcon className="w-4 h-4" /> {/* Ícono de Heroicons */}
-            </span>
-            <span>Anterior</span>
-        </button>
-        
-        <div className="flex space-x-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
-            <button
-              key={num}
-              onClick={() => handlePageClick(num)}
-              className={`px-4 py-2 rounded-full ${num === currentPage ? 'bg-gray-300' : 'bg-gray-200 hover:bg-gray-300'}`}
-            >
-              {num}
-            </button>
-          ))}
-        </div>
-        
-        <button
-          onClick={handleNextPage}
-          disabled={currentPage === totalPages}
-          className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          <span>Siguiente</span>
-          <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
-          <ChevronRightIcon className="w-4 h-4" /> {/* Ícono de Heroicons */}
-          </span>
-        </button>
+      {/* Componente de Paginación */}
+      <div className="mt-4">
+        <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onPageChange={handlePageChange}
+        />
       </div>
     </div>
   );

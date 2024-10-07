@@ -1,205 +1,126 @@
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon } from "@heroicons/react/20/solid";
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import api from "../services/axios";
 import { truncateComentario } from "../utils/truncarComentario";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
+import Calendario from './Objects/Calendario';
+import Paginacion from "./Objects/Paginacion";
 
 export default function ComentariosPendientes() {
   const [comentarios, setComentarios] = useState([]);
-  const [paginaActual, setPaginaActual] = useState(1); // Estado para la página actual
-  const [comentariosPorPagina] = useState(10); // Número de comentarios por página
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [comentariosPorPagina] = useState(10);
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
   const [comentariosFiltrados, setComentariosFiltrados] = useState([]);
   const [mostrarSelectorFecha, setMostrarSelectorFecha] = useState(false);
-  const [isCalendarOpenDesde, setIsCalendarOpenDesde] = useState(false);
-  const [isCalendarOpenHasta, setIsCalendarOpenHasta] = useState(false);
-  const [selectedDateDesde, setSelectedDateDesde] = useState("");
-  const [selectedDateHasta, setSelectedDateHasta] = useState("");
-  const [mostrarBarraClasificacion, setMostrarBarraClasificacion] =
-    useState(false); // Estado para mostrar barra de clasificación
-  const calendarDesdeRef = useRef(null);
-  const calendarHastaRef = useRef(null);
-  const [barraClasificacionVisible, setBarraClasificacionVisible] =
-    useState(false);
+  const [mostrarCalendario, setMostrarCalendario] = useState(false);
+  const [calendarioTipo, setCalendarioTipo] = useState(null);
+  const [barraClasificacionVisible, setBarraClasificacionVisible] = useState(false);
   const [comentarioSeleccionado, setComentarioSeleccionado] = useState(null);
-
-  const clasificarComentario = (comentario) => {
-    setComentarioSeleccionado(comentario);
-    setBarraClasificacionVisible(true);
-  };
-
-  const defaultComentarios = [
-    {
-      autor: "Desconocido",
-      comentario: "No estoy de acuerdo.",
-      sourceUrl: "example.com",
-      fechaScraping: "2024-09-23",
-    },
-    {
-      autor: "Desconocido",
-      comentario: "Me encanta esta publicacion.",
-      sourceUrl: "example2.com",
-      fechaScraping: "2024-09-22",
-    },
-    {
-      autor: "Desconocido",
-      comentario: "Buen trabajo, seguir asi.",
-      sourceUrl: "example3.com",
-      fechaScraping: "2024-09-21",
-    },
-  ];
+  const fechaButtonRef = useRef(null);
+  const calendarioRef = useRef(null);
 
   useEffect(() => {
     const fetchComentarios = async () => {
       try {
         const response = await api.get("/comments/get-all");
-        setComentarios(response.data.data); //el slice provisorio
+        setComentarios(response.data.data);
+        setComentariosFiltrados(response.data.data);
       } catch (err) {
-        //este set es para que no se tenga que inciar el server para ver comentarios Pendientes , es mas que nada para evitar errores pero eso solo para produccion
-        setComentarios(defaultComentarios);
-        console.log("Error al obtener los comentarios", err);
+        console.error("Error al obtener los comentarios", err);
       }
     };
 
     fetchComentarios();
   }, []);
 
-
-  // Paginación: Cálculo de los comentarios a mostrar en función de la página
-  const indiceUltimoComentario = paginaActual * comentariosPorPagina;
-  const indicePrimerComentario = indiceUltimoComentario - comentariosPorPagina;
-  const comentariosAMostrar =
-    comentariosFiltrados.length > 0
-      ? comentariosFiltrados.slice(
-          indicePrimerComentario,
-          indiceUltimoComentario,
-        )
-      : comentarios.slice(indicePrimerComentario, indiceUltimoComentario);
-
-  const totalPaginas = Math.ceil(
-    (comentariosFiltrados.length > 0
-      ? comentariosFiltrados.length
-      : comentarios.length) / comentariosPorPagina,
-  );
+  useEffect(() => {
+    filtrarComentarios();
+  }, [fechaDesde, fechaHasta, comentarios]);
 
   const filtrarComentarios = () => {
-    const desde = new Date(fechaDesde);
-    const hasta = new Date(fechaHasta);
+    if (!fechaDesde && !fechaHasta) {
+      setComentariosFiltrados(comentarios);
+      return;
+    }
+
+    const desde = fechaDesde ? parseISO(fechaDesde) : null;
+    const hasta = fechaHasta ? parseISO(fechaHasta) : null;
+
     const filtrados = comentarios.filter((comentario) => {
-      const fechaComentario = new Date(comentario.fecha);
-      return fechaComentario >= desde && fechaComentario <= hasta;
+      const fechaComentario = parseISO(comentario.fechaScraping);
+      if (!isValid(fechaComentario)) return false;
+      
+      if (desde && hasta) {
+        return fechaComentario >= desde && fechaComentario <= hasta;
+      } else if (desde) {
+        return fechaComentario >= desde;
+      } else if (hasta) {
+        return fechaComentario <= hasta;
+      }
+      return true;
     });
+
     setComentariosFiltrados(filtrados);
+    setPaginaActual(1);
   };
+
+  const indiceUltimoComentario = paginaActual * comentariosPorPagina;
+  const indicePrimerComentario = indiceUltimoComentario - comentariosPorPagina;
+  const comentariosAMostrar = comentariosFiltrados.slice(indicePrimerComentario, indiceUltimoComentario);
+  const totalPaginas = Math.ceil(comentariosFiltrados.length / comentariosPorPagina);
 
   const eliminarFiltro = () => {
     setFechaDesde("");
     setFechaHasta("");
-    setSelectedDateDesde("");
-    setSelectedDateHasta("");
-    setComentariosFiltrados([]); // Restablecer a todos los comentarios
+    setComentariosFiltrados(comentarios);
+    setPaginaActual(1);
+    setMostrarSelectorFecha(false);
+    setMostrarCalendario(false);
+    setCalendarioTipo(null);
   };
 
-  const toggleCalendarDesde = () => {
-    setIsCalendarOpenDesde(!isCalendarOpenDesde);
-  };
-
-  const toggleCalendarHasta = () => {
-    setIsCalendarOpenHasta(!isCalendarOpenHasta);
-  };
-  // Funciones para manejar la paginación
-  const handlePrevPage = () => {
-    if (paginaActual > 1) {
-      setPaginaActual(paginaActual - 1);
+  const toggleCalendario = (tipo) => {
+    if (calendarioTipo === tipo && mostrarCalendario) {
+      setMostrarCalendario(false);
+      setCalendarioTipo(null);
+    } else {
+      setMostrarCalendario(true);
+      setCalendarioTipo(tipo);
+      setMostrarSelectorFecha(false);
     }
   };
 
-  const handleNextPage = () => {
-    if (paginaActual < totalPaginas) {
-      setPaginaActual(paginaActual + 1);
+  const handleDateSelect = (date) => {
+    const formattedDate = format(date, "yyyy-MM-dd");
+    if (calendarioTipo === 'desde') {
+      setFechaDesde(formattedDate);
+      setMostrarSelectorFecha(true);
+    } else if (calendarioTipo === 'hasta') {
+      setFechaHasta(formattedDate);
     }
+    setMostrarCalendario(false);
+    setCalendarioTipo(null);
+    setMostrarSelectorFecha(true);
   };
 
-  const handlePageClick = (num) => {
-    setPaginaActual(num);
+
+  const handleFechaDesdeChange = (e) => {
+    setFechaDesde(e.target.value);
   };
 
-
-  const handleDateClickDesde = (day) => {
-    const today = new Date();
-    const month = (today.getMonth() + 1).toString().padStart(2, "0"); // Mes actual con ceros a la izquierda
-    const year = today.getFullYear();
-    setSelectedDateDesde(`${day}/${month}/${year}`); // Formato: día/mes/año
-    setFechaDesde(`${year}-${month}-${day}`); // Para la comparación
-    setIsCalendarOpenDesde(false);
-  };
-
-  const handleDateClickHasta = (day) => {
-    const today = new Date();
-    const month = (today.getMonth() + 1).toString().padStart(2, "0"); // Mes actual con ceros a la izquierda
-    const year = today.getFullYear();
-    setSelectedDateHasta(`${day}/${month}/${year}`); // Formato: día/mes/año
-    setFechaHasta(`${year}-${month}-${day}`); // Para la comparación
-    setIsCalendarOpenHasta(false);
-  };
-
-  const renderCalendar = (isDesde) => {
-    const days = [];
-    const today = new Date();
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    for (let i = 1; i <= monthEnd.getDate(); i++) {
-      days.push(i);
-    }
-
-    return (
-      <div className="absolute mt-2 bg-white p-4 rounded shadow-lg z-10 w-64">
-        <div className="text-center font-bold mb-2" >
-          {today.toLocaleString("default", { month: "long" })}{" "}
-          {today.getFullYear()}
-        </div>
-        <div className="grid grid-cols-7 gap-2" >
-          {["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"].map((day, index) => (
-            <div key={index} className="text-gray-500 text-sm">
-              {day}
-            </div>
-          ))}
-          {days.map((day) => (
-            <button
-              key={day}
-              onClick={
-                isDesde
-                  ? () => handleDateClickDesde(day)
-                  : () => handleDateClickHasta(day)
-              }
-              className={`w-full p-2 rounded-full hover:bg-gray-200 text-gray-800`}
-            >
-              {day}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
+  const handleFechaHastaChange = (e) => {
+    setFechaHasta(e.target.value);
   };
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (
-        isCalendarOpenDesde &&
-        calendarDesdeRef.current &&
-        !calendarDesdeRef.current.contains(event.target)
-      ) {
-        setIsCalendarOpenDesde(false);
-      }
-      if (
-        isCalendarOpenHasta &&
-        calendarHastaRef.current &&
-        !calendarHastaRef.current.contains(event.target)
-      ) {
-        setIsCalendarOpenHasta(false);
+      if (fechaButtonRef.current && !fechaButtonRef.current.contains(event.target) &&
+          calendarioRef.current && !calendarioRef.current.contains(event.target)) {
+        setMostrarSelectorFecha(false);
+        setMostrarCalendario(false);
+        setCalendarioTipo(null);
       }
     }
 
@@ -207,10 +128,11 @@ export default function ComentariosPendientes() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isCalendarOpenDesde, isCalendarOpenHasta]);
+  }, []);
 
-  const toggleBarraClasificacion = () => {
-    setMostrarBarraClasificacion(!mostrarBarraClasificacion);
+  const clasificarComentario = (comentario) => {
+    setComentarioSeleccionado(comentario);
+    setBarraClasificacionVisible(true);
   };
 
   return (
@@ -220,97 +142,95 @@ export default function ComentariosPendientes() {
           Comentarios pendientes
         </h2>
 
-        {/* Contenedor principal que contiene el botón Fecha y el conjunto de inputs y botón Descargar */}
         <div className="flex justify-between items-center mb-4">
-          {/* Botón Fecha alineado a la izquierda */}
-          <button
-            onClick={() => setMostrarSelectorFecha(!mostrarSelectorFecha)}
-            className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm" 
-          >
-            <PlusIcon className="w-5 h-5 text-gray-500" />
-            <span>Fecha</span>
-          </button>
+          <div className="relative">
+            <button
+              ref={fechaButtonRef}
+              onClick={() => setMostrarSelectorFecha(!mostrarSelectorFecha)}
+              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm" 
+            >
+              <PlusIcon className="w-5 h-5 text-gray-500" />
+              <span>Fecha</span>
+            </button>
 
-          {/* Inputs de fecha y botón Descargar alineados a la derecha */}
+            {mostrarSelectorFecha && !mostrarCalendario && (
+              <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                <div className="py-1">
+                  <button
+                    onClick={() => toggleCalendario('desde')}
+                    className="w-full text-left py-2 px-4 text-gray-800 hover:bg-gray-200"
+                  >
+                    Desde {fechaDesde && (
+                      <span className="ml-2 mx-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full">
+                        {fechaDesde}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => toggleCalendario('hasta')}
+                    className="w-full text-left py-2 px-4 text-gray-800 hover:bg-gray-200"
+                  >
+                    Hasta {fechaHasta && (
+                      <span className="ml-2 mx-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full">
+                        {fechaHasta}
+                      </span>
+                    )}
+                  </button>
+                  <div className="border-t border-gray-200">
+                  <button onClick={eliminarFiltro} className="w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100">
+                    Limpiar
+                  </button>
+                </div>
+                </div>
+              </div>
+            )}
+
+            {mostrarCalendario && (
+              <div ref={calendarioRef} className="absolute left-0 mt-2 z-20">
+                <Calendario onDateSelect={handleDateSelect} />
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center space-x-2">
             <input
               type="date"
               value={fechaDesde}
-              onChange={(e) => setFechaDesde(e.target.value)}
+              onChange={handleFechaDesdeChange}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
             <span>-</span>
             <input
               type="date"
               value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
+              onChange={handleFechaHastaChange}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
             <button className="bg-black text-white px-4 py-2 rounded-md">
               Descargar
             </button>
           </div>
-
-          {mostrarSelectorFecha && (
-            <div className="absolute mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-10" style={{ marginTop: '220px' }}> {/*Aqui es donde pones el margen para que no tape la fecha*/}
-              <div className="rounded-md bg-white shadow-xs">
-                <div className="py-1">
-                  <button
-                    onClick={toggleCalendarDesde}
-                    className="w-full text-left py-2 px-4 text-gray-800 hover:bg-gray-200"
-                  >
-                    Desde {selectedDateDesde && `(${selectedDateDesde})`}
-                  </button>
-                  {isCalendarOpenDesde && (
-                    <div ref={calendarDesdeRef}>{renderCalendar(true)}</div>
-                  )}
-                  <button
-                    onClick={toggleCalendarHasta}
-                    className="w-full text-left py-2 px-4 text-gray-800 hover:bg-gray-200"
-                  >
-                    Hasta {selectedDateHasta && `(${selectedDateHasta})`}
-                  </button>
-                  {isCalendarOpenHasta && (
-                    <div ref={calendarHastaRef}>{renderCalendar(false)}</div>
-                  )}
-                </div>
-                <button
-                  onClick={filtrarComentarios}
-                  className="w-full text-left py-2 px-4 text-gray-800 hover:bg-gray-200"
-                >
-                  Filtrar
-                </button>
-                <button
-                  onClick={eliminarFiltro}
-                  className="w-full text-left py-2 px-4 text-red-600 hover:bg-red-100"
-                >
-                  Eliminar Filtro
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
-        <div className="mt-8 bg-white shadow-md p-6 rounded-lg">
+        <div className="min-w-full bg-white shadow-md rounded-lg border-collapse">
           <table className="min-w-full">
             <thead>
               <tr>
-                <th className="p-2 text-left">Comentario</th>
-                <th className="p-2 text-left">Sitio web</th>
-                <th className="p-2 text-left">Fecha de clasificación</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Comentario</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Sitio web</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Fecha de clasificación</th>
                 <th className="p-2 text-left"></th>
               </tr>
             </thead>
             <tbody>
               {comentariosAMostrar.map((comentario, index) => (
                 <tr key={index} className="border-b">
-                  <td className="p-2">
+                  <td className="px-6 py-4">
                     {truncateComentario(comentario.comentario)}
                   </td>
-                  {/*TODO: Cambiar la consulta de backend para que envie el nombre del sitio en la response*/}
-                  <td className="p-2">{"emol.com"}</td>
+                  <td className="p-2">{comentario.sourceUrl}</td>
                   <td className="p-2">
-                    {format(parseISO(comentario.fechaScraping), "dd/MM/yyyy")}
+                    {format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")}
                   </td>
                   <td className="p-2">
                     <button
@@ -324,48 +244,14 @@ export default function ComentariosPendientes() {
               ))}
             </tbody>
           </table>
-
-          {/* Controles de Paginación */}
-        <div className="flex items-center justify-between mt-4">
-          <button
-            onClick={handlePrevPage}
-            disabled={paginaActual === 1}
-            className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${paginaActual === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
-              <ChevronLeftIcon className="w-4 h-4" /> {/* Ícono de Heroicons */}
-            </span>
-            <span>Anterior</span>
-          </button>
-          
-          <div className="flex space-x-2">
-            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((num) => (
-              <button
-                key={num}
-                onClick={() => handlePageClick(num)}
-                className={`px-4 py-2 rounded-full ${num === paginaActual ? 'bg-gray-300' : 'bg-gray-200 hover:bg-gray-300'}`}
-              >
-                {num}
-              </button>
-            ))}
-          </div>
-          
-          <button
-            onClick={handleNextPage}
-            disabled={paginaActual === totalPaginas}
-            className={`flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-100 ${paginaActual === totalPaginas ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <span>Siguiente</span>
-            <span className="flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full text-gray-500">
-              <ChevronRightIcon className="w-4 h-4" /> {/* Ícono de Heroicons */}
-            </span>
-          </button>
         </div>
-
-        </div>
+        <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onPageChange={setPaginaActual}
+        />
       </div>
 
-      {/* Barra lateral para clasificación */}
       {barraClasificacionVisible && (
         <div className="fixed right-[0px] top-0 h-screen w-[430px] bg-white shadow-lg p-6 opacity-100 border-l border-l-gray-300 overflow-y-auto">
           <div className="flex justify-between items-start">
@@ -376,14 +262,14 @@ export default function ComentariosPendientes() {
               onClick={() => setBarraClasificacionVisible(false)}
               className="text-gray-500 hover:text-gray-700 text-lg"
             >
-              &#10005; {/* Este es el símbolo de la X */}
+              &#10005;
             </button>
           </div>
           <br />
           <p>
             <strong>Comentario:</strong>
           </p>
-          <p>{comentarioSeleccionado?.texto}</p>
+          <p>{comentarioSeleccionado?.comentario}</p>
 
           <div className="mt-4">
             <label className="block mt-2">
@@ -412,8 +298,7 @@ export default function ComentariosPendientes() {
               />
             </label>
             <p className="text-gray-500 text-sm mt-1">
-              Tiempo relacionado con la información (antigüedad). Valor de 0 a
-              1.
+              Tiempo relacionado con la información (antigüedad). Valor de 0 a 1.
             </p>
 
             <label className="block mt-4">
@@ -470,8 +355,7 @@ export default function ComentariosPendientes() {
               />
             </label>
             <p className="text-gray-500 text-sm mt-1">
-              Origen de la información, si es legal o cuestionable. Valor de
-              -0.75 a 0.
+              Origen de la información, si es legal o cuestionable. Valor de -0.75 a 0.
             </p>
 
             <label className="block mt-4">
@@ -498,7 +382,6 @@ export default function ComentariosPendientes() {
             </button>
             <button
               className="bg-blue-600 text-white py-2 px-4 rounded w-[48%]"
-              /*onClick={ Aquí puedes agregar la funcionalidad para completar }*/
             >
               Completar
             </button>
