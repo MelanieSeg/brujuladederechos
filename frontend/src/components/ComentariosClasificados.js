@@ -96,6 +96,9 @@ export default function ComentariosClasificados() {
     };
   }, [isCalendarOpen, isDropdownOpen]);
 
+  const toggleDropdown = () => {
+    setDropdownOpen(!isDropdownOpen);
+  };
 
   const handleGravedadClick = () => {
     setShowDetailedColumns(!showDetailedColumns);
@@ -144,12 +147,11 @@ export default function ComentariosClasificados() {
 
   const renderCalendar = () => {
     return (
-      <div ref={calendarRef} className="absolute">
+      <div ref={calendarRef} className="absolute top-full left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
         <Calendario onDateSelect={handleDateSelect} />
       </div>
     );
   };
-  
 
   const renderDropdown = () => {
     return (
@@ -305,63 +307,61 @@ export default function ComentariosClasificados() {
       </h2>
 
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4 md:flex-row flex-col">
+        <div className="flex space-x-4 md:flex-row flex-col">
           {/* Botón para el calendario */}
-        <button
-          ref={calendarButtonRef}
-          onClick={toggleCalendar}
-          className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm md:my-4 my-2 relative"
-        >
-          <PlusIcon className="w-5 h-5 text-gray-500" />
-          <span>
-            {selectedDate ? (
-              <span>
-                Fecha: <span className="ml-2 mx-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full">
-                  {format(new Date(selectedDate), 'dd/MM/yyyy')}
-                </span>
-              </span>
-            ) : (
-              'Fecha'
-            )}
-          </span>
-          {isCalendarOpen && (
-            <div
-              ref={calendarRef}
-              className="absolute top-full left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+          <div className="relative">
+            <button
+              ref={calendarButtonRef}
+              onClick={toggleCalendar}
+              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
             >
-              <Calendario onDateSelect={handleDateSelect} />
-            </div>
-          )}
-        </button>
-
+              <PlusIcon className="w-5 h-5 text-gray-500" />
+              <span>
+                {selectedDate ? (
+                  <span>
+                    Fecha: <span className="ml-2 mx-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full">
+                      {format(new Date(selectedDate), 'dd/MM/yyyy')}
+                    </span>
+                  </span>
+                ) : (
+                  'Fecha'
+                )}
+              </span>
+            </button>
+            {isCalendarOpen && renderCalendar()}
+          </div>
 
           {/* Botón de Gravedad con Dropdown y funcionalidad de mostrar columnas detalladas */}
           <div className="relative">
             <button
               ref={gravedadButtonRef}
               onClick={handleGravedadClick}
-              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm md:my-4 my-2"
+              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
             >
               <PlusIcon className="w-5 h-5 text-gray-500" />
               <span>Gravedad</span>
             </button>
             {isDropdownOpen && renderDropdown()}
           </div>
-          
+
+          {/* Botón Quitar Filtros */}
           <button
-          className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm md:my-4 my-2"
-          onClick={() => {
-            setSelectedDate(null);
-            setSelectedGravedad({
-              Baja: true,
-              Moderada: true,
-              Alta: true,
-            });
-          }}
-        >
-          Quitar filtros
-          <XMarkIcon className="w-5 h-5 stroke-2 text-gray-500 mx-1" />
-        </button>
+            className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
+            onClick={() => {
+              setSelectedDate(null);
+              setSelectedGravedad({
+                Baja: true,
+                Moderada: true,
+                Alta: true,
+              });
+              setStartDate(null);
+              setEndDate(null);
+              setPaginaActual(1);
+            }}
+          >
+            Quitar filtros
+            <XMarkIcon className="w-5 h-5 stroke-2 text-gray-500 mx-1" />
+          </button>
         </div>
 
         <div className="flex items-center space-x-4">
