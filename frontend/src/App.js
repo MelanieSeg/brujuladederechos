@@ -9,22 +9,27 @@ import HistorialDeCambios from './components/HistorialDeCambios';
 import ComentariosRecolectados from './components/ComentariosRecolectados';
 
 function App() {
-  // Estado para manejar si la barra de notificaciones está visible o no
   const [mostrarNotificaciones, setMostrarNotificaciones] = React.useState(false);
 
-  // Función para alternar la visibilidad de las notificaciones
   const alternarNotificaciones = () => {
     setMostrarNotificaciones(!mostrarNotificaciones);
   };
 
   return (
     <Router>
-      <div className="relative flex bg-gray-50">
-        {/* Barra lateral que ahora usa Link en lugar de cambiar el estado */}
-        <BarraLateral alternarNotificaciones={alternarNotificaciones} />
+      <div className="flex bg-gray-50 min-h-screen">
+        {/* Barra lateral fija */}
+        <div className="fixed top-0 left-0 z-40 w-64 md:block hidden h-screen">
+          <BarraLateral alternarNotificaciones={alternarNotificaciones} />
+        </div>
 
-        <div className="flex-1">
-          {/* Mostramos la barra de notificaciones si mostrarNotificaciones es true */}
+        {/* Barra lateral móvil */}
+        <div className="md:hidden">
+          <BarraLateral alternarNotificaciones={alternarNotificaciones} />
+        </div>
+
+        {/* Contenido principal con margen ajustado */}
+        <div className="flex-1 md:ml-64">
           {mostrarNotificaciones && <BarraDeNotificaciones />}
 
           {/* Configuramos las rutas para las diferentes vistas */}
@@ -35,7 +40,6 @@ function App() {
             <Route path="/comentarios-clasificados" element={<ComentariosClasificados />} />
             <Route path="/historial-de-cambios" element={<HistorialDeCambios />} />
             <Route path="/configuracion" element={<div className="p-8">Contenido de Configuración</div>} />
-            {/* Ruta por defecto */}
             <Route path="/" element={<Dashboard />} />
           </Routes>
         </div>
@@ -45,3 +49,4 @@ function App() {
 }
 
 export default App;
+
