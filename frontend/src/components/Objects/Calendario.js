@@ -59,7 +59,7 @@ function Calendario({ onDateSelect }) {
     };
 
     return (
-        <div className="p-2 bg-white rounded-lg shadow-xl w-48"> {/* Reducimos el padding y el ancho del contenedor */}
+        <div className="p-2 rounded-lg shadow-xl bg-white w-48 z-10"> {/* Reducimos el padding y el ancho del contenedor */}
             <div className="flex justify-between items-center mb-2">
                 <button onClick={() => setCurrentDate(addMonths(currentDate, -1))} className="p-1 bg-gray-200 hover:bg-gray-300 rounded-md">
                     <ChevronLeftIcon className="w-4 h-4" /> {/* Reducimos el tamaño del ícono */}

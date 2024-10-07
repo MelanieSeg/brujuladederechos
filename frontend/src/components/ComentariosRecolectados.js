@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import {PlusIcon} from "@heroicons/react/20/solid";
-import { TrashIcon} from '@heroicons/react/24/outline';
+import {TrashIcon} from '@heroicons/react/24/outline';
 import api from "../services/axios";
 import { format, parseISO } from "date-fns";
 import { truncateComentario } from "../utils/truncarComentario";
 import Calendario from "./Objects/Calendario";
 import Paginacion from "./Objects/Paginacion";
+
 
 export default function ComentariosRecolectados() {
   const [defaultComentarios] = useState([
@@ -53,7 +54,7 @@ export default function ComentariosRecolectados() {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [selectedGravedad, setSelectedGravedad] = useState({
+  const [selectedEstado, setSelectedEstado] = useState({
     PENDIENTE_CLASIFICACION: true,
     CLASIFICADO: true,
   });
@@ -128,17 +129,17 @@ export default function ComentariosRecolectados() {
     setDropdownOpen(!isDropdownOpen);
   };
 
-  const handleGravedadChange = (gravedad) => {
-    setSelectedGravedad((prevState) => ({
+  const handleEstadoChange = (estado) => {
+    setSelectedEstado((prevState) => ({
       ...prevState,
-      [gravedad]: !prevState[gravedad],
+      [estado]: !prevState[estado],
     }));
   };
 
   const limpiarSeleccion = () => {
-    setSelectedGravedad({
-      Pendiente: true,
-      Clasificado: true,
+    setSelectedEstado({
+      PENDIENTE_CLASIFICACION: false,
+      CLASIFICADO: false,
     });
   };
 
@@ -186,21 +187,16 @@ export default function ComentariosRecolectados() {
 
 
   const renderDropdown = () => {
-    return (
-      <div
-        ref={dropdownRef}
-        className="absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
-      >
+    return isDropdownOpen && (
+      <div ref={dropdownRef} className="absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
         <div className="py-1">
-          <div className="px-4 py-2 text-sm text-gray-700 font-semibold">
-            Prioridad
-          </div>
+          <div className="px-4 py-2 text-sm text-gray-700 font-semibold">Prioridad</div>
           <div className="px-4 py-2">
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={selectedGravedad.Pendiente}
-                onChange={() => handleGravedadChange("Pendiente")}
+                checked={selectedEstado.PENDIENTE_CLASIFICACION}
+                onChange={() => handleEstadoChange("PENDIENTE_CLASIFICACION")}
                 className="form-checkbox text-gray-500"
               />
               <span className="text-gray-700">Pendiente</span>
@@ -210,18 +206,15 @@ export default function ComentariosRecolectados() {
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={selectedGravedad.Clasificado}
-                onChange={() => handleGravedadChange("Clasificado")}
+                checked={selectedEstado.CLASIFICADO}
+                onChange={() => handleEstadoChange("CLASIFICADO")}
                 className="form-checkbox text-gray-500"
               />
               <span className="text-gray-700">Clasificado</span>
             </label>
           </div>
           <div className="border-t border-gray-200">
-            <button
-              onClick={limpiarSeleccion}
-              className="w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100"
-            >
+            <button onClick={limpiarSeleccion} className="w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100">
               Limpiar
             </button>
           </div>
@@ -231,13 +224,11 @@ export default function ComentariosRecolectados() {
   };
 
   const filteredComments = comentarios.filter((comentario) => {
-    const gravedadMatch = selectedGravedad[comentario.estado]; // Usar "estado" en lugar de "gravedad"
-    
+    const estadoMatch = selectedEstado[comentario.estado]; // Ahora debería coincidir correctamente
     const dateMatch =
       (!fechaDesde || format(parseISO(comentario.fechaScraping), "yyyy-MM-dd") >= fechaDesde) &&
       (!fechaHasta || format(parseISO(comentario.fechaScraping), "yyyy-MM-dd") <= fechaHasta);
-      
-    return gravedadMatch && dateMatch;
+    return estadoMatch && dateMatch;
   });
   
 
@@ -277,22 +268,34 @@ export default function ComentariosRecolectados() {
                     className="block w-full text-left px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
                     onClick={() => handleDateOptionClick("desde")}
                   >
-                    Desde
+                    Desde 
+                    {fechaDesde && (
+                      <span className="ml-2 mx-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full">
+                        {fechaDesde}
+                      </span>
+                    )}
                   </button>
                   <button
                     className="block w-full text-left px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
                     onClick={() => handleDateOptionClick("hasta")}
                   >
-                    Hasta
+                    Hasta {fechaHasta && (
+                      <span className="ml-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full ">
+                        {fechaHasta}
+                      </span>
+                    )}
                   </button>
-                  <button
-                    className="block w-full text-left px-4 py-2 text-base text-red-600 hover:bg-gray-100"
-                    onClick={() => handleDateOptionClick("eliminar")}
-                  >
-                    Eliminar Filtro
-                  </button>
+                  <div className="border-t border-gray-200">
+                    <button
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100"
+                      onClick={() => handleDateOptionClick("eliminar")}
+                    >
+                      Limpiar
+                    </button>
+                  </div>
                 </div>
               )}
+
               {isCalendarOpen && (
                 <div className="absolute left-0 mt-2 calendario-container z-50">
                   <Calendario onDateSelect={handleDateClick} />
@@ -300,7 +303,7 @@ export default function ComentariosRecolectados() {
               )}
             </div>
 
-            {/* Gravedad button with dropdown */}
+            {/* Estado button with dropdown */}
             <div className="relative">
               <button
                 ref={gravedadButtonRef}
@@ -308,7 +311,7 @@ export default function ComentariosRecolectados() {
                 className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
               >
                 <PlusIcon className="w-5 h-5 text-gray-500" />
-                <span>Gravedad</span>
+                <span>Estado</span>
               </button>
               {isDropdownOpen && renderDropdown()}
             </div>
@@ -318,14 +321,14 @@ export default function ComentariosRecolectados() {
           <div className="flex items-center space-x-4">
             <input
               type="date"
-              value={fechaDesde}
+              value={null}
               onChange={(e) => setFechaDesde(e.target.value)}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
             <span>-</span>
             <input
               type="date"
-              value={fechaHasta}
+              value={null}
               onChange={(e) => setFechaHasta(e.target.value)}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
@@ -360,7 +363,7 @@ export default function ComentariosRecolectados() {
                 <td className="px-12 py-4">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColor(
-                      comentario.gravedad
+                      comentario.estado
                     )}`}
                   >
                     {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
