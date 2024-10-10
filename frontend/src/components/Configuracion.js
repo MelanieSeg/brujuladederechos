@@ -1,13 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Configuracion.css';
 
 const Configuracion = () => {
-  const [webScrapingActivo, setWebScrapingActivo] = useState(false); // Estado para manejar si el web scraping está activado
-  const [modoOscuro, setModoOscuro] = useState(false); // Estado para manejar el modo oscuro
+  // Estado para manejar si el web scraping está activado
+  const [webScrapingActivo, setWebScrapingActivo] = useState(false);
+  // Estado para manejar la frecuencia seleccionada
+  const [frecuenciaScraping, setFrecuenciaScraping] = useState('');
+  // Estado para manejar el modo oscuro
+  const [modoOscuro, setModoOscuro] = useState(false);
+
+  // Cargar la selección guardada en localStorage al cargar la página
+  useEffect(() => {
+    const frecuenciaGuardada = localStorage.getItem('frecuenciaScraping');
+    if (frecuenciaGuardada) {
+      setFrecuenciaScraping(frecuenciaGuardada);
+    }
+  }, []);
 
   // Función para alternar el estado de web scraping
   const alternarWebScraping = () => {
-    setWebScrapingActivo(!webScrapingActivo);
+    if (!frecuenciaScraping) {
+      alert('Por favor, selecciona una frecuencia para el web scraping.');
+    } else {
+      setWebScrapingActivo(!webScrapingActivo);
+    }
+  };
+
+  // Función para manejar el cambio de la frecuencia seleccionada
+  const manejarCambioFrecuencia = (event) => {
+    const nuevaFrecuencia = event.target.value;
+    setFrecuenciaScraping(nuevaFrecuencia);
+    // Guardar la frecuencia seleccionada en localStorage
+    localStorage.setItem('frecuenciaScraping', nuevaFrecuencia);
   };
 
   // Función para alternar el modo oscuro y claro
@@ -23,16 +47,44 @@ const Configuracion = () => {
         <h2>Ajuste de Frecuencia de Web Scraping</h2>
         <div className="radio-group">
           <label>
-            <input type="radio" name="scrapingFrequency" value="1hr" /> Cada 1 hora
+            <input
+              type="radio"
+              name="scrapingFrequency"
+              value="1hr"
+              checked={frecuenciaScraping === '1hr'}
+              onChange={manejarCambioFrecuencia}
+            /> 
+            Cada 1 hora
           </label>
           <label>
-            <input type="radio" name="scrapingFrequency" value="6hr" /> Cada 6 horas
+            <input
+              type="radio"
+              name="scrapingFrequency"
+              value="6hr"
+              checked={frecuenciaScraping === '6hr'}
+              onChange={manejarCambioFrecuencia}
+            /> 
+            Cada 6 horas
           </label>
           <label>
-            <input type="radio" name="scrapingFrequency" value="12hr" /> Cada 12 horas
+            <input
+              type="radio"
+              name="scrapingFrequency"
+              value="12hr"
+              checked={frecuenciaScraping === '12hr'}
+              onChange={manejarCambioFrecuencia}
+            /> 
+            Cada 12 horas
           </label>
           <label>
-            <input type="radio" name="scrapingFrequency" value="24hr" /> Cada 24 horas
+            <input
+              type="radio"
+              name="scrapingFrequency"
+              value="24hr"
+              checked={frecuenciaScraping === '24hr'}
+              onChange={manejarCambioFrecuencia}
+            /> 
+            Cada 24 horas
           </label>
         </div>
 
@@ -49,7 +101,7 @@ const Configuracion = () => {
 
       {/* Sección: Cambio de Modo */}
       <div className="section">
-        <h2>Cambio de Modo</h2>
+        <h2>Cambio de Tema</h2>
         <div className="button-group">
           <button onClick={alternarModo} className="button">
             {modoOscuro ? 'Activar Modo Claro' : 'Activar Modo Oscuro'}
