@@ -11,24 +11,22 @@ Es buena practica crear un entorno virual y ejecutarlo cada vez que se use.
 
 pip install virtualenv 
 ```
+
 **crear el entorno virtual**
+Para crear un entorno virtual llamado myenv, ejecuta el siguiente comando en el directorio del proyecto:
 
 ```bash
 virtualenv myenv
 ```
+Esto generará una carpeta myenv en el directorio actual.
 
-Con esto se va a generar una carpeta `myenv` en el directorio actual
 
-## Activar el entorno virtual
+## Activar el entorno virtual(Windows)
 
 ```bash
 ./myenv/Scripts/activate.ps1
 ```
-tambien si no les sale la carpeta /Scripts entonces prueben con : 
 
-```bash
-./myenv/bin/activate
-```
 
 Al activar se ver en la terminal un `(myenv)` en la linea de comandos lo indica que estamos dentro del entorno virtual
 
@@ -55,7 +53,7 @@ python app.py
 ```
 
 ## Probar el scarper
-si quieren probar solamente el scraper puede diriguirse desde `server`  a :
+si quieren probar solamente el scraper tienes que navegar desde `server`  a :
 
 ```bash
 cd .\comentarios_emol\spiders\
@@ -74,12 +72,12 @@ ejemplo :
 scrapy runspider emol_news_spider.py -o comentarios_test32.json
 ```
 
-al ejecutarlo van a ver que en esa misma carpeta se creo un archivo tipo json con el nombre ingresado donde puede ven todos los comentarios scrapeados.
+Al ejecutarlo, verás que en la misma carpeta se crea un archivo JSON con el nombre que especificaste. En ese archivo se almacenarán todos los comentarios que el scraper haya recolectado.
 
 
 
-## Desactivar el entorno virual
-Cuando terminemos de usar el server y queremos salir del entorno virutal tenemos que ingresar lo siguiente ne la terminal
+## Desactivar el entorno virtual
+Cuando terminemos de usar el server y queremos salir del entorno virutal tenemos que ingresar lo siguiente en la terminal
 
 ```bash
 deactivate

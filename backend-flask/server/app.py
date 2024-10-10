@@ -101,7 +101,7 @@ def send_comments_to_rabbitmq():
                 }
                 print("Comment adjusted:", comment_adjusted)
                 comments.append(comment_adjusted)
-        comments_to_send = comments[:500]
+        comments_to_send = comments[:600]
 
         publish_comments_to_rabbitmq(comments_to_send)
 
