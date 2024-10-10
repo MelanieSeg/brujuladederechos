@@ -12,6 +12,7 @@ class CommentsRouter {
     const router = express.Router();
 
     router.route("/get-all").get(this.CommentsController.getAllComments);
+    router.route("/get-all-comments-scraped").get(this.CommentsController.getAllComments);
 
     return router;
   }

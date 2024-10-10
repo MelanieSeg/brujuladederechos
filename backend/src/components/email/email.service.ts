@@ -1,6 +1,6 @@
 import { Transporter } from "nodemailer";
 import { transport } from "../../config/mailtrap";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, TipoToken } from "@prisma/client";
 import { generateRandomToken } from "../../utils";
 
 interface sendEmailInterface {
@@ -57,8 +57,11 @@ class EmailService {
     const generatedToken = generateRandomToken();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
 
-    const tokenRecord = await this.prisma.token.upsert({
-      where: { userId: userId },
+    const tokenRecord = await this.prisma.userToken.upsert({
+      where: { userId_tipo_unique:{
+        userId:userId,
+        tipo:TipoToken.VERIFICATION
+      }},
       update: {
         token: generatedToken,
         expireAt: expiresAt,
@@ -67,6 +70,7 @@ class EmailService {
         token: generatedToken,
         userId: userId,
         expireAt: expiresAt,
+        tipo:TipoToken.VERIFICATION
       },
     });
 
@@ -78,8 +82,11 @@ class EmailService {
   createRestartPasswordToken = async (userId: string): Promise<string> => {
     const generatedToken = generateRandomToken();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
-    const tokenRecord = await this.prisma.resetPassowrdToken.upsert({
-      where: { userId: userId },
+    const tokenRecord = await this.prisma.userToken.upsert({
+      where: { userId_tipo_unique:{
+        userId:userId,
+        tipo:TipoToken.RESET_PASSWORD
+      } },
       update: {
         token: generatedToken,
         expireAt: expiresAt,
@@ -87,6 +94,7 @@ class EmailService {
       create: {
         token: generatedToken,
         userId: userId,
+        tipo:TipoToken.RESET_PASSWORD,
         expireAt: expiresAt,
       },
     });

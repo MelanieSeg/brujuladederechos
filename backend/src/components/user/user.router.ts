@@ -13,7 +13,7 @@ class UserRouter {
   get router() {
     const router = express.Router();
 
-    router.route("/").post(this.UserController.createUser);
+    router.route("/create-user").post(this.UserController.createUser);
     router.route("/me").get(this.UserController.getUserById);
     router
       .route("/confirmar-usuario")

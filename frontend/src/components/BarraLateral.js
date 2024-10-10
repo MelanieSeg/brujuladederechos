@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { BellIcon, Bars3Icon } from '@heroicons/react/24/outline'; // Campanita y hamburguesa
-import { Link } from 'react-router-dom'; // Usar Link para las rutas
+import React, { useState, useEffect } from 'react';
+import { BellIcon, Bars3Icon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { Link, useLocation } from 'react-router-dom';
 
-// Componente de la barra lateral (Sidebar)
 export default function BarraLateral({ alternarNotificaciones }) {
-  // Estado para controlar la visibilidad de la barra lateral
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [user, setUser] = useState(null);  // Estado para almacenar los datos del usuario
+  const location = useLocation();
 
-  // Menú de opciones en la barra lateral
   const itemsDelMenu = [
     { nombre: 'Resumen', ruta: '/resumen' },
     { nombre: 'Comentarios recolectados', ruta: '/comentarios-recolectados' },
@@ -17,50 +16,59 @@ export default function BarraLateral({ alternarNotificaciones }) {
     { nombre: 'Configuración', ruta: '/configuracion' },
   ];
 
-  // Función para alternar la visibilidad de la barra lateral
   const toggleSidebar = () => {
     setSidebarVisible(!sidebarVisible);
   };
 
+  useEffect(() => {
+    // Hacer una solicitud para obtener los datos del usuario
+    fetch('/api/users/me', {  // Asegúrate de que este endpoint exista en tu backend
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,  // Enviar el token de autenticación
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setUser(data);  // Guardar los datos del usuario en el estado
+      })
+      .catch((error) => console.error('Error al obtener los datos del usuario:', error));
+  }, []);
+
   return (
     <div>
-      {/* Icono de hamburguesa para pantallas pequeñas */}
-      <div className="md:hidden p-4">
-        <Bars3Icon
-          className="h-8 w-8 text-gray-600 cursor-pointer"
-          onClick={toggleSidebar}
-        />
+      {/* Icono de hamburguesa visible solo en pantallas pequeñas */}
+      <div className="md:hidden p-4 ml-4">
+        <Bars3Icon className="h-8 w-8 text-gray-600 cursor-pointer" onClick={toggleSidebar} />
       </div>
 
       {/* Barra lateral */}
       <div
-        className={`bg-gray-50 h-screen p-5 w-64 shadow-lg flex flex-col justify-between absolute z-10 transition-transform duration-300 transform ${
+        className={`bg-gray-50 h-screen p-5 w-64 shadow-lg flex flex-col justify-between fixed z-10 transform transition-transform duration-300 md:relative ${
           sidebarVisible ? 'translate-x-0' : '-translate-x-full'
-        } md:relative md:translate-x-0`}
+        } md:translate-x-0`}
       >
-        <div>
-          {/* Ocultar título y campanita en pantallas pequeñas */}
+        <div className="flex flex-col flex-grow">
+          {/* Encabezado y campana */}
           <div className="hidden md:flex items-center justify-between mb-10">
             <h1 className="text-xl font-semibold">Brújula de Derechos Digitales</h1>
-            {/* Icono de campana para alternar las notificaciones */}
-            <BellIcon
-              className="h-6 w-6 text-gray-600 cursor-pointer"
-              onClick={alternarNotificaciones}
-            />
+            <BellIcon className="h-6 w-6 text-gray-600 cursor-pointer" onClick={alternarNotificaciones} />
           </div>
 
-          {/* Lista de opciones en la barra lateral */}
+          {/* Menú */}
           <ul>
             {itemsDelMenu.map((item) => (
               <li
                 key={item.nombre}
-                className="mb-4 font-semibold p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+                className={`mb-4 font-semibold p-2 rounded-lg ${
+                  location.pathname === item.ruta ? 'bg-gray-300 text-black' : 'text-gray-600 hover:bg-gray-100'
+                }`}
               >
                 <Link
                   to={item.ruta}
                   className="block"
                   onClick={() => {
-                    if (window.innerWidth < 768) toggleSidebar(); // Cerrar el sidebar en pantallas pequeñas
+                    if (window.innerWidth < 768) toggleSidebar();  // Cerrar el sidebar en pantallas pequeñas
                   }}
                 >
                   {item.nombre}
@@ -68,6 +76,23 @@ export default function BarraLateral({ alternarNotificaciones }) {
               </li>
             ))}
           </ul>
+
+          {/* Sección de foto de perfil y cerrar sesión */}
+          <div className="mt-auto p-4 border-t border-gray-200 flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <>
+                  <img src={user.profilePicture || "https://via.placeholder.com/40"} alt="Perfil" className="w-10 h-10 rounded-full" />
+                  <span className="text-gray-800 font-medium">{user.name}</span>
+                </>
+              ) : (
+                <span>Cargando usuario...</span>
+              )}
+            </div>
+            <button className="text-red-600 hover:text-red-800">
+              <ArrowRightOnRectangleIcon className="h-6 w-6" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

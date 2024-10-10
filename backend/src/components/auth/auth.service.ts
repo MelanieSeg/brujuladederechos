@@ -1,9 +1,14 @@
-import { PrismaClient, User } from "@prisma/client";
+import { PrismaClient, TipoToken, User } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 import * as jose from "jose";
 import dotenv from "dotenv";
 import { isValid } from "zod";
+
+
+//TODO: manejar mejor la crear de un new Prisma Client
+
+
 
 dotenv.config();
 
@@ -42,6 +47,8 @@ class AuthService {
       };
     }
 
+    await this.deleteRefreshTokens(user.id)
+
     const jwt = await new jose.SignJWT({
       userId: user.id,
       email: user.email,
@@ -71,11 +78,12 @@ class AuthService {
     const expireAt = new Date();
     expireAt.setDate(expireAt.getDate() + REFRESH_EXP_DAYS);
 
-    await this.prisma.refreshToken.create({
+    await this.prisma.userToken.create({
       data: {
         token: refreshToken,
         userId: userId,
         expireAt: expireAt,
+        tipo:TipoToken.REFRESH
       },
     });
 
@@ -103,26 +111,25 @@ class AuthService {
         };
       }
 
-      const existTokenInDB = await this.prisma.refreshToken.findUnique({
+      const existTokenInDB = await this.prisma.userToken.findUnique({
         where: {
           token: refreshToken,
         },
       });
 
-      if (!existTokenInDB) {
+      if (!existTokenInDB || existTokenInDB.tipo !== TipoToken.REFRESH) {
         return { isValid: false, payload: null, msg: "RefreshToken no valido" };
       }
 
-      // Verificar si el refreshToken esta expirado o no
       if (existTokenInDB.expireAt < new Date()) {
-        await this.prisma.refreshToken.delete({
+        await this.prisma.userToken.delete({
           where: {
             token: refreshToken,
           },
         });
+        return { isValid: false, payload: null, msg: "RefreshToken ha expirado" };
       }
 
-      //Generar un nuevo accessToken
       const newAccessToken = await new jose.SignJWT({
         userId: user.id,
         email: user?.email,
@@ -143,9 +150,10 @@ class AuthService {
   };
 
   deleteRefreshTokens = async (userId: string) => {
-    await this.prisma.refreshToken.deleteMany({
+    await this.prisma.userToken.deleteMany({
       where: {
         userId: userId,
+        tipo:TipoToken.REFRESH
       },
     });
   };
@@ -155,7 +163,7 @@ class AuthService {
   };
 
   cleanExpiredTokens = async () => {
-    await this.prisma.refreshToken.deleteMany({
+    await this.prisma.userToken.deleteMany({
       where: {
         expireAt: {
           lt: new Date(),
@@ -184,13 +192,13 @@ class AuthService {
         REFRESH_SECRET,
       );
 
-      const validateExistToken = await this.prisma.refreshToken.findUnique({
+      const validateExistToken = await this.prisma.userToken.findUnique({
         where: {
           token: refreshToken,
         },
       });
 
-      if (!validateExistToken) {
+      if (!validateExistToken || validateExistToken.tipo !== TipoToken.REFRESH) {
         return {
           isValid: false,
           payload: null,
@@ -199,7 +207,7 @@ class AuthService {
       }
 
       if (validateExistToken.expireAt < new Date()) {
-        await this.prisma.refreshToken.delete({
+        await this.prisma.userToken.delete({
           where: {
             token: refreshToken,
           },

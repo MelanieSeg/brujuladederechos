@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,20 +8,18 @@ datasource db {
 }
 
 model ComentarioScraped {
-  id                 String    @id @default(cuid())
-  comentario         String
-  sourceUrl          String
-  scrapingId         String    @unique
-  autor              String?
-  fechaComentario    DateTime?
-  fechaScraping      DateTime
-  fechaClasificacion DateTime?
-  clasificado        Boolean   @default(false)
-
+  id                     String                  @id @default(cuid())
+  comentario             String
+  sourceUrl              String
+  scrapingId             String                  @unique
+  autor                  String?
+  fechaScraping          DateTime
+  fechaClasificacion     DateTime?
+  clasificado            Boolean                 @default(false)
   ibfScore               Float?
   privacyScore           Float?
   expressionScore        Float?
-  vulnerabilidad         Float  @default(1)
+  vulnerabilidad         Float                   @default(1)
   intensidadPrivacidad   Int?
   elementoTiempo         Int?
   interesPublico         Int?
@@ -35,36 +27,28 @@ model ComentarioScraped {
   origenInformacion      Int?
   empatiaPrivacidad      Float?
   empatiaExpresion       Float?
-
-  estado EstadoComentario @default(PENDIENTE_CLASIFICACION)
-
-  // clasificadoPorID String?
-
-  sitioWebId String
-  sitioWeb   SitioWeb @relation(fields: [sitioWebId], references: [id])
-
-  // user User? @relation(fields: [clasificadoPorID],references: [id])
-
-  comentarios ComentarioClasificado[]
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  estado                 EstadoComentario        @default(PENDIENTE_CLASIFICACION)
+  sitioWebId             String
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  deletedAt              DateTime?
+  fechaComentario        DateTime?
+  comentarios            ComentarioClasificado[]
+  sitioWeb               SitioWeb                @relation(fields: [sitioWebId], references: [id])
 
   @@index([sitioWebId])
   @@index([estado])
 }
 
 model ComentarioClasificado {
-  id                  String   @id @default(cuid())
-  comentarioScrapedId String
+  id                  String            @id @default(cuid())
   clasificadorId      String
-  fechaClasificacion  DateTime @default(now())
+  fechaClasificacion  DateTime          @default(now())
   notas               String?
   clasificacion       String?
-
-  comentario   ComentarioScraped @relation(fields: [comentarioScrapedId], references: [id])
-  clasificador User              @relation(fields: [clasificadorId], references: [id])
+  comentarioScrapedId String
+  clasificador        User              @relation(fields: [clasificadorId], references: [id])
+  comentario          ComentarioScraped @relation(fields: [comentarioScrapedId], references: [id])
 
   @@index([comentarioScrapedId])
   @@index([clasificadorId])
@@ -79,69 +63,35 @@ model User {
   image                   String?
   password                String
   rol                     Roles                   @default(MODERADOR)
-  // comentariosScrapped ComentariosScrapped[]
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  auditoriasRealizadas    Auditoria[]
   comentariosClasificados ComentarioClasificado[]
   logAuditorias           LogAuditoria[]
-  auditoriasRealizadas    Auditoria[]
-
-  refreshToken RefreshToken[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  createdAt DateTime @default(now())
-  expireAt  DateTime
-  user      User     @relation(fields: [userId], references: [id])
-
-  @@index([expireAt])
-}
-
-model Token {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String   @unique
-  createdAt DateTime @default(now())
-  expireAt  DateTime
-
-  @@index([expireAt])
-}
-
-model ResetPassowrdToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String   @unique
-  createdAt DateTime @default(now())
-  expireAt  DateTime
-
-  @@index([expireAt])
+  UserToken               UserToken[]
 }
 
 model ConfigScraping {
   id                 String    @id @default(cuid())
   sitioWebId         String    @unique
-  sitioWeb           SitioWeb  @relation(fields: [sitioWebId], references: [id])
-  frecuenciaScraping Int // en minutos
+  frecuenciaScraping Int
   activo             Boolean   @default(true)
   ultimaEjecucion    DateTime?
   proximaEjecucion   DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
+  sitioWeb           SitioWeb  @relation(fields: [sitioWebId], references: [id])
 }
 
 model SitioWeb {
   id             String              @id @default(cuid())
   url            String              @unique
   nombre         String
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
   comentarios    ComentarioScraped[]
   configScraping ConfigScraping?
   logScraping    LogScraping[]
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
 }
 
 model Reporte {
@@ -160,13 +110,13 @@ model Reporte {
 model LogScraping {
   id                    String   @id @default(cuid())
   sitioWebId            String
-  sitioWeb              SitioWeb @relation(fields: [sitioWebId], references: [id])
   fechaInicio           DateTime
   fechaFin              DateTime
   comentariosScrapeados Int
   estado                Estado
   mensajeError          String?
   createdAt             DateTime @default(now())
+  sitioWeb              SitioWeb @relation(fields: [sitioWebId], references: [id])
 
   @@index([sitioWebId])
   @@index([estado])
@@ -176,7 +126,7 @@ model LogClasificacionIA {
   id             String   @id @default(cuid())
   fecha          DateTime @default(now())
   modelo_version String
-  duracion       Int // en segundos
+  duracion       Int
   estado         Estado
   mensaje_error  String?
 
@@ -191,8 +141,7 @@ model LogAuditoria {
   entidad   String
   entidadId String
   detalles  Json
-
-  usuario User @relation(fields: [usuarioId], references: [id])
+  usuario   User     @relation(fields: [usuarioId], references: [id])
 
   @@index([usuarioId])
   @@index([entidad, entidadId])
@@ -207,11 +156,24 @@ model Auditoria {
   cambiosAnteriores  Json?
   cambiosNuevos      Json?
   detalles           String?
-
-  usuario User @relation(fields: [usuarioId], references: [id])
+  usuario            User               @relation(fields: [usuarioId], references: [id])
 
   @@index([usuarioId])
   @@index([tipoAccion])
+}
+
+model UserToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  tipo      TipoToken
+  createdAt DateTime  @default(now())
+  expireAt  DateTime
+  User      User      @relation(fields: [userId], references: [id])
+
+  @@index([expireAt])
+  @@index([tipo])
+  @@unique([userId,tipo],name: "userId_tipo_unique")
 }
 
 enum TipoAccion {
@@ -267,4 +229,11 @@ enum EstadoComentario {
 enum Roles {
   ADMIN
   MODERADOR
+}
+
+enum TipoToken {
+  REFRESH
+  ACCESS
+  RESET_PASSWORD
+  VERIFICATION
 }

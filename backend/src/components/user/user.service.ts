@@ -1,4 +1,4 @@
-import { PrismaClient, User } from "@prisma/client";
+import { PrismaClient, TipoToken, User } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { generateRandomToken } from "../../utils";
 import EmailService from "../email/email.service";
@@ -41,9 +41,10 @@ class UserService {
 
   confirmEmail = async (token: string) => {
     try {
-      const validConfirmToken = await this.prisma.token.findUnique({
+      const validConfirmToken = await this.prisma.userToken.findUnique({
         where: {
           token: token,
+          tipo:TipoToken.VERIFICATION,
           expireAt: {
             gt: new Date(),
           },
@@ -73,7 +74,7 @@ class UserService {
             emailVerified: new Date(),
           },
         }),
-        this.prisma.token.delete({
+        this.prisma.userToken.delete({
           where: {
             id: validConfirmToken.id,
           },
@@ -141,9 +142,10 @@ class UserService {
 
   restartPassword = async (token: string, newPassowrd: string) => {
     try {
-      const validToken = await this.prisma.resetPassowrdToken.findUnique({
+      const validToken = await this.prisma.userToken.findUnique({
         where: {
           token: token,
+          tipo:TipoToken.RESET_PASSWORD,
           expireAt: {
             gt: new Date(),
           },
@@ -181,11 +183,17 @@ class UserService {
             id: findUser.id,
           },
         }),
-        this.prisma.resetPassowrdToken.delete({
+        this.prisma.userToken.delete({
           where: {
             id: validToken.id,
           },
         }),
+        this.prisma.userToken.deleteMany({
+          where:{
+            userId:findUser.id,
+            tipo:TipoToken.REFRESH
+          }
+        })
       ]);
 
       return {
@@ -204,6 +212,7 @@ class UserService {
         email: true,
         rol: true,
         name: true,
+        emailVerified:true,
       },
     });
 
