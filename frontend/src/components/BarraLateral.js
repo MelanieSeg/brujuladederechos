@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { BellIcon, Bars3Icon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 export default function BarraLateral({ alternarNotificaciones }) {
+
+  const { user, isLoading, logout } = useAuth()
+
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [user, setUser] = useState(null);  // Estado para almacenar los datos del usuario
   const location = useLocation();
 
   const itemsDelMenu = [
@@ -20,6 +23,16 @@ export default function BarraLateral({ alternarNotificaciones }) {
     setSidebarVisible(!sidebarVisible);
   };
 
+  const handleLogout = async () => {
+    try {
+
+      await logout()
+
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   useEffect(() => {
     // Hacer una solicitud para obtener los datos del usuario
     fetch('/api/users/me', {  // Asegúrate de que este endpoint exista en tu backend
@@ -30,7 +43,7 @@ export default function BarraLateral({ alternarNotificaciones }) {
     })
       .then((response) => response.json())
       .then((data) => {
-        setUser(data);  // Guardar los datos del usuario en el estado
+        //obtener data de user si es necesario , por ahora no por que cn la data que viene en el payload de JWT es suficienete
       })
       .catch((error) => console.error('Error al obtener los datos del usuario:', error));
   }, []);
@@ -44,9 +57,8 @@ export default function BarraLateral({ alternarNotificaciones }) {
 
       {/* Barra lateral */}
       <div
-        className={`bg-gray-50 h-screen p-5 w-64 shadow-lg flex flex-col justify-between fixed z-10 transform transition-transform duration-300 md:relative ${
-          sidebarVisible ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0`}
+        className={`bg-gray-50 h-screen p-5 w-64 shadow-lg flex flex-col justify-between fixed z-10 transform transition-transform duration-300 md:relative ${sidebarVisible ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0`}
       >
         <div className="flex flex-col flex-grow">
           {/* Encabezado y campana */}
@@ -60,9 +72,8 @@ export default function BarraLateral({ alternarNotificaciones }) {
             {itemsDelMenu.map((item) => (
               <li
                 key={item.nombre}
-                className={`mb-4 font-semibold p-2 rounded-lg ${
-                  location.pathname === item.ruta ? 'bg-gray-300 text-black' : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                className={`mb-4 font-semibold p-2 rounded-lg ${location.pathname === item.ruta ? 'bg-gray-300 text-black' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
               >
                 <Link
                   to={item.ruta}
@@ -82,14 +93,14 @@ export default function BarraLateral({ alternarNotificaciones }) {
             <div className="flex items-center space-x-4">
               {user ? (
                 <>
-                  <img src={user.profilePicture || "https://via.placeholder.com/40"} alt="Perfil" className="w-10 h-10 rounded-full" />
+                  <img src={user?.image || "https://via.placeholder.com/40"} alt="Perfil" className="w-10 h-10 rounded-full" />
                   <span className="text-gray-800 font-medium">{user.name}</span>
                 </>
               ) : (
                 <span>Cargando usuario...</span>
               )}
             </div>
-            <button className="text-red-600 hover:text-red-800">
+            <button className="text-red-600 hover:text-red-800" onClick={() => handleLogout()}>
               <ArrowRightOnRectangleIcon className="h-6 w-6" />
             </button>
           </div>

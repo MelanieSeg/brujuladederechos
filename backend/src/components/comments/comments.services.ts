@@ -8,19 +8,27 @@ class CommentsService {
     this.prisma = new PrismaClient();
   }
 
-  getAllClassifiedComments = async()=>{
-    try{
-      const comments = await this.prisma.comentarioClasificado.findMany();
+  getAllClassifiedComments = async () => {
+    try {
+      const comments = await this.prisma.comentarioClasificado.findMany({
+        include: {
+          comentario: {
+            include: {
+              sitioWeb: true
+            }
+          }
+        }
+      });
       //conversar el tema que es mejor implementar paginacion desde backend en la consulta que implementarla desde el front
 
-      if(comments.length === 0) {
-        return {data:null,msg:"No existen comentarios clasificados todavia."}
+      if (comments.length === 0) {
+        return { data: null, msg: "No existen comentarios clasificados todavia." }
       }
 
-      return {data:comments,msg:"Se obtuvieron los comentarios clasificados exitosamente"}
+      return { data: comments, msg: "Se obtuvieron los comentarios clasificados exitosamente" }
 
-    }catch(err){
-      return {data:null,msg:err}
+    } catch (err) {
+      return { data: null, msg: err }
     }
   }
 
@@ -80,8 +88,8 @@ class CommentsService {
       return { success: false, msg: err };
     }
   };
-  addCommentsBatch= async (comments:CommentScrapped[],webSiteName:string)=>{
-    try{
+  addCommentsBatch = async (comments: CommentScrapped[], webSiteName: string) => {
+    try {
       const findWebsite = await this.getWebSite(webSiteName);
 
       if (!findWebsite.data) {
@@ -91,26 +99,26 @@ class CommentsService {
       const dataToInsert = comments.map((comment) => {
 
         const commentDate = parseFecha(String(comment.fecha));
-        if(!commentDate){
+        if (!commentDate) {
           return {
-        scrapingId: comment.id,
-        comentario: cleanComment(comment.texto),
-        sourceUrl: comment.sourceUrl,
-        autor: comment.autor || null,
-        fechaComentario:new Date(),
-        sitioWebId: findWebsite.data.id,
-        fechaScraping: new Date(),
-      }
+            scrapingId: comment.id,
+            comentario: cleanComment(comment.texto),
+            sourceUrl: comment.sourceUrl,
+            autor: comment.autor || null,
+            fechaComentario: new Date(),
+            sitioWebId: findWebsite.data.id,
+            fechaScraping: new Date(),
+          }
         }
         return {
-        scrapingId: comment.id,
-        comentario: cleanComment(comment.texto),
-        sourceUrl: comment.sourceUrl,
-        autor: comment.autor || null,
-        fechaComentario:commentDate,
-        sitioWebId: findWebsite.data.id,
-        fechaScraping: new Date(),
-      }
+          scrapingId: comment.id,
+          comentario: cleanComment(comment.texto),
+          sourceUrl: comment.sourceUrl,
+          autor: comment.autor || null,
+          fechaComentario: commentDate,
+          sitioWebId: findWebsite.data.id,
+          fechaScraping: new Date(),
+        }
       });
 
       if (dataToInsert.length === 0) {
@@ -118,15 +126,15 @@ class CommentsService {
       }
 
       const result = await this.prisma.comentarioScraped.createMany({
-        data:dataToInsert,
-        skipDuplicates:true,
+        data: dataToInsert,
+        skipDuplicates: true,
       })
 
       return { success: true };
 
-    }catch(err){
-      console.log("Error al insertar comentarios en lote",err);
-      return {success:false,msg:err}
+    } catch (err) {
+      console.log("Error al insertar comentarios en lote", err);
+      return { success: false, msg: err }
     }
   }
 
@@ -152,7 +160,7 @@ class CommentsService {
     return date.toISOString().replace('T', ' ').replace('Z', '');
   };
 
-  close=async () =>{
+  close = async () => {
     await this.prisma.$disconnect();
   }
 }
