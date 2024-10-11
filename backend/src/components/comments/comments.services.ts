@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { CLASIFICACION, ComentarioScraped, EstadoComentario, PrismaClient } from "@prisma/client";
 import { cleanComment, parseFecha } from "../../utils";
-import { CommentScrapped } from "../../schemas/commentScrapped";
+import { CommentScrapdClassification, CommentScrapped, commentScrappedClassificationSchema } from "../../schemas/commentScrapped";
 
 class CommentsService {
   private prisma: PrismaClient;
@@ -29,6 +29,87 @@ class CommentsService {
 
     } catch (err) {
       return { data: null, msg: err }
+    }
+  }
+  manualClassificationComment = async (data: CommentScrapdClassification, userId: string) => {
+
+    const parseResult = commentScrappedClassificationSchema.safeParse(data);
+    if (!parseResult.success) {
+      const errorMessages = parseResult.error.errors.map(err => err.message).join(", ");
+      return { data: null, msg: `Validación fallida: ${errorMessages}` };
+    }
+
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userId
+        }
+      })
+
+      if (!user) {
+        return { data: null, msg: "Usuario no valido" }
+      }
+
+
+      const {
+        comentarioScrapedId,
+        clasificadorId,
+        intensidadPrivacidad,
+        elementoTiempo,
+        interesPublico,
+        caracterPersonaPublico,
+        origenInformacion,
+        empatiaPrivacidad,
+        empatiaExpresion,
+        gravedad,
+        notas,
+      } = parseResult.data;
+
+
+      const result = await this.prisma.$transaction(async (prisma) => {
+        const comment = await prisma.comentarioScraped.findUnique({
+          where: {
+            id: comentarioScrapedId
+          }
+        })
+
+        if (!comment) {
+          throw new Error("Comentario no encontrado.");
+        }
+
+        const commentUpdatedIbf = await prisma.comentarioScraped.update({
+          data: {
+            clasificado: true,
+            fechaClasificacion: new Date(),
+            estado: EstadoComentario.CLASIFICADO, intensidadPrivacidad,
+            elementoTiempo,
+            interesPublico,
+            caracterPersonaPublico,
+            origenInformacion,
+            empatiaPrivacidad,
+            empatiaExpresion,
+          },
+          where: {
+            id: comment.id
+          }
+        })
+
+        const comentarioClasificated = await prisma.comentarioClasificado.create({
+          data: {
+            clasificadorId: user.id,
+            gravedad: gravedad,
+            notas: notas || null,
+            clasificacion: CLASIFICACION.MANUAL,
+            comentarioScrapedId: commentUpdatedIbf.id
+          }
+        })
+
+      })
+
+      return { data: result, msg: "Clasificacion manual exitosa" }
+
+    } catch (err) {
+
     }
   }
 
