@@ -9,45 +9,7 @@ import api from '../services/axios';
 import { truncateComentario } from '../utils/truncarComentario';
 
 export default function ComentariosClasificados() {
-  const [defaultComentarios] = useState([
-    { comentario: 'No me gustó mucho', gravedad: 'Baja', sitioWeb: 'latercera.com', fechaScraping: 'Jul 4, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'La interfaz es confusa.', gravedad: 'Moderada', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 14, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'No me gustó mucho', gravedad: 'Baja', sitioWeb: 'latercera.com', fechaScraping: 'Jul 4, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Podría ser mejor.', gravedad: 'Baja', sitioWeb: 'latercera.com', fechaScraping: 'Jul 4, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'No estoy satisfecho', gravedad: 'Alta', sitioWeb: 'latercera.com', fechaScraping: 'Jul 4, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Hay muchos errores aquí', gravedad: 'Moderada', sitioWeb: 'quora.com', fechaScraping: 'Jul 4, 2024', t: 3, ePrivacidad: 1, pi: 0, pf: 3, oi: -0.75, eLibertad: 0 },
-    { comentario: 'No es lo que esperaba', gravedad: 'Alta', sitioWeb: 'quora.com', fechaScraping: 'Jul 4, 2024', t: 1, ePrivacidad: 1, pi: 0, pf: 3, oi: 0, eLibertad: 1 },
-    { comentario: 'Esto es completamente inútil.', gravedad: 'Baja', sitioWeb: 'latercera.com', fechaScraping: 'Jul 4, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Terrible experiencia, no lo recomiendo.', gravedad: 'Baja', sitioWeb: 'latercera.com', fechaScraping: 'Jul 4, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Decepcionante, muy mal hecho.', gravedad: 'Alta', sitioWeb: 'latercera.com', fechaScraping: 'Jul 4, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Es lo peor que he leído.', gravedad: 'Baja', sitioWeb: 'latercera.com', fechaScraping: 'Jul 4, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Inaceptable, una total pérdida de tiempo.', gravedad: 'Moderada', sitioWeb: 'latercera.com', fechaScraping: 'Jul 4, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Excelente servicio.', gravedad: 'Alta', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 5, 2024', t: 1, ePrivacidad: 1, pi: 2, pf: 3, oi: 0.5, eLibertad: 1 },
-    { comentario: 'Muy útil y fácil de usar.', gravedad: 'Baja', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 6, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Buena calidad.', gravedad: 'Moderada', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 7, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'No cumple con las expectativas.', gravedad: 'Alta', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 8, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Servicio al cliente deficiente.', gravedad: 'Alta', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 9, 2024', t: 3, ePrivacidad: 1, pi: 0, pf: 3, oi: -0.5, eLibertad: 0 },
-    { comentario: 'Producto llegó dañado.', gravedad: 'Moderada', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 10, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Tiempo de entrega rápido.', gravedad: 'Baja', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 11, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'El producto no coincide con la descripción.', gravedad: 'Alta', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 12, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Muy satisfecho con la compra.', gravedad: 'Baja', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 13, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'La interfaz es confusa.', gravedad: 'Moderada', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 14, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Excelente relación calidad-precio.', gravedad: 'Alta', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 15, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Excelente servicio.', gravedad: 'Alta', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 5, 2024', t: 1, ePrivacidad: 1, pi: 2, pf: 3, oi: 0.5, eLibertad: 1 },
-    { comentario: 'Muy útil y fácil de usar.', gravedad: 'Baja', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 6, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Buena calidad.', gravedad: 'Moderada', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 7, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'No cumple con las expectativas.', gravedad: 'Alta', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 8, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Servicio al cliente deficiente.', gravedad: 'Alta', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 9, 2024', t: 3, ePrivacidad: 1, pi: 0, pf: 3, oi: -0.5, eLibertad: 0 },
-    { comentario: 'Producto llegó dañado.', gravedad: 'Moderada', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 10, 2024', t: 2, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'Tiempo de entrega rápido.', gravedad: 'Baja', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 11, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'El producto no coincide con la descripción.', gravedad: 'Alta', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 12, 2024', t: 1, ePrivacidad: 1, pi: 1, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'Muy satisfecho con la compra.', gravedad: 'Baja', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 13, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-    { comentario: 'La interfaz es confusa.', gravedad: 'Moderada', sitioWeb: 'ejemplo.com', fechaScraping: 'Jul 14, 2024', t: 2, ePrivacidad: 1, pi: 2, pf: 2, oi: 0, eLibertad: 1 },
-    { comentario: 'No me gustó mucho', gravedad: 'Baja', sitioWeb: 'latercera.com', fechaScraping: 'Jul 4, 2024', t: 0, ePrivacidad: 1, pi: 1, pf: 1, oi: 0, eLibertad: 1 },
-  ]);
-
   const [comentarios, setComentarios] = useState([])
-
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [selectedGravedad, setSelectedGravedad] = useState({
     Baja: true,
@@ -77,10 +39,10 @@ export default function ComentariosClasificados() {
       try {
 
         const response = await api.get("/comments/get-all-classified-comments")
-        //       console.log(response.data.data);
+        console.log(response.data.data);
         setComentarios(response.data.data)
       } catch (err) {
-        setComentarios(defaultComentarios)
+        setComentarios([])
         console.log("Error al obtener los comentarios")
       }
     }
@@ -152,6 +114,19 @@ export default function ComentariosClasificados() {
         return 'bg-green-500 text-white';
       default:
         return 'bg-gray-500 text-white';
+    }
+  };
+
+  const mapGravedad = (gravedadApi) => {
+    switch (gravedadApi.toUpperCase()) {
+      case 'LEVE':
+        return 'Baja';
+      case 'MODERADA':
+        return 'Moderada';
+      case 'ALTA':
+        return 'Alta';
+      default:
+        return 'Desconocida';
     }
   };
 
@@ -239,7 +214,8 @@ export default function ComentariosClasificados() {
   };
 
   const filteredComentarios = comentarios.filter((comentario) => {
-    const gravedadMatch = selectedGravedad[comentario.gravedad];
+    const gravedadMapeada = mapGravedad(comentario.gravedad);
+    const gravedadMatch = selectedGravedad[gravedadMapeada];
 
     let dateMatch = true;
     if (selectedDate) {
@@ -278,7 +254,7 @@ export default function ComentariosClasificados() {
     }
 
     const commentsToDownload = comentarios.filter((comentario) => {
-      const comentarioDate = new Date(comentario.fecha);
+      const comentarioDate = new Date(comentario.fechaClasificacion);
       comentarioDate.setHours(0, 0, 0, 0);
 
       const start = new Date(startDate);
@@ -293,18 +269,20 @@ export default function ComentariosClasificados() {
       );
     });
 
+    const rows = commentsToDownload.map((comment) => [
+      `"${comment.comentario.replace(/"/g, '""')}"`,
+      mapGravedad(comment.gravedad),
+      comment.comentario.sitioWeb.nombre,
+      format(parseISO(comment.fechaClasificacion), "dd-MM-yyyy"),
+    ]);
+
     if (commentsToDownload.length === 0) {
       alert('No hay comentarios en el rango de fechas seleccionado.');
       return;
     }
 
     const headers = ['Comentario', 'Gravedad', 'Sitio web', 'Fecha de clasificación'];
-    const rows = commentsToDownload.map((comment) => [
-      `"${comment.comentario.replace(/"/g, '""')}"`,
-      comment.gravedad,
-      comment.sitio,
-      comment.fecha,
-    ]);
+
 
     let csvContent =
       headers.join(',') + '\n' + rows.map((e) => e.join(',')).join('\n');
@@ -413,7 +391,7 @@ export default function ComentariosClasificados() {
         </div>
       </div>
 
-      <table className="min-w-full bg-white shadow-md rounded-lg border-collapse">
+      <table className="min-w-full bg-white shadow-md rounded-lg table-fixed border-collapse">
         <thead>
           <tr>
             <th className="px-6 py-4 text-left font-medium text-gray-500">
@@ -455,7 +433,7 @@ export default function ComentariosClasificados() {
           </tr>
         </thead>
         <tbody>
-          {comentarios.map((comentario, index) => (
+          {currentComentarios.map((comentario, index) => (
             <tr key={index} className="border-t border-gray-200">
               <td className="px-6 py-4">
                 <input type="checkbox" className="mr-2" />
@@ -478,7 +456,7 @@ export default function ComentariosClasificados() {
                     comentario.gravedad
                   )}`}
                 >
-                  {comentario.gravedad}
+                  {mapGravedad(comentario.gravedad)}
                 </span>
               </td>
               <td className="px-6 py-4">{comentario.comentario?.sitioWeb?.nombre ? comentario?.comentario?.sitioWeb?.nombre : "latercera.com"}</td>
