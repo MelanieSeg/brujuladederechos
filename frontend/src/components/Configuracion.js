@@ -8,13 +8,14 @@ const Configuracion = () => {
     return savedMode === 'true' ? true : false;
   });
 
+  // Al iniciar, se revisa el localStorage y aplica el modo de tema
   useEffect(() => {
     const frecuenciaGuardada = localStorage.getItem('frecuenciaScraping');
     if (frecuenciaGuardada) {
       setFrecuenciaScraping(frecuenciaGuardada);
     }
 
-    // Aplicar la clase inicial del modo
+    // Aplica las clases iniciales según el modo
     if (modoOscuro) {
       document.body.classList.add('bg-gray-900', 'text-white');
       document.body.classList.remove('bg-gray-100', 'text-gray-900');
