@@ -13,7 +13,7 @@ class CommentsRouter {
 
     router.route("/get-all").get(this.CommentsController.getAllComments);
     router.route("/get-all-comments-scraped").get(this.CommentsController.getAllComments);
-
+    router.route("/get-all-classified-comments").get(this.CommentsController.getAllClassifiedComments);
     return router;
   }
 }

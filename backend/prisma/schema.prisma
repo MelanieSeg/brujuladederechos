@@ -44,8 +44,9 @@ model ComentarioClasificado {
   id                  String            @id @default(cuid())
   clasificadorId      String
   fechaClasificacion  DateTime          @default(now())
+  gravedad Gravedad?
   notas               String?
-  clasificacion       String?
+  clasificacion       CLASIFICACION?
   comentarioScrapedId String
   clasificador        User              @relation(fields: [clasificadorId], references: [id])
   comentario          ComentarioScraped @relation(fields: [comentarioScrapedId], references: [id])
@@ -236,4 +237,9 @@ enum TipoToken {
   ACCESS
   RESET_PASSWORD
   VERIFICATION
+}
+
+enum CLASIFICACION {
+  AUTOMATICA
+  MANUAL
 }

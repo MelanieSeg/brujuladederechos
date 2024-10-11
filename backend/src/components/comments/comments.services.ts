@@ -8,6 +8,22 @@ class CommentsService {
     this.prisma = new PrismaClient();
   }
 
+  getAllClassifiedComments = async()=>{
+    try{
+      const comments = await this.prisma.comentarioClasificado.findMany();
+      //conversar el tema que es mejor implementar paginacion desde backend en la consulta que implementarla desde el front
+
+      if(comments.length === 0) {
+        return {data:null,msg:"No existen comentarios clasificados todavia."}
+      }
+
+      return {data:comments,msg:"Se obtuvieron los comentarios clasificados exitosamente"}
+
+    }catch(err){
+      return {data:null,msg:err}
+    }
+  }
+
   getAllComments = async () => {
     try {
       const comments = await this.prisma.comentarioScraped.findMany();

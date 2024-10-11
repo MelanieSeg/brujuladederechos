@@ -10,7 +10,7 @@ const DEAD_LETTER_EXCHANGE = 'comentarios_scraping_queue_dead';
 const DEAD_LETTER_ROUTING_KEY = 'dead_letter_routing_key';
 const DEAD_LETTER_QUEUE = 'comentarios_scraping_queue_dead';
 
-
+//TODO: MEJORAR COMENTARIOS PARA QUE SEA MAS FACIL DE ENTENDER PARA MIS COMPANEROS
 class CommentsConsumer{
   private connection!:Connection;
   private channel!:Channel;
@@ -134,11 +134,11 @@ class CommentsConsumer{
         console.log(`[x] Insertados ${comments.length} comentarios exitosamente.`);
       } else {
         console.error(`Error al insertar comentarios: ${result.msg}`);
-        msgs.forEach(msg => this.channel.nack(msg, false, true)); // reintentar
+        msgs.forEach(msg => this.channel.nack(msg, false, true)); 
       }
     } catch (err) {
       console.error('Error al insertar comentarios en la base de datos:', err);
-      msgs.forEach(msg => this.channel.nack(msg, false, true)); // reintentar
+      msgs.forEach(msg => this.channel.nack(msg, false, true)); 
     }
   };
 
