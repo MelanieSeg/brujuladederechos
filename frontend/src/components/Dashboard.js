@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect } from 'react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
 import { Bar, Pie, Line } from 'react-chartjs-2';
@@ -101,8 +103,30 @@ export default function Dashboard() {
   ];
 
   const labelsDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+  // Función para obtener el número de semanas en el mes actual
+  const getWeeksInCurrentMonth = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Ajustar para que la semana comience en lunes (1) en lugar de domingo (0)
+    const firstDayOfWeek = firstDay.getDay() || 7;
+    const lastDayOfWeek = lastDay.getDay() || 7;
+
+    return Math.ceil((lastDay.getDate() + firstDayOfWeek - 1) / 7);
+  };
+
+  // Generar etiquetas para las semanas del mes actual
+  const labelsSemanasDelMes = Array.from(
+    { length: getWeeksInCurrentMonth() },
+    (_, i) => `Semana ${i + 1}`
+  );
+
   const datosBarra = {
-    labels: labelsMeses,
+    labels: periodo === 'Mensual' ? labelsSemanasDelMes : labelsMeses,
     datasets: [
       {
         label: 'Comentarios clasificados',
@@ -111,7 +135,7 @@ export default function Dashboard() {
         borderWidth: 1,
         hoverBackgroundColor: '#6366F1',
         hoverBorderColor: '#6366F1',
-        data: datosTemporales.datosBarra,
+        data: datosTemporales.datosBarra.slice(0, periodo === 'Mensual' ? labelsSemanasDelMes.length : 12),
       },
     ],
   };
@@ -202,7 +226,6 @@ export default function Dashboard() {
     },
   };
   
-
   useEffect(() => {
     const datos = datosTemporalesPorPeriodo[periodo];
     setTotalComentarios(datos.totalComentarios);
@@ -216,7 +239,7 @@ export default function Dashboard() {
           case 'Diario':
             return {
               data: {
-                labels: labelsHoras, // Usar horas para el gráfico diario
+                labels: labelsHoras,
                 datasets: [
                   {
                     label: 'Total de comentarios analizados',
@@ -231,11 +254,11 @@ export default function Dashboard() {
           case 'Semanal':
             return {
               data: {
-                labels: labelsDias, // Cambia a días de la semana
+                labels: labelsDias,
                 datasets: [
                   {
                     label: 'Total de comentarios analizados (Semanal)',
-                    data: datosTemporales.datosLineaClasificaciones.slice(0, 7), // Usa datos semanales
+                    data: datosTemporales.datosLineaClasificaciones.slice(0, 7),
                     fill: true,
                     borderColor: '#4F46E5',
                     backgroundColor: 'rgba(79, 70, 229, 0.2)',
@@ -246,11 +269,11 @@ export default function Dashboard() {
           case 'Mensual':
             return {
               data: {
-                labels: labelsMeses, // Cambia a meses del año
+                labels: labelsSemanasDelMes,
                 datasets: [
                   {
                     label: 'Total de comentarios analizados (Mensual)',
-                    data: datosTemporales.datosBarra, // Usa datos mensuales
+                    data: datosTemporales.datosBarra.slice(0, labelsSemanasDelMes.length),
                     fill: true,
                     borderColor: '#4F46E5',
                     backgroundColor: 'rgba(79, 70, 229, 0.2)',
@@ -266,7 +289,7 @@ export default function Dashboard() {
           case 'Diario':
             return {
               data: {
-                labels: labelsHoras, // Usar horas para el gráfico diario
+                labels: labelsHoras,
                 datasets: [
                   {
                     label: 'Tasa de aprobación',
@@ -281,11 +304,11 @@ export default function Dashboard() {
           case 'Semanal':
             return {
               data: {
-                labels: labelsDias, // Usar días de la semana
+                labels: labelsDias,
                 datasets: [
                   {
                     label: 'Tasa de aprobación (Semanal)',
-                    data: datosTemporales.datosLineaTasaAprobacion.slice(0, 7), // Datos semanales
+                    data: datosTemporales.datosLineaTasaAprobacion.slice(0, 7),
                     fill: true,
                     borderColor: '#10B981',
                     backgroundColor: 'rgba(16, 185, 129, 0.2)',
@@ -296,11 +319,11 @@ export default function Dashboard() {
           case 'Mensual':
             return {
               data: {
-                labels: labelsMeses, // Usar meses para el gráfico mensual
+                labels: labelsSemanasDelMes,
                 datasets: [
                   {
                     label: 'Tasa de aprobación (Mensual)',
-                    data: datosTemporales.datosBarra, // Datos mensuales
+                    data: datosTemporales.datosLineaTasaAprobacion.slice(0, labelsSemanasDelMes.length),
                     fill: true,
                     borderColor: '#10B981',
                     backgroundColor: 'rgba(16, 185, 129, 0.2)',
@@ -316,10 +339,12 @@ export default function Dashboard() {
     }
   };
   
-
   const { data } = getChartData() || {};
 
-  // Función para obtener los datos y opciones según la métrica seleccionada
+  // Obtener el mes y año actual
+  const currentDate = new Date();
+  const currentMonth = currentDate.toLocaleString('es-ES', { month: 'long' });
+  const currentYear = currentDate.getFullYear();
 
   return (
     <div className="p-8 bg-gray-100 flex-1 w-full">
@@ -354,7 +379,7 @@ export default function Dashboard() {
           <div
             onClick={() => setSelectedMetric('Tasa de aprobación')}
             className={`bg-white shadow-md p-6 rounded-lg cursor-pointer ${
-              selectedMetric === 'Tasa de aprobación' ? 'ring-2 ring-indigo-500' : ''
+              selectedMetric === 'Tasa de aprobación' ? 'ring-2  ring-indigo-500' : ''
             }`}
           >
             <h2 className="text-gray-500 text-sm">Tasa de aprobación</h2>
@@ -367,7 +392,12 @@ export default function Dashboard() {
         {data && periodo !== 'Anual' && (
           <div className="bg-white shadow-md p-6 rounded-lg col-span-2">
             <h2 className="text-lg font-bold mb-4">{selectedMetric}</h2>
-            <div className="h-[300px] w-full"> {/* Ajuste aquí */}
+            {periodo === 'Mensual' && (
+              <p className="text-sm text-gray-500 mb-4">
+                Mes actual: {currentMonth} del {currentYear}
+              </p>
+            )}
+            <div className="h-[300px] w-full">
               <Line data={data} options={opcionesLinea} />
             </div>
           </div>
@@ -431,7 +461,6 @@ export default function Dashboard() {
         </div>
       )}
     </div>
-
 
       {/* Tabla de últimos comentarios */}
       <div className="mt-8 bg-white shadow-md p-6 rounded-lg">
