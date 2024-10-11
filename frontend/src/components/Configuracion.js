@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import './Configuracion.css';
 
 const Configuracion = () => {
-  // Estado para manejar si el web scraping está activado
   const [webScrapingActivo, setWebScrapingActivo] = useState(false);
-  // Estado para manejar la frecuencia seleccionada
   const [frecuenciaScraping, setFrecuenciaScraping] = useState('');
-  // Estado para manejar el modo oscuro
-  const [modoOscuro, setModoOscuro] = useState(false);
+  const [modoOscuro, setModoOscuro] = useState(() => {
+    const savedMode = localStorage.getItem('modoOscuro');
+    return savedMode === 'true' ? true : false;
+  });
 
-  // Cargar la selección guardada en localStorage al cargar la página
   useEffect(() => {
     const frecuenciaGuardada = localStorage.getItem('frecuenciaScraping');
     if (frecuenciaGuardada) {
       setFrecuenciaScraping(frecuenciaGuardada);
     }
-  }, []);
 
-  // Función para alternar el estado de web scraping
+    // Aplicar la clase inicial del modo
+    if (modoOscuro) {
+      document.body.classList.add('bg-gray-900', 'text-white');
+      document.body.classList.remove('bg-gray-100', 'text-gray-900');
+    } else {
+      document.body.classList.add('bg-gray-100', 'text-gray-900');
+      document.body.classList.remove('bg-gray-900', 'text-white');
+    }
+  }, [modoOscuro]);
+
   const alternarWebScraping = () => {
     if (!frecuenciaScraping) {
       alert('Por favor, selecciona una frecuencia para el web scraping.');
@@ -26,143 +32,137 @@ const Configuracion = () => {
     }
   };
 
-  // Función para manejar el cambio de la frecuencia seleccionada
   const manejarCambioFrecuencia = (event) => {
     const nuevaFrecuencia = event.target.value;
     setFrecuenciaScraping(nuevaFrecuencia);
-    // Guardar la frecuencia seleccionada en localStorage
     localStorage.setItem('frecuenciaScraping', nuevaFrecuencia);
   };
 
-  // Función para alternar el modo oscuro y claro
   const alternarModo = () => {
-    setModoOscuro(!modoOscuro);
-    document.body.className = modoOscuro ? 'light-mode' : 'dark-mode'; // Aplica la clase de modo oscuro o claro
+    const nuevoModo = !modoOscuro;
+    setModoOscuro(nuevoModo);
+    localStorage.setItem('modoOscuro', nuevoModo);
+
+    if (nuevoModo) {
+      document.body.classList.add('bg-gray-900', 'text-white');
+      document.body.classList.remove('bg-gray-100', 'text-gray-900');
+    } else {
+      document.body.classList.add('bg-gray-100', 'text-gray-900');
+      document.body.classList.remove('bg-gray-900', 'text-white');
+    }
   };
 
   return (
-    <div className="page-container">
-      {/* Sección: Frecuencia de Web Scraping */}
-      <div className="section">
-        <h2>Ajuste de Frecuencia de Web Scraping</h2>
-        <div className="radio-group">
-          <label>
-            <input
-              type="radio"
-              name="scrapingFrequency"
-              value="1hr"
-              checked={frecuenciaScraping === '1hr'}
-              onChange={manejarCambioFrecuencia}
-            /> 
-            Cada 1 hora
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="scrapingFrequency"
-              value="6hr"
-              checked={frecuenciaScraping === '6hr'}
-              onChange={manejarCambioFrecuencia}
-            /> 
-            Cada 6 horas
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="scrapingFrequency"
-              value="12hr"
-              checked={frecuenciaScraping === '12hr'}
-              onChange={manejarCambioFrecuencia}
-            /> 
-            Cada 12 horas
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="scrapingFrequency"
-              value="24hr"
-              checked={frecuenciaScraping === '24hr'}
-              onChange={manejarCambioFrecuencia}
-            /> 
-            Cada 24 horas
-          </label>
-        </div>
+    <div className={`p-8 ${modoOscuro ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} flex-1`}>
+      <h2 className="text-2xl font-semibold mb-6">Configuración</h2>
 
-        {/* Botón para activar/desactivar el Web Scraping */}
-        <div className="button-center">
+      {/* Frecuencia de Web Scraping */}
+      <div className={`shadow-md rounded-lg p-6 mb-6 ${modoOscuro ? 'bg-gray-800' : 'bg-white'}`}>
+        <h3 className="text-xl font-semibold mb-4">Ajuste de Frecuencia de Web Scraping</h3>
+        <div className="space-y-2">
+          {['1hr', '6hr', '12hr', '24hr'].map((option) => (
+            <label key={option} className="flex items-center space-x-2">
+              <input
+                type="radio"
+                name="scrapingFrequency"
+                value={option}
+                checked={frecuenciaScraping === option}
+                onChange={manejarCambioFrecuencia}
+                className="form-radio text-blue-600"
+              />
+              <span>Cada {option.replace('hr', ' hora')}{option !== '1hr' ? 's' : ''}</span>
+            </label>
+          ))}
+        </div>
+        <div className="mt-4">
           <button
             onClick={alternarWebScraping}
-            className={webScrapingActivo ? 'button-active' : 'button-inactive'}
+            className={`w-full px-4 py-2 rounded-md text-white font-medium ${webScrapingActivo ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}
           >
             {webScrapingActivo ? 'Activado Web Scraping' : 'Desactivado Web Scraping'}
           </button>
         </div>
       </div>
 
-      {/* Sección: Cambio de Modo */}
-      <div className="section">
-        <h2>Cambio de Tema</h2>
-        <div className="button-group">
-          <button onClick={alternarModo} className="button">
-            {modoOscuro ? 'Activar Modo Claro' : 'Activar Modo Oscuro'}
-          </button>
-        </div>
+      {/* Cambio de Tema */}
+      <div className={`shadow-md rounded-lg p-6 mb-6 ${modoOscuro ? 'bg-gray-800' : 'bg-white'}`}>
+        <h3 className="text-xl font-semibold mb-4">Cambio de Tema</h3>
+        <button
+          onClick={alternarModo}
+          className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+        >
+          {modoOscuro ? 'Activar Modo Claro' : 'Activar Modo Oscuro'}
+        </button>
       </div>
 
-      {/* Sección: Cambiar Contraseña */}
-      <div className="section">
-        <h2>Cambiar Contraseña</h2>
-        <div className="form-group">
-          <label>Contraseña Actual:</label>
-          <input type="password" placeholder="Contraseña Actual" />
+      {/* Cambiar Contraseña */}
+      <div className={`shadow-md rounded-lg p-6 mb-6 ${modoOscuro ? 'bg-gray-800' : 'bg-white'}`}>
+        <h3 className="text-xl font-semibold mb-4">Cambiar Contraseña</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block mb-1">Contraseña Actual:</label>
+            <input type="password" placeholder="Contraseña Actual" className="w-full px-3 py-2 border rounded-md" />
+          </div>
+          <div>
+            <label className="block mb-1">Nueva Contraseña:</label>
+            <input type="password" placeholder="Nueva Contraseña" className="w-full px-3 py-2 border rounded-md" />
+          </div>
+          <div>
+            <label className="block mb-1">Confirmar Nueva Contraseña:</label>
+            <input type="password" placeholder="Confirmar Nueva Contraseña" className="w-full px-3 py-2 border rounded-md" />
+          </div>
         </div>
-        <div className="form-group">
-          <label>Nueva Contraseña:</label>
-          <input type="password" placeholder="Nueva Contraseña" />
-        </div>
-        <div className="form-group">
-          <label>Confirmar Nueva Contraseña:</label>
-          <input type="password" placeholder="Confirmar Nueva Contraseña" />
-        </div>
-        <button className="button">Actualizar Contraseña</button>
+        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Actualizar Contraseña
+        </button>
       </div>
 
-      {/* Sección: Cambiar Foto de Perfil */}
-      <div className="section">
-        <h2>Cambiar Foto de Perfil</h2>
-        <div className="form-group">
-          <label>Seleccionar Imagen:</label>
-          <input type="file" />
+      {/* Cambiar Foto de Perfil */}
+      <div className={`shadow-md rounded-lg p-6 mb-6 ${modoOscuro ? 'bg-gray-800' : 'bg-white'}`}>
+        <h3 className="text-xl font-semibold mb-4">Cambiar Foto de Perfil</h3>
+        <div>
+          <label className="block mb-1">Seleccionar Imagen:</label>
+          <input type="file" className="w-full" />
         </div>
-        <button className="button">Actualizar Foto</button>
+        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Actualizar Foto
+        </button>
       </div>
 
-      {/* Sección: Actualizar Información de Contacto */}
-      <div className="section">
-        <h2>Actualizar Información de Contacto</h2>
-        <div className="form-group">
-          <label>Correo Electrónico:</label>
-          <input type="email" placeholder="Correo Electrónico" />
+      {/* Actualizar Información de Contacto */}
+      <div className={`shadow-md rounded-lg p-6 mb-6 ${modoOscuro ? 'bg-gray-800' : 'bg-white'}`}>
+        <h3 className="text-xl font-semibold mb-4">Actualizar Información de Contacto</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block mb-1">Correo Electrónico:</label>
+            <input type="email" placeholder="Correo Electrónico" className="w-full px-3 py-2 border rounded-md" />
+          </div>
+          <div>
+            <label className="block mb-1">Dirección:</label>
+            <input type="text" placeholder="Dirección" className="w-full px-3 py-2 border rounded-md" />
+          </div>
         </div>
-        <div className="form-group">
-          <label>Dirección:</label>
-          <input type="text" placeholder="Dirección" />
-        </div>
-        <button className="button">Actualizar Información</button>
+        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Actualizar Información
+        </button>
       </div>
 
-      {/* Sección: Preferencias de Comunicación */}
-      <div className="section">
-        <h2>Preferencias de Comunicación</h2>
-        <div className="checkbox-group">
-          <label>
-            <input type="checkbox" /> Recibir Actualizaciones por Email
+      {/* Preferencias de Comunicación */}
+      <div className={`shadow-md rounded-lg p-6 ${modoOscuro ? 'bg-gray-800' : 'bg-white'}`}>
+        <h3 className="text-xl font-semibold mb-4">Preferencias de Comunicación</h3>
+        <div className="space-y-2">
+          <label className="flex items-center space-x-2">
+            <input type="checkbox" className="form-checkbox text-blue-600" />
+            <span>Recibir Actualizaciones por Email</span>
           </label>
-          <label>
-            <input type="checkbox" /> Recibir Notificaciones por SMS
+          <label className="flex items-center space-x-2">
+            <input type="checkbox" className="form-checkbox text-blue-600" />
+            <span>Recibir Notificaciones por SMS</span>
           </label>
         </div>
-        <button className="button">Guardar Preferencias</button>
+        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Guardar Preferencias
+        </button>
       </div>
     </div>
   );
