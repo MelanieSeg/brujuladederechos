@@ -16,8 +16,8 @@ const processQueue = (error, token = null) => {
 };
 
 const api = axios.create({
-  baseURL: "http://localhost:4000/auth", // Cambia esto por tu URL de producción si es necesario
-  withCredentials: true, // Para enviar cookies (refreshToken)
+  baseURL: "http://localhost:4000/auth",
+  withCredentials: true, // Para enviar cookies 
 });
 
 api.interceptors.request.use(
