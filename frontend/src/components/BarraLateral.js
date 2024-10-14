@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { BellIcon, Bars3Icon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 export default function BarraLateral({ alternarNotificaciones }) {
+
+  const { user, isLoading, logout } = useAuth()
+
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [user, setUser] = useState(null);  // Estado para almacenar los datos del usuario
   const location = useLocation();
 
   const itemsDelMenu = [
@@ -20,6 +23,16 @@ export default function BarraLateral({ alternarNotificaciones }) {
     setSidebarVisible(!sidebarVisible);
   };
 
+  const handleLogout = async () => {
+    try {
+
+      await logout()
+
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   useEffect(() => {
     // Hacer una solicitud para obtener los datos del usuario
     fetch('/api/users/me', {  // Asegúrate de que este endpoint exista en tu backend
@@ -30,7 +43,7 @@ export default function BarraLateral({ alternarNotificaciones }) {
     })
       .then((response) => response.json())
       .then((data) => {
-        setUser(data);  // Guardar los datos del usuario en el estado
+        //obtener data de user si es necesario , por ahora no por que cn la data que viene en el payload de JWT es suficienete
       })
       .catch((error) => console.error('Error al obtener los datos del usuario:', error));
   }, []);

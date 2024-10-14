@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"      # puerto AMQP
+      - "15672:15672"    # perto para administar 
+    environment:
+      RABBITMQ_DEFAULT_USER: scraping_service
+      RABBITMQ_DEFAULT_PASS: your_secure_password
+    networks:
+      - app-network
+
+  db:
+    image: postgres:14
+    container_name: postgres
+    environment:
+      POSTGRES_USER: brujula_test_db_owner
+      POSTGRES_PASSWORD: E...........
+      POSTGRES_DB: brujula_test_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-data:
