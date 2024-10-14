@@ -15,8 +15,9 @@ class CommentsRouter {
     router.route("/get-all-comments-scraped").get(this.CommentsController.getAllComments);
     router.route("/get-all-classified-comments").get(this.CommentsController.getAllClassifiedComments);
     //TODO: Terminar funcionalida de clasificacion manual
-    router.route("/get-clasificate-comment").post(this.CommentsController.clasificateComment);
+    router.route("/clasificar").post(this.CommentsController.clasificateComment);
     return router;
+
   }
 }
 

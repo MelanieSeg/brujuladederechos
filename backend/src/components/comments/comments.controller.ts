@@ -1,6 +1,14 @@
 import { Request, Response } from "express";
 import CommentsService from "./comments.services";
 import { commentScrappedClassificationSchema } from "../../schemas/commentScrapped";
+import { request } from "http";
+
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+  };
+}
 
 class CommentsController {
   private CommentsService: CommentsService;
@@ -34,8 +42,36 @@ class CommentsController {
     }
   }
 
-  clasificateComment = async (req: Request, res: Response) => {
-  }
+  clasificateComment = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      console.log(req.body)
+      const userId = req.body.userId;
+
+      if (!userId) {
+        return res.status(401).json({ msg: "Usuario no autenticado" });
+      }
+
+      const classificationData = req.body;
+      const validationResult = commentScrappedClassificationSchema.safeParse(classificationData);
+
+      if (!validationResult.success) {
+        console.error("Errores de validación:", validationResult.error.errors);
+        return res.status(400).json({ msg: "Datos de clasificación inválidos", errors: validationResult.error.errors });
+      }
+
+      const result = await this.CommentsService.manualClassificationComment(validationResult.data, userId);
+
+      if (result.success) {
+        return res.status(200).json({ data: result.data, msg: "Se a guardado exitosamene" });
+      } else {
+        return res.status(400).json({ msg: result.msg });
+      }
+    } catch (err) {
+      console.error("Error en clasificateComment:", err);
+      return res.status(500).json({ msg: "Error interno del servidor" });
+    }
+  };
 }
+
 
 export default CommentsController;

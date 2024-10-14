@@ -5,8 +5,10 @@ import { truncateComentario } from "../utils/truncarComentario";
 import { format, parseISO, isValid } from "date-fns";
 import Calendario from './Objects/Calendario';
 import Paginacion from "./Objects/Paginacion";
+import { useAuth } from "../hooks/useAuth"
 
 export default function ComentariosPendientes() {
+  const { user } = useAuth()
   const [comentarios, setComentarios] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
   const [comentariosPorPagina] = useState(10);
@@ -18,8 +20,19 @@ export default function ComentariosPendientes() {
   const [calendarioTipo, setCalendarioTipo] = useState(null);
   const [barraClasificacionVisible, setBarraClasificacionVisible] = useState(false);
   const [comentarioSeleccionado, setComentarioSeleccionado] = useState(null);
+  const [clasificacion, setClasificacion] = useState({
+    intensidadPrivacidad: "",
+    elementoTiempo: "",
+    empatiaPrivacidad: "",
+    interesPublico: "",
+    caracterPersonaPublico: "",
+    origenInformacion: "",
+    empatiaExpresion: "",
+    notas: ""
+  });
   const fechaButtonRef = useRef(null);
   const calendarioRef = useRef(null);
+
 
   useEffect(() => {
     const fetchComentarios = async () => {
@@ -51,7 +64,7 @@ export default function ComentariosPendientes() {
     const filtrados = comentarios.filter((comentario) => {
       const fechaComentario = parseISO(comentario.fechaScraping);
       if (!isValid(fechaComentario)) return false;
-      
+
       if (desde && hasta) {
         return fechaComentario >= desde && fechaComentario <= hasta;
       } else if (desde) {
@@ -117,7 +130,7 @@ export default function ComentariosPendientes() {
   useEffect(() => {
     function handleClickOutside(event) {
       if (fechaButtonRef.current && !fechaButtonRef.current.contains(event.target) &&
-          calendarioRef.current && !calendarioRef.current.contains(event.target)) {
+        calendarioRef.current && !calendarioRef.current.contains(event.target)) {
         setMostrarSelectorFecha(false);
         setMostrarCalendario(false);
         setCalendarioTipo(null);
@@ -135,6 +148,54 @@ export default function ComentariosPendientes() {
     setBarraClasificacionVisible(true);
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    let parsedValue = value;
+
+    if (name === "empatiaPrivacidad" || name === "empatiaExpresion") {
+      parsedValue = parseFloat(value);
+    } else if (name !== "notas") {
+      parsedValue = parseInt(value, 10);
+    }
+
+    setClasificacion({ ...clasificacion, [name]: value });
+  };
+
+  console.log(user)
+
+  const enviarClasificacion = async () => {
+    try {
+      const response = await api.post("/comments/clasificar", {
+        comentarioScrapedId: comentarioSeleccionado.id,
+        clasificadorId: user.id,
+        ...clasificacion,
+        userId: user
+      });
+
+      console.log('Clasificación guardada:', response.data);
+
+      if (response.status === 200) {
+        setBarraClasificacionVisible(false);
+        alert("Clasificación guardada exitosamente");
+        // Resetear el formulario de clasificación
+        setClasificacion({
+          intensidadPrivacidad: "",
+          elementoTiempo: "",
+          empatiaPrivacidad: "",
+          interesPublico: "",
+          caracterPersonaPublico: "",
+          origenInformacion: "",
+          empatiaExpresion: "",
+          notas: ""
+        });
+      }
+    } catch (error) {
+      console.error("Error al guardar la clasificación", error);
+      console.log("Respuesta del servidor:", error.response?.data);
+      alert("Error al guardar la clasificación: " + (error.response?.data?.msg || error.message));
+    }
+  };
+
   return (
     <div className="p-8 flex flex-col">
       <div className="flex-grow">
@@ -147,7 +208,7 @@ export default function ComentariosPendientes() {
             <button
               ref={fechaButtonRef}
               onClick={() => setMostrarSelectorFecha(!mostrarSelectorFecha)}
-              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm" 
+              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
             >
               <PlusIcon className="w-5 h-5 text-gray-500" />
               <span>Fecha</span>
@@ -177,10 +238,10 @@ export default function ComentariosPendientes() {
                     )}
                   </button>
                   <div className="border-t border-gray-200">
-                  <button onClick={eliminarFiltro} className="w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100">
-                    Limpiar
-                  </button>
-                </div>
+                    <button onClick={eliminarFiltro} className="w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100">
+                      Limpiar
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -278,6 +339,9 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="1"
                 max="3"
+                name="privacidadIntrusiva"
+                value={clasificacion.intensidadPrivacidad}
+                onChange={handleInputChange}
                 placeholder="PR"
                 className="border rounded w-full mt-1 p-1"
               />
@@ -292,6 +356,9 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="0"
                 max="1"
+                name="tiempo"
+                value={clasificacion.elementoTiempo}
+                onChange={handleInputChange}
                 placeholder="T"
                 step="0.1"
                 className="border rounded w-full mt-1 p-1"
@@ -307,6 +374,9 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="0"
                 max="1"
+                name="empatiaPrivacidad"
+                value={clasificacion.empatiaPrivacidad}
+                onChange={handleInputChange}
                 placeholder="E.Privacidad"
                 className="border rounded w-full mt-1 p-1"
               />
@@ -321,6 +391,9 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="1"
                 max="3"
+                name="interesPublico"
+                value={clasificacion.interesPublico}
+                onChange={handleInputChange}
                 placeholder="IP"
                 className="border rounded w-full mt-1 p-1"
               />
@@ -335,6 +408,9 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="1"
                 max="2"
+                name="figuraPublica"
+                value={clasificacion.caracterPersonaPublico}
+                onChange={handleInputChange}
                 placeholder="PF"
                 className="border rounded w-full mt-1 p-1"
               />
@@ -349,8 +425,11 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="-0.75"
                 max="0"
+                name="origenIformacion"
                 placeholder="OI"
                 step={0.05}
+                value={clasificacion.origenInformacion}
+                onChange={handleInputChange}
                 className="border rounded w-full mt-1 p-1"
               />
             </label>
@@ -364,6 +443,9 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="0"
                 max="1"
+                name="empatiaLibertad"
+                value={clasificacion.empatiaExpresion}
+                onChange={handleInputChange}
                 placeholder="E.Libertad"
                 className="border rounded w-full mt-1 p-1"
               />
@@ -382,6 +464,7 @@ export default function ComentariosPendientes() {
             </button>
             <button
               className="bg-blue-600 text-white py-2 px-4 rounded w-[48%]"
+              onClick={enviarClasificacion}
             >
               Completar
             </button>

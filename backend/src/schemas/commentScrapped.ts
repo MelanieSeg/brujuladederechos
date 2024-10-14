@@ -22,14 +22,13 @@ export type ScrappedData = z.infer<typeof scrappedDataSchema>;
 export const commentScrappedClassificationSchema = z.object({
   comentarioScrapedId: z.string(),
   clasificadorId: z.string(),
-  intensidadPrivacidad: z.number().int().min(0).max(10).optional(),
-  elementoTiempo: z.number().int().min(0).max(10).optional(),
-  interesPublico: z.number().int().min(0).max(10).optional(),
-  caracterPersonaPublico: z.number().int().min(0).max(10).optional(),
+  intensidadPrivacidad: z.number().int().min(1).max(3).optional(),
+  elementoTiempo: z.number().int().min(0).max(1).optional(),
+  interesPublico: z.number().int().min(1).max(3).optional(),
+  caracterPersonaPublico: z.number().int().min(1).max(2).optional(),
   origenInformacion: z.number().int().min(0).max(10).optional(),
   empatiaPrivacidad: z.number().min(0).max(1).optional(),
   empatiaExpresion: z.number().min(0).max(1).optional(),
-  gravedad: z.nativeEnum(Gravedad).optional(),
   notas: z.string().optional(),
 })
 
