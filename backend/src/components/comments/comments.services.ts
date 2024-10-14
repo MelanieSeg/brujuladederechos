@@ -27,7 +27,6 @@ class CommentsService {
         origenInformacion,
         empatiaPrivacidad,
         empatiaExpresion,
-        gravedad,
         notas,
       } = data;
 
@@ -59,7 +58,6 @@ class CommentsService {
         const comentarioClasificated = await prisma.comentarioClasificado.create({
           data: {
             clasificadorId: user.id,
-            gravedad: gravedad,
             notas: notas || null,
             clasificacion: CLASIFICACION.MANUAL,
             comentarioScrapedId: commentUpdatedIbf.id
