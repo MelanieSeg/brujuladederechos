@@ -20,4 +20,4 @@ module.exports = {
   },
   darkMode: 'class', // Activar modo oscuro por clase
   plugins: [],
-}
+};
