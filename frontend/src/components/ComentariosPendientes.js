@@ -21,14 +21,13 @@ export default function ComentariosPendientes() {
   const [barraClasificacionVisible, setBarraClasificacionVisible] = useState(false);
   const [comentarioSeleccionado, setComentarioSeleccionado] = useState(null);
   const [clasificacion, setClasificacion] = useState({
-    intensidadPrivacidad: "",
-    elementoTiempo: "",
-    empatiaPrivacidad: "",
-    interesPublico: "",
-    caracterPersonaPublico: "",
-    origenInformacion: "",
-    empatiaExpresion: "",
-    notas: ""
+    intensidadPrivacidad: 0,
+    elementoTiempo: 0,
+    empatiaPrivacidad: 0,
+    interesPublico: 0,
+    caracterPersonaPublico: 0,
+    origenInformacion: 0,
+    empatiaExpresion: 0
   });
   const fechaButtonRef = useRef(null);
   const calendarioRef = useRef(null);
@@ -162,14 +161,26 @@ export default function ComentariosPendientes() {
   };
 
   console.log(user)
+  console.log({
+    comentarioScrapedId: comentarioSeleccionado?.id,
+    clasificadorId: user?.id,
+    ...clasificacion,
+    userId: user.id
+  });
 
   const enviarClasificacion = async () => {
     try {
       const response = await api.post("/comments/clasificar", {
         comentarioScrapedId: comentarioSeleccionado.id,
         clasificadorId: user.id,
-        ...clasificacion,
-        userId: user
+        intensidadPrivacidad: Number(clasificacion.intensidadPrivacidad),
+        elementoTiempo: Number(clasificacion.elementoTiempo),
+        empatiaPrivacidad: Number(clasificacion.empatiaPrivacidad),
+        interesPublico: Number(clasificacion.interesPublico),
+        caracterPersonaPublico: Number(clasificacion.caracterPersonaPublico),
+        origenInformacion: Number(clasificacion.origenInformacion),
+        empatiaExpresion: Number(clasificacion.empatiaExpresion),
+        userId: user.id
       });
 
       console.log('Clasificación guardada:', response.data);
@@ -179,14 +190,13 @@ export default function ComentariosPendientes() {
         alert("Clasificación guardada exitosamente");
         // Resetear el formulario de clasificación
         setClasificacion({
-          intensidadPrivacidad: "",
-          elementoTiempo: "",
-          empatiaPrivacidad: "",
-          interesPublico: "",
-          caracterPersonaPublico: "",
-          origenInformacion: "",
-          empatiaExpresion: "",
-          notas: ""
+          intensidadPrivacidad: 0,
+          elementoTiempo: 0,
+          empatiaPrivacidad: 0,
+          interesPublico: 0,
+          caracterPersonaPublico: 0,
+          origenInformacion: 0,
+          empatiaExpresion: 0
         });
       }
     } catch (error) {
@@ -339,7 +349,7 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="1"
                 max="3"
-                name="privacidadIntrusiva"
+                name="intensidadPrivacidad"
                 value={clasificacion.intensidadPrivacidad}
                 onChange={handleInputChange}
                 placeholder="PR"
@@ -356,7 +366,7 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="0"
                 max="1"
-                name="tiempo"
+                name="elementoTiempo"
                 value={clasificacion.elementoTiempo}
                 onChange={handleInputChange}
                 placeholder="T"
@@ -408,7 +418,7 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="1"
                 max="2"
-                name="figuraPublica"
+                name="caracterPersonaPublico"
                 value={clasificacion.caracterPersonaPublico}
                 onChange={handleInputChange}
                 placeholder="PF"
@@ -423,9 +433,9 @@ export default function ComentariosPendientes() {
               Origen de la información (-0.75 - 0):
               <input
                 type="number"
-                min="-0.75"
-                max="0"
-                name="origenIformacion"
+                min="0"
+                max="1"
+                name="origenInformacion"
                 placeholder="OI"
                 step={0.05}
                 value={clasificacion.origenInformacion}
@@ -443,7 +453,7 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="0"
                 max="1"
-                name="empatiaLibertad"
+                name="empatiaExpresion"
                 value={clasificacion.empatiaExpresion}
                 onChange={handleInputChange}
                 placeholder="E.Libertad"
