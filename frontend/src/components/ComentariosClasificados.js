@@ -214,8 +214,10 @@ export default function ComentariosClasificados() {
   };
 
   const filteredComentarios = comentarios.filter((comentario) => {
-    const gravedadMapeada = mapGravedad(comentario.gravedad);
-    const gravedadMatch = selectedGravedad[gravedadMapeada];
+    const gravedadMapeada = mapGravedad(comentario.gravedad ? comentario.gravedad : 'Desconocida');
+    console.log(gravedadMapeada)
+    const gravedadMatch = 'Desconocida';
+    console.log(gravedadMatch)
 
     let dateMatch = true;
     if (selectedDate) {
@@ -271,7 +273,7 @@ export default function ComentariosClasificados() {
 
     const rows = commentsToDownload.map((comment) => [
       `"${comment.comentario.replace(/"/g, '""')}"`,
-      mapGravedad(comment.gravedad),
+      mapGravedad(comment?.gravedad ? comment.gravedad : 'Desconocida'),
       comment.comentario.sitioWeb.nombre,
       format(parseISO(comment.fechaClasificacion), "dd-MM-yyyy"),
     ]);
@@ -453,10 +455,10 @@ export default function ComentariosClasificados() {
               <td className="px-6 py-4">
                 <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${getBadgeColor(
-                    comentario.gravedad
+                    comentario?.gravedad
                   )}`}
                 >
-                  {mapGravedad(comentario.gravedad)}
+                  {mapGravedad(comentario?.gravedad ? comentario.gravedad : 'Desconocida')}
                 </span>
               </td>
               <td className="px-6 py-4">{comentario.comentario?.sitioWeb?.nombre ? comentario?.comentario?.sitioWeb?.nombre : "latercera.com"}</td>
