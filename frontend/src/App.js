@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react';//
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import BarraLateral from './components/BarraLateral';
 import Dashboard from './components/Dashboard';
