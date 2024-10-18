@@ -1,12 +1,16 @@
+// src/ComentariosRecolectados.js
+
 import React, { useState, useRef, useEffect } from "react";
-import {PlusIcon} from "@heroicons/react/20/solid";
-import {TrashIcon} from '@heroicons/react/24/outline';
+import { PlusIcon } from "@heroicons/react/20/solid";
+import { TrashIcon } from '@heroicons/react/24/outline';
 import api from "../services/axios";
 import { format, parseISO } from "date-fns";
 import { truncateComentario } from "../utils/truncarComentario";
 import Calendario from "./Objects/Calendario";
 import Paginacion from "./Objects/Paginacion";
 
+// **Importación añadida para el componente Formulario**
+import Formulario from "./Objects/Formulario";
 
 export default function ComentariosRecolectados() {
   const [defaultComentarios] = useState([
@@ -49,7 +53,7 @@ export default function ComentariosRecolectados() {
     // ... (más comentarios)
   ]);
 
-  const [comentarios,setComentarios] = useState([])
+  const [comentarios, setComentarios] = useState([]);
 
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
@@ -88,7 +92,7 @@ export default function ComentariosRecolectados() {
   }, []);
 
 
-        console.log(comentarios)
+  console.log(comentarios)
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -230,7 +234,7 @@ export default function ComentariosRecolectados() {
       (!fechaHasta || format(parseISO(comentario.fechaScraping), "yyyy-MM-dd") <= fechaHasta);
     return estadoMatch && dateMatch;
   });
-  
+
 
   const indexOfLastComment = currentPage * commentsPerPage;
   const indexOfFirstComment = indexOfLastComment - commentsPerPage;
@@ -321,20 +325,19 @@ export default function ComentariosRecolectados() {
           <div className="flex items-center space-x-4">
             <input
               type="date"
-              value={null}
+              value={fechaDesde}
               onChange={(e) => setFechaDesde(e.target.value)}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
             <span>-</span>
             <input
               type="date"
-              value={null}
+              value={fechaHasta}
               onChange={(e) => setFechaHasta(e.target.value)}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
-            <button className="bg-black text-white px-4 py-2 rounded-md">
-              Descargar
-            </button>
+            {/* **Componente Formulario para descargar el PDF** */}
+            <Formulario comentariosFiltrados={filteredComments} />
           </div>
         </div>
 
@@ -369,8 +372,8 @@ export default function ComentariosRecolectados() {
                     {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
                   </span>
                 </td>
-                <td className="px-6 py-4">{"emol.com"}</td>
-                <td className="px-6 py-4">{format(parseISO(comentario.fechaScraping),"dd-MM-yyyy")}</td>
+                <td className="px-6 py-4">{comentario.sourceUrl}</td>
+                <td className="px-6 py-4">{format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")}</td>
                 <td className="px-6 py-4 text-right">
                   <TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer" />
                 </td>
@@ -384,7 +387,7 @@ export default function ComentariosRecolectados() {
           totalPaginas={totalPages}
           onPageChange={handlePageClick}  // Este callback manejará el cambio de página
         />
-        </div>
+      </div>
     </div>
   );
 }

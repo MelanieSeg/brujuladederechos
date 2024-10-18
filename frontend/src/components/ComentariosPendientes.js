@@ -5,10 +5,13 @@ import { truncateComentario } from "../utils/truncarComentario";
 import { format, parseISO, isValid } from "date-fns";
 import Calendario from './Objects/Calendario';
 import Paginacion from "./Objects/Paginacion";
-import { useAuth } from "../hooks/useAuth"
+import { useAuth } from "../hooks/useAuth";
+
+// **Importación añadida para el componente Formulario**
+import Formulario from "./Objects/Formulario";
 
 export default function ComentariosPendientes() {
-  const { user } = useAuth()
+  const { user } = useAuth();
   const [comentarios, setComentarios] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
   const [comentariosPorPagina] = useState(10);
@@ -31,7 +34,6 @@ export default function ComentariosPendientes() {
   });
   const fechaButtonRef = useRef(null);
   const calendarioRef = useRef(null);
-
 
   useEffect(() => {
     const fetchComentarios = async () => {
@@ -117,7 +119,6 @@ export default function ComentariosPendientes() {
     setMostrarSelectorFecha(true);
   };
 
-
   const handleFechaDesdeChange = (e) => {
     setFechaDesde(e.target.value);
   };
@@ -157,10 +158,10 @@ export default function ComentariosPendientes() {
       parsedValue = parseInt(value, 10);
     }
 
-    setClasificacion({ ...clasificacion, [name]: value });
+    setClasificacion({ ...clasificacion, [name]: value }); 
   };
 
-  console.log(user)
+  console.log(user);
   console.log({
     comentarioScrapedId: comentarioSeleccionado?.id,
     clasificadorId: user?.id,
@@ -277,9 +278,8 @@ export default function ComentariosPendientes() {
               onChange={handleFechaHastaChange}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
-            <button className="bg-black text-white px-4 py-2 rounded-md">
-              Descargar
-            </button>
+            {/* **Reemplazar el botón "Descargar" con el componente Formulario** */}
+            <Formulario comentariosFiltrados={comentariosFiltrados} />
           </div>
         </div>
 

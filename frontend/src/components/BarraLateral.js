@@ -16,6 +16,7 @@ export default function BarraLateral({ alternarNotificaciones }) {
     { nombre: 'Comentarios pendientes', ruta: '/comentarios-pendientes' },
     { nombre: 'Comentarios clasificados', ruta: '/comentarios-clasificados' },
     { nombre: 'Historial de cambios', ruta: '/historial-de-cambios' },
+    { nombre:'Panel Administrador',ruta:'/panel-administrador'},
     { nombre: 'Configuración', ruta: '/configuracion' },
   ];
 
