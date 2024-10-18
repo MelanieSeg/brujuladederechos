@@ -1,4 +1,4 @@
-// src/ComentariosRecolectados.js
+// src/ComentariosRecolectados.js///////
 
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon } from "@heroicons/react/20/solid";
