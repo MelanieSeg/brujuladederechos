@@ -21,13 +21,13 @@ export default function ComentariosPendientes() {
   const [barraClasificacionVisible, setBarraClasificacionVisible] = useState(false);
   const [comentarioSeleccionado, setComentarioSeleccionado] = useState(null);
   const [clasificacion, setClasificacion] = useState({
-    intensidadPrivacidad: 0,
-    elementoTiempo: 0,
-    empatiaPrivacidad: 0,
-    interesPublico: 0,
-    caracterPersonaPublico: 0,
-    origenInformacion: 0,
-    empatiaExpresion: 0
+    intensidadPrivacidad: '',
+    elementoTiempo: '',
+    empatiaPrivacidad: '',
+    interesPublico: '',
+    caracterPersonaPublico: '',
+    origenInformacion: '',
+    empatiaExpresion: ''
   });
   const fechaButtonRef = useRef(null);
   const calendarioRef = useRef(null);
