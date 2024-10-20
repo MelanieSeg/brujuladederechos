@@ -8,7 +8,7 @@ import ComentariosPendientes from './components/ComentariosPendientes';
 import ComentariosClasificados from './components/ComentariosClasificados';
 import HistorialDeCambios from './components/HistorialDeCambios';
 import ComentariosRecolectados from './components/ComentariosRecolectados';
-import Configuracion from './components/Configuracion';
+import Configuracion from './components/Configuracion'; // Importación correcta del componente
 
 function App() {
   const [mostrarNotificaciones, setMostrarNotificaciones] = React.useState(false);

@@ -5,8 +5,8 @@ let isRefreshing = false;
 let failedQueue = [];
 
 const api = axios.create({
-  baseURL: "http://localhost:4000", // Cambia esto por tu URL de producción si es necesario
-  // withCredentials: true, // Descomenta si implementas autenticación con cookies
+  baseURL: "http://localhost:4000",
+  withCredentials: true
 });
 
 // Función para guardar las configuraciones del usuario

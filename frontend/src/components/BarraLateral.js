@@ -3,12 +3,14 @@ import { BellIcon, Bars3Icon, ArrowRightOnRectangleIcon } from '@heroicons/react
 import { Link, useLocation } from 'react-router-dom';
 import { SunIcon, MoonIcon } from '@heroicons/react/24/solid';
 import { ThemeContext } from '../utils/ThemeContext'; // Importamos el contexto del tema
+import { useAuth } from '../hooks/useAuth'; // Autenticación
 
 export default function BarraLateral({ alternarNotificaciones }) {
+  const { user, isLoading, logout } = useAuth(); // Obtenemos datos de autenticación
+
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [user, setUser] = useState(null);
   const location = useLocation();
-  const { isDarkMode, toggleTheme } = useContext(ThemeContext);  // Usamos el contexto global del tema
+  const { isDarkMode, toggleTheme } = useContext(ThemeContext); // Usamos el contexto global del tema
 
   const itemsDelMenu = [
     { nombre: 'Resumen', ruta: '/resumen' },
@@ -24,19 +26,13 @@ export default function BarraLateral({ alternarNotificaciones }) {
     setSidebarVisible(!sidebarVisible);
   };
 
-  useEffect(() => {
-    fetch('/api/users/me', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setUser(data);
-      })
-      .catch((error) => console.error('Error al obtener los datos del usuario:', error));
-  }, []);
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <div>
@@ -61,13 +57,13 @@ export default function BarraLateral({ alternarNotificaciones }) {
               <BellIcon className="h-6 w-6 cursor-pointer" onClick={alternarNotificaciones} />
               {/* Botón de modo claro/oscuro */}
               <button
-                onClick={toggleTheme}  // Alternamos entre modo oscuro y claro usando el contexto
+                onClick={toggleTheme} // Alternamos entre modo oscuro y claro usando el contexto
                 className={`p-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}
               >
                 {isDarkMode ? (
-                  <SunIcon className="h-6 w-6 text-white" />  // Icono de sol en modo oscuro
+                  <SunIcon className="h-6 w-6 text-white" /> // Icono de sol en modo oscuro
                 ) : (
-                  <MoonIcon className="h-6 w-6 text-black" />  // Icono de luna en modo claro
+                  <MoonIcon className="h-6 w-6 text-black" /> // Icono de luna en modo claro
                 )}
               </button>
             </div>
@@ -113,7 +109,7 @@ export default function BarraLateral({ alternarNotificaciones }) {
                 <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Cargando usuario...</span>
               )}
             </div>
-            <button className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600">
+            <button onClick={handleLogout} className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600">
               <ArrowRightOnRectangleIcon className="h-6 w-6" />
             </button>
           </div>
