@@ -1,3 +1,4 @@
+// src/ComentariosPendientes.js
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import api from "../services/axios";
@@ -5,10 +6,13 @@ import { truncateComentario } from "../utils/truncarComentario";
 import { format, parseISO, isValid } from "date-fns";
 import Calendario from './Objects/Calendario';
 import Paginacion from "./Objects/Paginacion";
-import { useAuth } from "../hooks/useAuth"
+import { useAuth } from "../hooks/useAuth";
+
+// Importación del componente Formulario
+import Formulario from "./Objects/Formulario";
 
 export default function ComentariosPendientes() {
-  const { user } = useAuth()
+  const { user } = useAuth();
   const [comentarios, setComentarios] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
   const [comentariosPorPagina] = useState(10);
@@ -31,7 +35,6 @@ export default function ComentariosPendientes() {
   });
   const fechaButtonRef = useRef(null);
   const calendarioRef = useRef(null);
-
 
   useEffect(() => {
     const fetchComentarios = async () => {
@@ -117,7 +120,6 @@ export default function ComentariosPendientes() {
     setMostrarSelectorFecha(true);
   };
 
-
   const handleFechaDesdeChange = (e) => {
     setFechaDesde(e.target.value);
   };
@@ -157,16 +159,8 @@ export default function ComentariosPendientes() {
       parsedValue = parseInt(value, 10);
     }
 
-    setClasificacion({ ...clasificacion, [name]: value });
+    setClasificacion({ ...clasificacion, [name]: parsedValue }); 
   };
-
-  console.log(user)
-  console.log({
-    comentarioScrapedId: comentarioSeleccionado?.id,
-    clasificadorId: user?.id,
-    ...clasificacion,
-    userId: user.id
-  });
 
   const enviarClasificacion = async () => {
     try {
@@ -205,6 +199,34 @@ export default function ComentariosPendientes() {
       alert("Error al guardar la clasificación: " + (error.response?.data?.msg || error.message));
     }
   };
+
+  // Definir las columnas específicas para "Comentarios Pendientes" con nombres correctos
+  const columnasPendientes = [
+    {
+      title: "Comentario",
+      width: 250,
+      halign: 'left',
+    },
+    {
+      title: "Sitio Web",
+      width: 150,
+      halign: 'left',
+    },
+    {
+      title: "Fecha de Clasificación",
+      width: 100,
+      halign: 'center',
+    },
+  ];
+
+  // Definir la función formatData para transformar cada comentario en una fila
+  const formatData = (comentario) => [
+    comentario.comentario,
+    comentario.sourceUrl,
+    isValid(parseISO(comentario.fechaScraping))
+      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
+      : "Fecha Inválida"
+  ];
 
   return (
     <div className="p-8 flex flex-col">
@@ -277,9 +299,13 @@ export default function ComentariosPendientes() {
               onChange={handleFechaHastaChange}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
-            <button className="bg-black text-white px-4 py-2 rounded-md">
-              Descargar
-            </button>
+            {/* Utilizar el componente Formulario con columnas específicas */}
+            <Formulario 
+              comentariosFiltrados={comentariosFiltrados} 
+              columns={columnasPendientes} 
+              formatData={formatData}
+              fileName="comentarios_pendientes.pdf"
+            />
           </div>
         </div>
 
@@ -301,7 +327,9 @@ export default function ComentariosPendientes() {
                   </td>
                   <td className="p-2">{comentario.sourceUrl}</td>
                   <td className="p-2">
-                    {format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")}
+                    {isValid(parseISO(comentario.fechaScraping)) 
+                      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
+                      : "Fecha Inválida"}
                   </td>
                   <td className="p-2">
                     <button
@@ -324,7 +352,7 @@ export default function ComentariosPendientes() {
       </div>
 
       {barraClasificacionVisible && (
-        <div className="fixed right-[0px] top-0 h-screen w-[430px] bg-white shadow-lg p-6 opacity-100 border-l border-l-gray-300 overflow-y-auto">
+        <div className="fixed right-0 top-0 h-screen w-[430px] bg-white shadow-lg p-6 opacity-100 border-l border-l-gray-300 overflow-y-auto">
           <div className="flex justify-between items-start">
             <h2 className="text-xl font-bold">
               Clasificación manual de comentario
@@ -433,8 +461,8 @@ export default function ComentariosPendientes() {
               Origen de la información (-0.75 - 0):
               <input
                 type="number"
-                min="0"
-                max="1"
+                min="-0.75"
+                max="0"
                 name="origenInformacion"
                 placeholder="OI"
                 step={0.05}

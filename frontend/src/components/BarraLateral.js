@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { BellIcon, Bars3Icon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
+
 import { SunIcon, MoonIcon } from '@heroicons/react/24/solid';
 import { ThemeContext } from '../utils/ThemeContext'; // Importamos el contexto del tema
 import { useAuth } from '../hooks/useAuth'; // Autenticación
+
 
 export default function BarraLateral({ alternarNotificaciones }) {
   const { user, isLoading, logout } = useAuth(); // Obtenemos datos de autenticación
@@ -18,7 +20,7 @@ export default function BarraLateral({ alternarNotificaciones }) {
     { nombre: 'Comentarios pendientes', ruta: '/comentarios-pendientes' },
     { nombre: 'Comentarios clasificados', ruta: '/comentarios-clasificados' },
     { nombre: 'Historial de cambios', ruta: '/historial-de-cambios' },
-    { nombre: 'Panel de administración', ruta: '/panel-administracion' },
+    { nombre:'Panel Administrador',ruta:'/panel-administrador'},
     { nombre: 'Configuración', ruta: '/configuracion' },
   ];
 
