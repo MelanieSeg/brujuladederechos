@@ -1,15 +1,13 @@
-// src/ComentariosRecolectados.js///////
+// src/ComentariosRecolectados.js
 
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import { TrashIcon } from '@heroicons/react/24/outline';
 import api from "../services/axios";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { truncateComentario } from "../utils/truncarComentario";
 import Calendario from "./Objects/Calendario";
 import Paginacion from "./Objects/Paginacion";
-
-// **Importación añadida para el componente Formulario**
 import Formulario from "./Objects/Formulario";
 
 export default function ComentariosRecolectados() {
@@ -74,26 +72,25 @@ export default function ComentariosRecolectados() {
   const dateButtonRef = useRef(null);
   const calendarRef = useRef(null);
 
-
-  //NOTA: los comentarios recolectados van a ser los mismo que los pendientes por ahora, esto hasta que este la clasificacion manual
+  // NOTA: los comentarios recolectados van a ser los mismos que los pendientes por ahora, esto hasta que esté la clasificación manual
   useEffect(() => {
     const fetchComentarios = async () => {
       try {
         const response = await api.get("/comments/get-all-comments-scraped");
         setComentarios(response.data.data);
       } catch (err) {
-        //este set es para que no se tenga que inciar el server para ver comentarios Pendientes , es mas que nada para evitar errores pero eso solo para produccion
+        // Este set es para evitar errores en producción si no se puede obtener los comentarios
         setComentarios(defaultComentarios);
         console.log("Error al obtener los comentarios", err);
       }
     };
 
     fetchComentarios();
-  }, []);
+  }, [defaultComentarios]);
 
+  console.log(comentarios);
 
-  console.log(comentarios)
-
+  // Manejar clics fuera de los dropdowns para cerrarlos
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -189,7 +186,6 @@ export default function ComentariosRecolectados() {
     setIsCalendarOpen(false); // Cerramos el calendario después de seleccionar la fecha
   };
 
-
   const renderDropdown = () => {
     return isDropdownOpen && (
       <div ref={dropdownRef} className="absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
@@ -227,15 +223,36 @@ export default function ComentariosRecolectados() {
     );
   };
 
+  // Definir las columnas y la función de formateo específica para esta vista
+  const columns = [
+    { title: "Comentario", width: 200, halign: 'left' },
+    { title: "Estado", width: 60, halign: 'center' },
+    { title: "Sitio Web", width: 120, halign: 'left' },
+    { title: "Fecha", width: 140, halign: 'center' },
+  ];
+
+  const formatData = (comentario) => {
+    const comentarioTexto = comentario.comentario; // No truncar para el PDF
+    const estado =
+      comentario.estado === "PENDIENTE_CLASIFICACION" ? "Pendiente" : "Clasificado";
+    const sitioWeb = comentario.sourceUrl;
+    const fecha = isValid(parseISO(comentario.fechaScraping))
+      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
+      : "Fecha Inválida";
+
+    return [comentarioTexto, estado, sitioWeb, fecha];
+  };
+
+  // Filtrar comentarios según estado y fechas seleccionadas
   const filteredComments = comentarios.filter((comentario) => {
-    const estadoMatch = selectedEstado[comentario.estado]; // Ahora debería coincidir correctamente
+    const estadoMatch = selectedEstado[comentario.estado];
     const dateMatch =
       (!fechaDesde || format(parseISO(comentario.fechaScraping), "yyyy-MM-dd") >= fechaDesde) &&
       (!fechaHasta || format(parseISO(comentario.fechaScraping), "yyyy-MM-dd") <= fechaHasta);
     return estadoMatch && dateMatch;
   });
 
-
+  // Paginación
   const indexOfLastComment = currentPage * commentsPerPage;
   const indexOfFirstComment = indexOfLastComment - commentsPerPage;
   const currentComments = filteredComments.slice(
@@ -253,12 +270,12 @@ export default function ComentariosRecolectados() {
 
         <div className="flex items-center justify-between mb-6">
           <div className="flex space-x-4">
-            {/* Date button with dropdown */}
+            {/* Botón de Fecha con Dropdown */}
             <div className="relative">
               <button
                 ref={dateButtonRef}
                 onClick={toggleDateDropdown}
-                className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
+                className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm hover:bg-gray-100"
               >
                 <PlusIcon className="w-5 h-5 text-gray-500" />
                 <span>Fecha</span>
@@ -307,12 +324,12 @@ export default function ComentariosRecolectados() {
               )}
             </div>
 
-            {/* Estado button with dropdown */}
+            {/* Botón de Estado con Dropdown */}
             <div className="relative">
               <button
                 ref={gravedadButtonRef}
                 onClick={handleGravedadClick}
-                className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
+                className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm hover:bg-gray-100"
               >
                 <PlusIcon className="w-5 h-5 text-gray-500" />
                 <span>Estado</span>
@@ -321,71 +338,90 @@ export default function ComentariosRecolectados() {
             </div>
           </div>
 
-          {/* Date inputs and Download button */}
+          {/* Inputs de Fecha y Botón de Descarga */}
           <div className="flex items-center space-x-4">
             <input
               type="date"
               value={fechaDesde}
               onChange={(e) => setFechaDesde(e.target.value)}
-              className="border border-gray-300 rounded px-4 py-2 bg-white"
+              className="border border-gray-300 rounded px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <span>-</span>
             <input
               type="date"
               value={fechaHasta}
               onChange={(e) => setFechaHasta(e.target.value)}
-              className="border border-gray-300 rounded px-4 py-2 bg-white"
+              className="border border-gray-300 rounded px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {/* **Componente Formulario para descargar el PDF** */}
-            <Formulario comentariosFiltrados={filteredComments} />
+            {/* Componente Formulario para descargar el PDF */}
+            <Formulario 
+              comentariosFiltrados={filteredComments} 
+              columns={columns}
+              formatData={formatData}
+              fileName="comentarios_recolectados.pdf"
+            />
           </div>
         </div>
 
-        <table className="min-w-full bg-white shadow-md rounded-lg border-collapse">
-          <thead>
-            <tr>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                Comentario
-              </th>
-              <th className="px-12 py-4 text-left font-medium text-gray-500">
-                Estado
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                Sitio Web
-              </th>
-              <th className="px-6 py-4 text-left font-medium text-gray-500">
-                Fecha
-              </th>
-              <th className="px-6 py-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentComments.map((comentario, index) => (
-              <tr key={index} className="border-b border-gray-200">
-                <td className="px-6 py-4">{truncateComentario(comentario.comentario)}</td>
-                <td className="px-12 py-4">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColor(
-                      comentario.estado
-                    )}`}
-                  >
-                    {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
-                  </span>
-                </td>
-                <td className="px-6 py-4">{comentario.sourceUrl}</td>
-                <td className="px-6 py-4">{format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")}</td>
-                <td className="px-6 py-4 text-right">
-                  <TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer" />
-                </td>
+        {/* Tabla de Comentarios */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white shadow-md rounded-lg border-collapse">
+            <thead>
+              <tr>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">
+                  Comentario
+                </th>
+                <th className="px-12 py-4 text-left font-medium text-gray-500">
+                  Estado
+                </th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">
+                  Sitio Web
+                </th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">
+                  Fecha
+                </th>
+                <th className="px-6 py-4"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {currentComments.map((comentario, index) => (
+                <tr key={index} className="border-b border-gray-200">
+                  {/* Truncar el comentario para la vista */}
+                  <td className="px-6 py-4 max-w-xs">
+                    <div className="whitespace-nowrap overflow-hidden overflow-ellipsis">
+                      {truncateComentario(comentario.comentario, 100)}
+                    </div>
+                  </td>
+                  <td className="px-12 py-4">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColor(
+                        comentario.estado
+                      )}`}
+                    >
+                      {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">{comentario.sourceUrl}</td>
+                  <td className="px-6 py-4">
+                    {isValid(parseISO(comentario.fechaScraping)) 
+                      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy") 
+                      : "Fecha Inválida"
+                    }
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         
+        {/* Paginación */}
         <Paginacion
           paginaActual={currentPage}
           totalPaginas={totalPages}
-          onPageChange={handlePageClick}  // Este callback manejará el cambio de página
+          onPageChange={handlePageClick}
         />
       </div>
     </div>
