@@ -18,7 +18,7 @@ export default function BarraLateral({ alternarNotificaciones }) {
     { nombre: 'Comentarios pendientes', ruta: '/comentarios-pendientes' },
     { nombre: 'Comentarios clasificados', ruta: '/comentarios-clasificados' },
     { nombre: 'Historial de cambios', ruta: '/historial-de-cambios' },
-    { nombre: 'Panel de administración', ruta: '/panel-administracion' }, // Nuevo apartado
+    { nombre: 'Panel de administración', ruta: '/panel-administracion' },
     { nombre: 'Configuración', ruta: '/configuracion' },
   ];
 
@@ -54,7 +54,6 @@ export default function BarraLateral({ alternarNotificaciones }) {
               Brújula de Derechos Digitales
             </h1>
             <div className="flex items-center space-x-4">
-              <BellIcon className="h-6 w-6 cursor-pointer" onClick={alternarNotificaciones} />
               {/* Botón de modo claro/oscuro */}
               <button
                 onClick={toggleTheme} // Alternamos entre modo oscuro y claro usando el contexto
@@ -66,6 +65,7 @@ export default function BarraLateral({ alternarNotificaciones }) {
                   <MoonIcon className="h-6 w-6 text-black" /> // Icono de luna en modo claro
                 )}
               </button>
+              <BellIcon className="h-6 w-6 cursor-pointer" onClick={alternarNotificaciones} />
             </div>
           </div>
 
