@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { ThemeProvider } from './utils/ThemeContext';
 import BarraLateral from './components/BarraLateral';
 import Dashboard from './components/Dashboard';
 import ComentariosPendientes from './components/ComentariosPendientes';
