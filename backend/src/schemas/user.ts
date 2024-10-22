@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import * as z from "zod";
 
 export const userSchema = z.object({
@@ -19,26 +20,22 @@ export const userSchema = z.object({
   rol: z.string().default("MODERADOR"),
 });
 
-
-//TODO:Completar esto 
 export const userUpdateSchema = z.object({
   name: z
     .string()
-    .min(1, {
-      message: "El nombre del usuario tiene que ser al menos un caracter",
-    })
-    .max(72),
-  email: z.string().email(),
-  password: z
+    .min(1, { message: "El nombre del usuario debe tener al menos un carácter" })
+    .max(72, { message: "El nombre del usuario no puede exceder los 72 caracteres" })//CAMBIAR LA CANTIDAD
+    .optional(),
+  email: z
     .string()
-    .min(6, {
-      message: "La contraseña tiene que ser de minimo 6 caracteres",
-    })
-    .max(24, {
-      message: "La contraseña no puede superarar los 24 caracteres",
-    }),
-  rol: z.string().default("MODERADOR"),
-});
+    .email({ message: "Debe proporcionar un email válido" })
+    .optional(),
+  rol: z.string().optional(),
+  isActive: z.boolean().optional(),
+}).strict();
+//export type UpdateUserDto = z.infer<typeof userUpdateSchema>
+export type UpdateUserDto = z.infer<typeof userUpdateSchema>;
+export type UserUpdateData = Partial<Prisma.UserUpdateInput>
 
 export const userResetPasswordSchema = z.object({
   password: z

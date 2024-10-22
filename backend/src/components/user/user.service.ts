@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { generateRandomToken } from "../../utils";
 import EmailService from "../email/email.service";
 import { isValid } from "zod";
+import { UpdateUserDto, UserUpdateData } from "../../schemas/user";
 
 class UserService {
   private prisma: PrismaClient;
@@ -10,6 +11,12 @@ class UserService {
   constructor(emailService: EmailService) {
     this.prisma = new PrismaClient();
     this.EmailService = emailService;
+  }
+
+  private removeUndefined<T extends object>(obj: T): Partial<T> {
+    return Object.fromEntries(
+      Object.entries(obj).filter(([_, v]) => v !== undefined)
+    );
   }
 
   addUser = async (user: User) => {
@@ -264,25 +271,33 @@ class UserService {
     }
   }
 
-  updateUserData = async (user: User) => {
+  updateUserData = async (user: UpdateUserDto, id: string) => {
     try {
-
-      const userExist = await this.getUserById(user.id);
+      const userExist = await this.getUserById(id);
 
       if (!userExist) {
         return {
           success: false,
-          message: `El usuario con id: ${user.id} no fue encontrado`
+          message: `El usuario con id: ${id} no fue encontrado`
+        }
+      }
+
+      if (user.email) {
+        const emailInUse = await this.getUserbyEmail(user.email);
+
+        if (emailInUse && emailInUse.id !== userExist.id) {
+          return {
+            success: false,
+            message: `El email ingresado ya esta en uso`
+          }
         }
       }
 
       const updatedUser = await this.prisma.user.update({
-        data: {
-          ...user
-        },
         where: {
-          id: userExist.id
-        }
+          id: id
+        },
+        data: user
       })
 
       return {

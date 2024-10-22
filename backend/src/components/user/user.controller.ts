@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import UserService from "./user.service";
-import { userResetPasswordSchema, userSchema } from "../../schemas/user";
+import { userResetPasswordSchema, userSchema, userUpdateSchema } from "../../schemas/user";
 import { tokenSchema } from "../../schemas/token";
 
 class UserController {
@@ -39,7 +39,20 @@ class UserController {
 
   updateUserData = async (req: Request, res: Response) => {
     try {
-      //     const validData =  
+      const id = req.params
+      const validData = userUpdateSchema.safeParse(req.body)
+      if (!validData.success) {
+        return res.status(400).json({ error: "Datos ingresados invalidos" });
+      }
+
+      //const updatedUser =await this.userService.updateUserData(validData);
+
+      //return res.status(200).json({
+      //data:updatedUser,
+      //message:`Informacion de uusario actualizada con exito`
+      //})
+
+      return res.status(200).json({ validData, id })
 
     } catch (err) {
       //TODO:Cambirar los errores po expeciones
