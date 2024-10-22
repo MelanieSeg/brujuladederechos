@@ -213,7 +213,7 @@ export default function ComentariosPendientes() {
       halign: 'left',
     },
     {
-      title: "Fecha de Clasificación",
+      title: "Fecha",
       width: 100,
       halign: 'center',
     },
@@ -315,7 +315,7 @@ export default function ComentariosPendientes() {
               <tr>
                 <th className="px-6 py-4 text-left font-medium text-gray-500">Comentario</th>
                 <th className="px-6 py-4 text-left font-medium text-gray-500">Sitio web</th>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">Fecha de clasificación</th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Fecha </th>
                 <th className="p-2 text-left"></th>
               </tr>
             </thead>

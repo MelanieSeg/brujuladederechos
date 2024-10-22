@@ -1,5 +1,6 @@
+// components/PanelAdministrador.js
 import React, { useState, useEffect } from 'react';
-import {//
+import {
   PencilIcon,
   TrashIcon,
   UserPlusIcon,
@@ -21,6 +22,16 @@ export default function PanelAdministrador() {
     { id: 8, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
     { id: 9, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
     { id: 10, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
+    { id: 11, nombre: 'John Doe', email: 'john@example.com', estado: 'Activo' },
+    { id: 12, nombre: 'Claudia Ramírez', email: 'claudia@example.com', estado: 'Inactivo' },
+    { id: 13, nombre: 'Jane Smith', email: 'jane@example.com', estado: 'Inactivo' },
+    { id: 14, nombre: 'Alice Johnson', email: 'alice@example.com', estado: 'Inactivo' },
+    { id: 15, nombre: 'Cesar Vásquez', email: 'cesar.vasquez@example.com', estado: 'Activo' },
+    { id: 16, nombre: 'Camila Díaz', email: 'camila.diaz@example.com', estado: 'Activo' },
+    { id: 17, nombre: 'Carolina Blanco', email: 'carolina.blanco@example.com', estado: 'Activo' },
+    { id: 18, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
+    { id: 19, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
+    { id: 20, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
   ];
 
   const [moderadores, setModeradores] = useState(datosTemporalesModeradores);
@@ -162,6 +173,7 @@ export default function PanelAdministrador() {
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Nombre del moderador"
               className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
           {/* Campo de Email */}
@@ -175,6 +187,7 @@ export default function PanelAdministrador() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email del moderador"
               className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
           {/* Campo de Contraseña */}
@@ -188,6 +201,7 @@ export default function PanelAdministrador() {
               onChange={(e) => setContraseña(e.target.value)}
               placeholder="**********"
               className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
           {/* Campo de Confirmar Contraseña */}
@@ -201,6 +215,7 @@ export default function PanelAdministrador() {
               onChange={(e) => setConfirmarContraseña(e.target.value)}
               placeholder="**********"
               className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
           {/* Campo de Estado */}
@@ -265,6 +280,7 @@ export default function PanelAdministrador() {
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Nombre del moderador"
               className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
           {/* Campo de Email */}
@@ -278,6 +294,7 @@ export default function PanelAdministrador() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email del moderador"
               className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
           {/* Campo de Estado */}
@@ -344,6 +361,7 @@ export default function PanelAdministrador() {
             type="password"
             placeholder="********"
             className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
           />
         </div>
         <div className="flex justify-end space-x-2 mt-6">
@@ -365,34 +383,31 @@ export default function PanelAdministrador() {
   );
 
   return (
-    <div className="p-8 bg-[#F9F9F9] flex-1 relative">
-      <h2 className="text-3xl font-bold mb-8 text-gray-800">
+    <div className="p-8 bg-[#FAF9F8] flex-1 relative">
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800">
         Panel de administración
       </h2>
 
-      {/* Campo de Búsqueda */}
-      <div className="mb-6 w-1/3 relative">
-        <input
-          type="text"
-          value={busqueda}
-          onChange={manejarCambioBusqueda}
-          placeholder="Buscar moderador..."
-          className="w-full pr-10 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <MagnifyingGlassIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
-      </div>
+      {/* Barra de Navegación Integrada - Modificada para mantener la longitud y la posición del botón */}
+      <div className="mb-6 flex items-center justify-between">
+  {/* Contenedor de búsqueda */}
+  <div className="relative flex-grow mr-4" style={{ maxWidth: '300px' }}>
 
-      <div className="mb-6 flex justify-end">
-        <button
-          onClick={() => {
-            resetFormFields();
-            setMostrarFormulario(true);
-          }}
-          className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
-          <UserPlusIcon className="h-5 w-5 mr-2" /> Agregar nuevo moderador
-        </button>
-      </div>
+    <input
+      type="text"
+      value={busqueda}
+      onChange={manejarCambioBusqueda}
+      placeholder="Buscar moderador..."
+      className="w-full pr-10 p-2 h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+    />
+    <MagnifyingGlassIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+  </div>
+  
+  {/* Botón "Agregar Nuevo Moderador" */}
+  <button className="bg-blue-500 text-white px-4 py-2 rounded-md h-10">
+    Agregar Nuevo Moderador
+  </button>
+</div>
 
       <div className="overflow-x-auto bg-white shadow-sm rounded-md">
         <table className="min-w-full bg-white">
@@ -431,35 +446,44 @@ export default function PanelAdministrador() {
                     {moderador.estado}
                   </span>
                 </td>
-                <td className="px-6 py-4 flex items-center space-x-4">
-                  <button
-                    onClick={() =>
-                      manejarActivarDesactivarModerador(
-                        moderador.id,
-                        moderador.estado === 'Activo' ? 'Inactivo' : 'Activo'
-                      )
-                    }
-                    className="px-4 py-1 text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-                    style={{ minWidth: '100px' }}
-                  >
-                    {moderador.estado === 'Activo' ? 'Desactivar' : 'Activar'}
-                  </button>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => {
-                        setModeradorAEditar(moderador);
-                        setMostrarFormularioEditar(true);
-                      }}
-                      className="text-gray-500 hover:text-blue-600"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => confirmarEliminarModerador(moderador.id)}
-                      className="text-gray-500 hover:text-red-600"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+                <td className="px-6 py-4">
+                  {/* Contenedor de los botones de acción */}
+                  <div className="flex items-center justify-between">
+                    {/* Botón Activar/Desactivar alineado con el título "Acciones" */}
+                    <div>
+                      <button
+                        onClick={() =>
+                          manejarActivarDesactivarModerador(
+                            moderador.id,
+                            moderador.estado === 'Activo' ? 'Inactivo' : 'Activo'
+                          )
+                        }
+                        className="px-4 py-1 text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                        style={{ minWidth: '100px' }}
+                      >
+                        {moderador.estado === 'Activo' ? 'Desactivar' : 'Activar'}
+                      </button>
+                    </div>
+                    {/* Contenedor de los íconos de editar y eliminar */}
+                    <div className="flex items-center space-x-2 ml-4">
+                      <button
+                        onClick={() => {
+                          setModeradorAEditar(moderador);
+                          setMostrarFormularioEditar(true);
+                        }}
+                        className="text-gray-500 hover:text-blue-600"
+                        aria-label="Editar moderador"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => confirmarEliminarModerador(moderador.id)}
+                        className="text-gray-500 hover:text-red-600"
+                        aria-label="Eliminar moderador"
+                      >
+                        <PencilIcon className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -469,7 +493,7 @@ export default function PanelAdministrador() {
       </div>
 
       {/* Componente de Paginación */}
-      <div className="mt-6">
+      <div className="mt-4">
         <Paginacion
           paginaActual={paginaActual}
           totalPaginas={totalPaginas}
@@ -477,9 +501,10 @@ export default function PanelAdministrador() {
         />
       </div>
 
+      {/* Formularios y Modales */}
       {mostrarFormulario && formularioAgregarModerador}
       {mostrarFormularioEditar && formularioEditarModerador}
       {mostrarModalEliminar && modalEliminarModerador}
     </div>
   );
-}
+}//
