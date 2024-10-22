@@ -44,7 +44,7 @@ class UserService {
       const validConfirmToken = await this.prisma.userToken.findUnique({
         where: {
           token: token,
-          tipo:TipoToken.VERIFICATION,
+          tipo: TipoToken.VERIFICATION,
           expireAt: {
             gt: new Date(),
           },
@@ -145,7 +145,7 @@ class UserService {
       const validToken = await this.prisma.userToken.findUnique({
         where: {
           token: token,
-          tipo:TipoToken.RESET_PASSWORD,
+          tipo: TipoToken.RESET_PASSWORD,
           expireAt: {
             gt: new Date(),
           },
@@ -189,9 +189,9 @@ class UserService {
           },
         }),
         this.prisma.userToken.deleteMany({
-          where:{
-            userId:findUser.id,
-            tipo:TipoToken.REFRESH
+          where: {
+            userId: findUser.id,
+            tipo: TipoToken.REFRESH
           }
         })
       ]);
@@ -212,7 +212,7 @@ class UserService {
         email: true,
         rol: true,
         name: true,
-        emailVerified:true,
+        emailVerified: true,
       },
     });
 
@@ -229,6 +229,74 @@ class UserService {
         email: email,
       },
     });
+
+  deactivateUser = async (id: string) => {
+    try {
+      const user = await this.getUserById(id);
+
+      if (!user) {
+        return { success: false, message: `Error, el usuario con el id ${id} no fue encontrado` };
+      }
+
+      //NOTA: El usuario no lo podemos eliminiar por que existen existe la posibilidad
+      // de que este haya clasificado comentario por lo que no se puede eliminar de la base de datos
+      // por lo que solo lo vamos a "desactivar" o quitar el accesso
+      //
+      const deactivatedUser = await this.prisma.user.update({
+        where: {
+          id: user.id
+        },
+        data: {
+          isActive: false
+        }
+      })
+
+      //TODO: Aca hay que crear un registro de auditoria que al usuario "x" se le quito el acceso
+
+      return {
+        success: true,
+        message: `Se elimino el acceso al usuario ${this.deactivateUser.name}`
+      }
+
+
+    } catch (err) {
+      return { success: false, message: "Error al intentar eliminar usuario" };
+    }
+  }
+
+  updateUserData = async (user: User) => {
+    try {
+
+      const userExist = await this.getUserById(user.id);
+
+      if (!userExist) {
+        return {
+          success: false,
+          message: `El usuario con id: ${user.id} no fue encontrado`
+        }
+      }
+
+      const updatedUser = await this.prisma.user.update({
+        data: {
+          ...user
+        },
+        where: {
+          id: userExist.id
+        }
+      })
+
+      return {
+        success: true,
+        message: `Se actualizo la informacion del usuario: ${updatedUser.name} con exito`
+      }
+
+    } catch (err) {
+      return {
+        success: false,
+        message: `Error interno al intentar realizar un UPDATE en la data del usuario: ${user.name}`
+      }
+    }
+  }
 }
 
 export default UserService;

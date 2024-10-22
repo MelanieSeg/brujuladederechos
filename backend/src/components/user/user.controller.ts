@@ -37,6 +37,16 @@ class UserController {
     }
   };
 
+  updateUserData = async (req: Request, res: Response) => {
+    try {
+      //     const validData =  
+
+    } catch (err) {
+      //TODO:Cambirar los errores po expeciones
+      return res.status(500).json({ error: `Error interno del servidor, ${err}` })
+    }
+  }
+
   confirmEmailUser = async (req: Request, res: Response) => {
     try {
       const validData = tokenSchema.safeParse(req.body);

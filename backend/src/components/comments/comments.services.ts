@@ -110,6 +110,24 @@ class CommentsService {
       return { data: null, msg: err };
     }
   };
+
+  getAllCommentsPending = async () => {
+    try {
+      const pendingComments = await this.prisma.comentarioScraped.findMany({
+        where: {
+          clasificado: false
+        }
+      })
+
+      return {
+        data: pendingComments,
+        message: "Se obtuvieron todo los comentarios pendientes exitosamente"
+      }
+
+    } catch (err) {
+      return { data: null, message: err }
+    }
+  }
   addComment = async (comments: CommentScrapped[], webSiteName: string) => {
     try {
       const findWebsite = await this.getWebSite(webSiteName);

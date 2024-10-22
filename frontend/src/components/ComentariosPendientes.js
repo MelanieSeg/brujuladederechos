@@ -39,7 +39,7 @@ export default function ComentariosPendientes() {
   useEffect(() => {
     const fetchComentarios = async () => {
       try {
-        const response = await api.get("/comments/get-all");
+        const response = await api.get("/comments/get-all-comments-pending");
         setComentarios(response.data.data);
         setComentariosFiltrados(response.data.data);
       } catch (err) {
@@ -159,7 +159,7 @@ export default function ComentariosPendientes() {
       parsedValue = parseInt(value, 10);
     }
 
-    setClasificacion({ ...clasificacion, [name]: parsedValue }); 
+    setClasificacion({ ...clasificacion, [name]: parsedValue });
   };
 
   const enviarClasificacion = async () => {
@@ -300,9 +300,9 @@ export default function ComentariosPendientes() {
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
             {/* Utilizar el componente Formulario con columnas específicas */}
-            <Formulario 
-              comentariosFiltrados={comentariosFiltrados} 
-              columns={columnasPendientes} 
+            <Formulario
+              comentariosFiltrados={comentariosFiltrados}
+              columns={columnasPendientes}
               formatData={formatData}
               fileName="comentarios_pendientes.pdf"
             />
@@ -327,7 +327,7 @@ export default function ComentariosPendientes() {
                   </td>
                   <td className="p-2">{comentario.sourceUrl}</td>
                   <td className="p-2">
-                    {isValid(parseISO(comentario.fechaScraping)) 
+                    {isValid(parseISO(comentario.fechaScraping))
                       ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
                       : "Fecha Inválida"}
                   </td>

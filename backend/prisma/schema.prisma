@@ -24,7 +24,7 @@ model ComentarioScraped {
   elementoTiempo         Int?
   interesPublico         Int?
   caracterPersonaPublico Int?
-  origenInformacion      Int?
+  origenInformacion      Float?
   empatiaPrivacidad      Float?
   empatiaExpresion       Float?
   estado                 EstadoComentario        @default(PENDIENTE_CLASIFICACION)
@@ -63,6 +63,7 @@ model User {
   emailVerified           DateTime?
   image                   String?
   password                String
+  isActive Boolean @default(true)
   rol                     Roles                   @default(MODERADOR)
   createdAt               DateTime                @default(now())
   updatedAt               DateTime                @updatedAt
