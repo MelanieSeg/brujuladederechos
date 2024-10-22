@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, Roles } from "@prisma/client";
 import * as z from "zod";
 
 export const userSchema = z.object({
@@ -20,6 +20,11 @@ export const userSchema = z.object({
   rol: z.string().default("MODERADOR"),
 });
 
+
+export const userIdParamsSchema = z.object({
+  id: z.string().uuid()
+}).strict()
+
 export const userUpdateSchema = z.object({
   name: z
     .string()
@@ -30,7 +35,7 @@ export const userUpdateSchema = z.object({
     .string()
     .email({ message: "Debe proporcionar un email válido" })
     .optional(),
-  rol: z.string().optional(),
+  rol: z.nativeEnum(Roles).default(Roles.MODERADOR).optional(),
   isActive: z.boolean().optional(),
 }).strict();
 //export type UpdateUserDto = z.infer<typeof userUpdateSchema>

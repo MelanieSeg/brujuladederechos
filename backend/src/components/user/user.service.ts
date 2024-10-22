@@ -2,7 +2,6 @@ import { PrismaClient, TipoToken, User } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { generateRandomToken } from "../../utils";
 import EmailService from "../email/email.service";
-import { isValid } from "zod";
 import { UpdateUserDto, UserUpdateData } from "../../schemas/user";
 
 class UserService {
@@ -11,12 +10,6 @@ class UserService {
   constructor(emailService: EmailService) {
     this.prisma = new PrismaClient();
     this.EmailService = emailService;
-  }
-
-  private removeUndefined<T extends object>(obj: T): Partial<T> {
-    return Object.fromEntries(
-      Object.entries(obj).filter(([_, v]) => v !== undefined)
-    );
   }
 
   addUser = async (user: User) => {
@@ -297,7 +290,9 @@ class UserService {
         where: {
           id: id
         },
-        data: user
+        data: {
+          ...user
+        }
       })
 
       return {

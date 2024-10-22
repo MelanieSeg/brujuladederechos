@@ -14,7 +14,7 @@ class UserRouter {
     const router = express.Router();
 
     router.route("/create-user").post(this.UserController.createUser);
-    router.route("/update-user").post(this.UserController.updateUserData);
+    router.route("/update-user/id/:id").patch(this.UserController.updateUserData);
     router.route("/me").get(this.UserController.getUserById);
     router
       .route("/confirmar-usuario")
