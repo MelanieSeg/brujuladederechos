@@ -14,6 +14,7 @@ import RutasProtegidas from './components/RutasProtegidas';
 import LayoutProtegido from './components/LayoutProtegido';
 import RutasPublicas from './components/RutasPublicas';
 import PanelAdministrador from './components/PanelAdministrador';
+import FormConfirmarUsuario from './components/forms/Form-confirmar-usuario';
 
 function App() {
   const [mostrarNotificaciones, setMostrarNotificaciones] = React.useState(false);
@@ -30,6 +31,11 @@ function App() {
             <Route path='/login' element={
               <RutasPublicas>
                 <Login />
+              </RutasPublicas>
+            } />
+            <Route path='/confirmar-cuenta' element={
+              <RutasPublicas>
+                <FormConfirmarUsuario />
               </RutasPublicas>
             } />
 

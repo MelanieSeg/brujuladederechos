@@ -7,6 +7,11 @@ import {//
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import Paginacion from './Objects/Paginacion';
+import api from '../services/axios';
+import userApi from '../services/axiosUserInstance';
+import FormCreateUser from './forms/Form-crear-usuario';
+import FormUpdateUser from './forms/Form-update-usuario';
+import { useNavigate } from 'react-router-dom';
 
 export default function PanelAdministrador() {
   // Datos temporales de moderadores
@@ -23,7 +28,7 @@ export default function PanelAdministrador() {
     { id: 10, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
   ];
 
-  const [moderadores, setModeradores] = useState(datosTemporalesModeradores);
+  const [moderadores, setModeradores] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState('');
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -37,6 +42,8 @@ export default function PanelAdministrador() {
   const [contraseña, setContraseña] = useState('');
   const [confirmarContraseña, setConfirmarContraseña] = useState('');
   const [estado, setEstado] = useState('Activo');
+  const navigate = useNavigate()
+
 
   const moderadoresPorPagina = 10;
 
@@ -49,15 +56,32 @@ export default function PanelAdministrador() {
     setEstado('Activo');
   };
 
+
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      try {
+        const response = await userApi.get("/")
+        setModeradores(response.data)
+      } catch (err) {
+        console.log(`Error al obtener los usuarios`, err)
+      }
+    }
+    fetchUsuarios()
+  }, [])
+
+
   useEffect(() => {
     if (moderadorAEditar) {
-      setNombre(moderadorAEditar.nombre);
+      setNombre(moderadorAEditar.name);
       setEmail(moderadorAEditar.email);
-      setEstado(moderadorAEditar.estado);
+      setEstado(moderadorAEditar.isActive);
       setContraseña('');
       setConfirmarContraseña('');
     }
   }, [moderadorAEditar]);
+
+
+  console.log(moderadores)
 
   // Función para activar o desactivar un moderador
   const manejarActivarDesactivarModerador = (id, nuevoEstado) => {
@@ -88,36 +112,28 @@ export default function PanelAdministrador() {
   };
 
   // Filtrar moderadores según la búsqueda
-  const moderadoresFiltrados = moderadores.filter((moderador) =>
-    moderador.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+  const moderadoresFiltrados = moderadores?.filter((moderador) =>
+    moderador.name.toLowerCase().includes(busqueda.toLowerCase()) ||
     moderador.email.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   // Cálculo de índices para la paginación
   const indiceUltimoModerador = paginaActual * moderadoresPorPagina;
   const indicePrimerModerador = indiceUltimoModerador - moderadoresPorPagina;
-  const moderadoresAMostrar = moderadoresFiltrados.slice(
+  const moderadoresAMostrar = moderadoresFiltrados?.slice(
     indicePrimerModerador,
     indiceUltimoModerador
   );
 
   const totalPaginas = Math.ceil(
-    moderadoresFiltrados.length / moderadoresPorPagina
+    moderadoresFiltrados?.length / moderadoresPorPagina
   );
 
   // Función para agregar un nuevo moderador
   const handleAgregarModerador = (e) => {
     e.preventDefault();
-    // Validaciones si es necesario
-    const newId = moderadores.length ? Math.max(...moderadores.map(m => m.id)) + 1 : 1;
-    const nuevoModerador = {
-      id: newId,
-      nombre,
-      email,
-      estado,
-    };
 
-    setModeradores([...moderadores, nuevoModerador]);
+    //   setModeradores([...moderadores, nuevoModerador]);
     setMostrarFormulario(false);
     resetFormFields();
   };
@@ -126,13 +142,6 @@ export default function PanelAdministrador() {
   const handleEditarModerador = (e) => {
     e.preventDefault();
     // Validaciones si es necesario
-    setModeradores(
-      moderadores.map((mod) =>
-        mod.id === moderadorAEditar.id
-          ? { ...mod, nombre, email, estado }
-          : mod
-      )
-    );
     setMostrarFormularioEditar(false);
     setModeradorAEditar(null);
     resetFormFields();
@@ -140,7 +149,7 @@ export default function PanelAdministrador() {
 
   // Formulario para agregar un nuevo moderador
   const formularioAgregarModerador = (
-    <div className="absolute inset-0 bg-gray-800 bg-opacity-50 flex justify-end">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-end">
       <div className="w-full max-w-md bg-white h-full p-6 shadow-md overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold">Agregar nuevo moderador</h3>
@@ -151,98 +160,14 @@ export default function PanelAdministrador() {
             <XMarkIcon className="h-6 w-6 text-gray-700" />
           </button>
         </div>
-        <form onSubmit={handleAgregarModerador}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Nombre completo
-            </label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Nombre del moderador"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {/* Campo de Email */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email del moderador"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {/* Campo de Contraseña */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={contraseña}
-              onChange={(e) => setContraseña(e.target.value)}
-              placeholder="**********"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {/* Campo de Confirmar Contraseña */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Confirmar contraseña
-            </label>
-            <input
-              type="password"
-              value={confirmarContraseña}
-              onChange={(e) => setConfirmarContraseña(e.target.value)}
-              placeholder="**********"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {/* Campo de Estado */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Estado del moderador
-            </label>
-            <select
-              value={estado}
-              onChange={(e) => setEstado(e.target.value)}
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Activo">Activo</option>
-              <option value="Inactivo">Inactivo</option>
-            </select>
-          </div>
-          <div className="flex justify-between mt-6">
-            <button
-              type="button"
-              onClick={() => {
-                setMostrarFormulario(false);
-                resetFormFields();
-              }}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-            >
-              Completar
-            </button>
-          </div>
-        </form>
+        <FormCreateUser />
       </div>
     </div>
   );
 
   // Formulario para editar un moderador existente
   const formularioEditarModerador = (
-    <div className="absolute inset-0 bg-gray-800 bg-opacity-50 flex justify-end">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-end">
       <div className="w-full max-w-md bg-white h-full p-6 shadow-md overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold">Editar moderador</h3>
@@ -254,66 +179,7 @@ export default function PanelAdministrador() {
             <XMarkIcon className="h-6 w-6 text-gray-700" />
           </button>
         </div>
-        <form onSubmit={handleEditarModerador}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Nombre completo
-            </label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Nombre del moderador"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {/* Campo de Email */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email del moderador"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {/* Campo de Estado */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Estado del moderador
-            </label>
-            <select
-              value={estado}
-              onChange={(e) => setEstado(e.target.value)}
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Activo">Activo</option>
-              <option value="Inactivo">Inactivo</option>
-            </select>
-          </div>
-          <div className="flex justify-between mt-6">
-            <button
-              type="button"
-              onClick={() => {
-                setMostrarFormularioEditar(false);
-                setModeradorAEditar(null);
-                resetFormFields();
-              }}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-            >
-              Guardar cambios
-            </button>
-          </div>
-        </form>
+        <FormUpdateUser userData={moderadorAEditar} />
       </div>
     </div>
   );
@@ -408,6 +274,9 @@ export default function PanelAdministrador() {
                 Estado
               </th>
               <th className="px-6 py-4 text-left font-semibold text-gray-600">
+                Email verificado
+              </th>
+              <th className="px-6 py-4 text-left font-semibold text-gray-600">
                 Acciones
               </th>
             </tr>
@@ -418,18 +287,29 @@ export default function PanelAdministrador() {
                 key={moderador.id}
                 className="border-t border-gray-200 hover:bg-gray-50"
               >
-                <td className="px-6 py-4 text-gray-700">{moderador.nombre}</td>
+                <td className="px-6 py-4 text-gray-700">{moderador.name}</td>
                 <td className="px-6 py-4 text-gray-700">{moderador.email}</td>
                 <td className="px-6 py-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                      moderador.estado === 'Activo'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
+                    className={`px-3 py-1 rounded-full text-sm font-semibold ${moderador.isActive
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}
                   >
-                    {moderador.estado}
+                    {moderador.isActive ? "Activo" : "Inactivo"}
                   </span>
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-semibold ${moderador.emailVerified
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}
+                  >
+                    {moderador.emailVerified ? "Verificado" : "No Verificado"}
+                  </span>
+
+
                 </td>
                 <td className="px-6 py-4 flex items-center space-x-4">
                   <button
@@ -442,7 +322,7 @@ export default function PanelAdministrador() {
                     className="px-4 py-1 text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                     style={{ minWidth: '100px' }}
                   >
-                    {moderador.estado === 'Activo' ? 'Desactivar' : 'Activar'}
+                    {moderador.isActive ? 'Desactivar' : 'Activar'}
                   </button>
                   <div className="flex items-center space-x-2">
                     <button

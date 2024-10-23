@@ -41,7 +41,7 @@ class UserService {
 
   confirmEmail = async (token: string) => {
     try {
-      const validConfirmToken = await this.prisma.userToken.findUnique({
+      const validConfirmToken = await this.prisma.userToken.findFirst({
         where: {
           token: token,
           tipo: TipoToken.VERIFICATION,
@@ -213,6 +213,7 @@ class UserService {
         rol: true,
         name: true,
         emailVerified: true,
+        isActive: true
       },
     });
 
@@ -235,7 +236,7 @@ class UserService {
       const user = await this.getUserById(id);
 
       if (!user) {
-        return { success: false, message: `Error, el usuario con el id ${id} no fue encontrado` };
+        return { success: false, data: null, message: `Error, el usuario con el id ${id} no fue encontrado` };
       }
 
       //NOTA: El usuario no lo podemos eliminiar por que existen existe la posibilidad
@@ -255,12 +256,13 @@ class UserService {
 
       return {
         success: true,
+        data: deactivatedUser,
         message: `Se elimino el acceso al usuario ${this.deactivateUser.name}`
       }
 
 
     } catch (err) {
-      return { success: false, message: "Error al intentar eliminar usuario" };
+      return { success: false, data: null, message: "Error al intentar eliminar usuario" };
     }
   }
 
@@ -271,6 +273,7 @@ class UserService {
       if (!userExist) {
         return {
           success: false,
+          data: null,
           message: `El usuario con id: ${id} no fue encontrado`
         }
       }
@@ -281,6 +284,7 @@ class UserService {
         if (emailInUse && emailInUse.id !== userExist.id) {
           return {
             success: false,
+            data: null,
             message: `El email ingresado ya esta en uso`
           }
         }
@@ -297,12 +301,14 @@ class UserService {
 
       return {
         success: true,
+        data: updatedUser,
         message: `Se actualizo la informacion del usuario: ${updatedUser.name} con exito`
       }
 
     } catch (err) {
       return {
         success: false,
+        data: null,
         message: `Error interno al intentar realizar un UPDATE en la data del usuario: ${user.name}`
       }
     }

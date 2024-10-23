@@ -40,6 +40,12 @@ class AuthController {
         });
       }
 
+      if (!validUser.isActive) {
+        return res.status(403).json({
+          error: "Tu cuenta está desactivada y no puedes acceder a la aplicación."
+        });
+      }
+
       const { isValid, accessToken, refreshToken } =
         await this.AuhtService.login(validUser, password);
       if (!isValid) {

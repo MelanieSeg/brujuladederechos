@@ -17,12 +17,12 @@ export const userSchema = z.object({
     .max(24, {
       message: "La contraseña no puede superarar los 24 caracteres",
     }),
-  rol: z.string().default("MODERADOR"),
+  rol: z.string().default("MODERADOR").optional(),
 });
 
 
 export const userIdParamsSchema = z.object({
-  id: z.string().uuid()
+  id: z.string().cuid()
 }).strict()
 
 export const userUpdateSchema = z.object({
@@ -38,9 +38,15 @@ export const userUpdateSchema = z.object({
   rol: z.nativeEnum(Roles).default(Roles.MODERADOR).optional(),
   isActive: z.boolean().optional(),
 }).strict();
+
+
+
 //export type UpdateUserDto = z.infer<typeof userUpdateSchema>
 export type UpdateUserDto = z.infer<typeof userUpdateSchema>;
 export type UserUpdateData = Partial<Prisma.UserUpdateInput>
+
+
+
 
 export const userResetPasswordSchema = z.object({
   password: z

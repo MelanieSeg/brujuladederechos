@@ -9,7 +9,7 @@ const server = express();
 server.use(
   cors({
     origin: ["http://localhost:5173", "http://localhost:3000"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Métodos HTTP que se permiten
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"], // Métodos HTTP que se permiten
     allowedHeaders: ["Content-Type", "Authorization"], // los headers permitidos
     credentials: true, // permitir enviar cookies
   }),

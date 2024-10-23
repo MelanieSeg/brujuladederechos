@@ -15,11 +15,11 @@ class UserRouter {
 
     router.route("/create-user").post(this.UserController.createUser);
     router.route("/update-user/id/:id").patch(this.UserController.updateUserData);
+    router.route("/deactivate-user").patch(this.UserController.deactivateUser)
     router.route("/me").get(this.UserController.getUserById);
     router
       .route("/confirmar-usuario")
       .post(this.UserController.confirmEmailUser);
-
     router
       .route("/request-reset-password")
       .post(this.UserController.requestResetPassword);

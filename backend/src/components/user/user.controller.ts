@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import UserService from "./user.service";
-import { userResetPasswordSchema, userSchema, userUpdateSchema } from "../../schemas/user";
+import { userIdParamsSchema, userResetPasswordSchema, userSchema, userUpdateSchema } from "../../schemas/user";
 import { tokenSchema } from "../../schemas/token";
 
 class UserController {
@@ -39,20 +39,19 @@ class UserController {
 
   updateUserData = async (req: Request, res: Response) => {
     try {
-      const id = req.params
+      const { id } = req.params
       const validData = userUpdateSchema.safeParse(req.body)
       if (!validData.success) {
         return res.status(400).json({ error: "Datos ingresados invalidos" });
       }
 
-      //const updatedUser =await this.userService.updateUserData(validData);
+      const updatedUser = await this.userService.updateUserData(validData.data, id);
 
-      //return res.status(200).json({
-      //data:updatedUser,
-      //message:`Informacion de uusario actualizada con exito`
-      //})
+      return res.status(200).json({
+        data: updatedUser.data,
+        message: `Informacion de usuario actualizada con exito`
+      })
 
-      return res.status(200).json({ validData, id })
 
     } catch (err) {
       //TODO:Cambirar los errores po expeciones
@@ -60,25 +59,55 @@ class UserController {
     }
   }
 
+  deactivateUser = async (req: Request, res: Response) => {
+    try {
+
+      const validData = userIdParamsSchema.safeParse(req.body);
+      if (!validData.success) {
+        return res.status(400).json({ error: "Datos ingresados invalidos" });
+      }
+
+      const data = await this.userService.deactivateUser(validData.data.id)
+
+
+      return res.status(200).json({
+        message: `Se desactivo el acceso a el usuario: ${data.data?.name}`
+      })
+
+
+    } catch (err) {
+      return res.status(500).json({ error: `Error interno del servidor, ${err}` })
+    }
+  }
+
   confirmEmailUser = async (req: Request, res: Response) => {
     try {
+      console.log('Solicitud de confirmación recibida:', req.body);
+
       const validData = tokenSchema.safeParse(req.body);
       if (!validData.success) {
-        return res.status(400).json({ error: "Informacion invalida" });
+        console.error('Validación de token fallida:', validData.error);
+        return res.status(400).json({ error: "Información inválida" });
       }
 
-      const confirmEmail = await this.userService.confirmEmail(
-        validData.data.token,
-      );
+      console.log('Token validado:', validData.data.token);
+
+      const confirmEmail = await this.userService.confirmEmail(validData.data.token);
+
+      console.log('Resultado de confirmEmail:', confirmEmail);
 
       if (!confirmEmail.success) {
-        return res.status(500).json({ error: "Error interno del servidor" });
+        console.error('Confirmación de email fallida para el token:', validData.data.token);
+        return res.status(400).json({ error: "Código de confirmación inválido o expirado" });
       }
 
+      console.log('Cuenta confirmada exitosamente para el token:', validData.data.token);
       return res.status(200).json({ msg: "Cuenta confirmada con exito" });
     } catch (err) {
+      console.error('Error en confirmEmailUser:', err);
       return res.status(500).json({ error: "Error interno del servidor" });
     }
+
   };
 
   requestResetPassword = async (req: Request, res: Response) => {
