@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import UserService from "./user.service";
-import { userIdParamsSchema, userResetPasswordSchema, userSchema, userUpdateSchema } from "../../schemas/user";
+import { userChangeStateSchema, userIdParamsSchema, userResetPasswordSchema, userSchema, userUpdateSchema } from "../../schemas/user";
 import { tokenSchema } from "../../schemas/token";
 
 class UserController {
@@ -9,6 +9,13 @@ class UserController {
   constructor(userService: UserService) {
     this.userService = userService;
   }
+  /*
+   * - [ ]  TODO: Cambiar los errores de !validData.success para entregar mas informacion util.
+     - [ ]  TODO: Mostrar errores de zod.
+   *
+  */
+
+
 
   createUser = async (req: Request, res: Response) => {
     try {
@@ -59,21 +66,39 @@ class UserController {
     }
   }
 
-  deactivateUser = async (req: Request, res: Response) => {
+  changeUserState = async (req: Request, res: Response) => {
     try {
 
-      const validData = userIdParamsSchema.safeParse(req.body);
+      const validData = userChangeStateSchema.safeParse(req.body);
       if (!validData.success) {
         return res.status(400).json({ error: "Datos ingresados invalidos" });
       }
 
-      const data = await this.userService.deactivateUser(validData.data.id)
+      const data = await this.userService.changeUserState(validData.data)
 
 
       return res.status(200).json({
         message: `Se desactivo el acceso a el usuario: ${data.data?.name}`
       })
 
+
+    } catch (err) {
+      return res.status(500).json({ error: `Error interno del servidor, ${err}` })
+    }
+  }
+
+  deleteUser = async (req: Request, res: Response) => {
+    try {
+      const validData = userIdParamsSchema.safeParse(req.body);
+      if (!validData.success) {
+        return res.status(400).json({ error: "Datos ingresados invalidos" });
+      }
+
+      const data = await this.userService.deleteUser(validData.data.id);
+
+      return res.status(200).json({
+        message: `Se elimino el usuario: ${data.data?.name}`
+      })
 
     } catch (err) {
       return res.status(500).json({ error: `Error interno del servidor, ${err}` })

@@ -25,6 +25,14 @@ export const userIdParamsSchema = z.object({
   id: z.string().cuid()
 }).strict()
 
+export const userChangeStateSchema = z.object({
+  id: z.string().cuid(),
+  isActive: z.boolean(),
+}).strict()
+
+export type UserChangeStateDto = z.infer<typeof userChangeStateSchema>
+
+
 export const userUpdateSchema = z.object({
   name: z
     .string()

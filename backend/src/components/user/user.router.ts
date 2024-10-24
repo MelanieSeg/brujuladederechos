@@ -15,7 +15,8 @@ class UserRouter {
 
     router.route("/create-user").post(this.UserController.createUser);
     router.route("/update-user/id/:id").patch(this.UserController.updateUserData);
-    router.route("/deactivate-user").patch(this.UserController.deactivateUser)
+    router.route("/deactivate-user").patch(this.UserController.changeUserState)
+    router.route("/delete-user").patch(this.UserController.deleteUser)
     router.route("/me").get(this.UserController.getUserById);
     router
       .route("/confirmar-usuario")

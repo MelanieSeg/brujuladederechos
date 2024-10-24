@@ -47,3 +47,12 @@ export const userUpdateSchema = yup.object().shape({
   isActive: yup.boolean().optional(),
 });
 
+
+export const deleteUserConfirmSchema = yup.object().shape({
+  justificacion: yup.string()
+    .max(255, 'La justificación no puede exceder los 255 caracteres')
+    .optional(),
+  contrasena: yup.string()
+    .required('Debe confirmar su contraseña')
+    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+})

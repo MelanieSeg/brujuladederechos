@@ -14,20 +14,6 @@ import FormUpdateUser from './forms/Form-update-usuario';
 import { useNavigate } from 'react-router-dom';
 
 export default function PanelAdministrador() {
-  // Datos temporales de moderadores
-  const datosTemporalesModeradores = [
-    { id: 1, nombre: 'John Doe', email: 'john@example.com', estado: 'Activo' },
-    { id: 2, nombre: 'Claudia Ramírez', email: 'claudia@example.com', estado: 'Inactivo' },
-    { id: 3, nombre: 'Jane Smith', email: 'jane@example.com', estado: 'Inactivo' },
-    { id: 4, nombre: 'Alice Johnson', email: 'alice@example.com', estado: 'Inactivo' },
-    { id: 5, nombre: 'Cesar Vásquez', email: 'cesar.vasquez@example.com', estado: 'Activo' },
-    { id: 6, nombre: 'Camila Díaz', email: 'camila.diaz@example.com', estado: 'Activo' },
-    { id: 7, nombre: 'Carolina Blanco', email: 'carolina.blanco@example.com', estado: 'Activo' },
-    { id: 8, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
-    { id: 9, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
-    { id: 10, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
-  ];
-
   const [moderadores, setModeradores] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState('');
@@ -83,13 +69,28 @@ export default function PanelAdministrador() {
 
   console.log(moderadores)
 
+  const cambiarStateUsuario = async function (userId, currentState) {
+    //http://localhost:4000/user/deactivate-user
+    try {
+
+      const response = await userApi.patch("/deactivate-user", { id: userId, isActive: currentState })
+      console.log(response)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   // Función para activar o desactivar un moderador
-  const manejarActivarDesactivarModerador = (id, nuevoEstado) => {
+  const manejarActivarDesactivarModerador = (id, currentState) => {
     setModeradores(
       moderadores.map((mod) =>
-        mod.id === id ? { ...mod, estado: nuevoEstado } : mod
+        mod.id === id ? { ...mod, isActive: !mod.isActive } : mod
       )
     );
+
+    cambiarStateUsuario(id, currentState)
+
+
   };
 
   // Función para confirmar la eliminación de un moderador
@@ -99,7 +100,7 @@ export default function PanelAdministrador() {
   };
 
   // Función para eliminar un moderador
-  const manejarEliminarModerador = () => {
+  const manejarEliminarModerador = (userId, motivo) => {
     setModeradores(moderadores.filter((mod) => mod.id !== moderadorAEliminar));
     setMostrarModalEliminar(false);
     setModeradorAEliminar(null);
@@ -316,7 +317,7 @@ export default function PanelAdministrador() {
                     onClick={() =>
                       manejarActivarDesactivarModerador(
                         moderador.id,
-                        moderador.estado === 'Activo' ? 'Inactivo' : 'Activo'
+                        moderador.isActive
                       )
                     }
                     className="px-4 py-1 text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"

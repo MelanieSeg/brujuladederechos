@@ -2,7 +2,7 @@ import { PrismaClient, TipoToken, User } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { generateRandomToken } from "../../utils";
 import EmailService from "../email/email.service";
-import { UpdateUserDto, UserUpdateData } from "../../schemas/user";
+import { UpdateUserDto, UserChangeStateDto, UserUpdateData } from "../../schemas/user";
 
 class UserService {
   private prisma: PrismaClient;
@@ -231,12 +231,12 @@ class UserService {
       },
     });
 
-  deactivateUser = async (id: string) => {
+  changeUserState = async (userChangeStateDto: UserChangeStateDto) => {
     try {
-      const user = await this.getUserById(id);
+      const user = await this.getUserById(userChangeStateDto.id);
 
       if (!user) {
-        return { success: false, data: null, message: `Error, el usuario con el id ${id} no fue encontrado` };
+        return { success: false, data: null, message: `Error, el usuario con el id ${userChangeStateDto.id} no fue encontrado` };
       }
 
       //NOTA: El usuario no lo podemos eliminiar por que existen existe la posibilidad
@@ -248,7 +248,7 @@ class UserService {
           id: user.id
         },
         data: {
-          isActive: false
+          isActive: !userChangeStateDto.isActive
         }
       })
 
@@ -257,12 +257,46 @@ class UserService {
       return {
         success: true,
         data: deactivatedUser,
-        message: `Se elimino el acceso al usuario ${this.deactivateUser.name}`
+        message: `Se elimino el acceso al usuario ${deactivatedUser.name}`
       }
-
 
     } catch (err) {
       return { success: false, data: null, message: "Error al intentar eliminar usuario" };
+    }
+  }
+
+  deleteUser = async (userId: string) => {
+    try {
+
+      const user = await this.getUserById(userId);
+
+      if (!user) {
+        return { success: false, data: null, message: `Error, el usuario con el id ${userId} no fue encontrado` };
+      }
+
+
+      const deleteUser = await this.prisma.user.update({
+        where: {
+          id: user.id,
+          isDelete: false,
+        },
+        data: {
+          isDelete: true
+        }
+      })
+
+      if (!deleteUser) {
+        return { success: false, data: null, message: `Error, no se pude eliminar el usuario, puede que el usuario ingresado ya haya sido "eliminado"` };
+      }
+
+      return { success: true, data: deleteUser, message: `El usuario: ${deleteUser.name} ha sido eliminado exitosamente` };
+
+    } catch (err) {
+      return {
+        success: false,
+        data: null,
+        message: `Error al intentar eliminar un usuario. ERROR: ${err}`
+      }
     }
   }
 
