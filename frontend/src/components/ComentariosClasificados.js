@@ -1,15 +1,20 @@
-// components/ComentariosClasificados.js
+// src/components/ComentariosClasificados.js
+
 import React, { useState, useRef, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/16/solid';
 import { TrashIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import Calendario from './Objects/Calendario';
 import Paginacion from './Objects/Paginacion';
 import api from '../services/axios';
 import { truncateComentario } from '../utils/truncarComentario';
 import Cargando from './Objects/Cargando';
+import { useAuth } from "../hooks/useAuth";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ComentariosClasificados() {
+  const { user } = useAuth();
   const [comentarios, setComentarios] = useState([]);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [selectedGravedad, setSelectedGravedad] = useState({
@@ -37,6 +42,29 @@ export default function ComentariosClasificados() {
   const dropdownRef = useRef(null);
   const gravedadButtonRef = useRef(null);
 
+  // Estados para edición de puntuación
+  const [barraEdicionVisible, setBarraEdicionVisible] = useState(false);
+  const [comentarioSeleccionado, setComentarioSeleccionado] = useState(null);
+  const [puntuacion, setPuntuacion] = useState({
+    intensidadPrivacidad: '',
+    elementoTiempo: '',
+    empatiaPrivacidad: '',
+    interesPublico: '',
+    caracterPersonaPublico: '',
+    origenInformacion: '',
+    empatiaExpresion: ''
+  });
+  const puntuacionRef = useRef(null);
+
+  // Estados para manejar la eliminación
+  const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
+  const [comentarioAEliminar, setComentarioAEliminar] = useState(null);
+  const [password, setPassword] = useState("");
+  const [reason, setReason] = useState("");
+
+  // Estado temporal para almacenar el comentario eliminado (para Deshacer)
+  const [comentarioEliminado, setComentarioEliminado] = useState(null);
+
   useEffect(() => {
     const fetchComentariosClasificados = async () => {
       try {
@@ -45,7 +73,7 @@ export default function ComentariosClasificados() {
         setComentarios(response.data.data);
       } catch (err) {
         setComentarios([]);
-        console.log('Error al obtener los comentarios');
+        console.log('Error al obtener los comentarios', err);
       } finally {
         setLoading(false);
       }
@@ -74,13 +102,32 @@ export default function ComentariosClasificados() {
       ) {
         setDropdownOpen(false);
       }
+
+      // Cerrar la barra de edición si se hace clic fuera
+      if (
+        barraEdicionVisible &&
+        puntuacionRef.current &&
+        !puntuacionRef.current.contains(event.target)
+      ) {
+        setBarraEdicionVisible(false);
+        setComentarioSeleccionado(null);
+        setPuntuacion({
+          intensidadPrivacidad: '',
+          elementoTiempo: '',
+          empatiaPrivacidad: '',
+          interesPublico: '',
+          caracterPersonaPublico: '',
+          origenInformacion: '',
+          empatiaExpresion: ''
+        });
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isCalendarOpen, isDropdownOpen]);
+  }, [isCalendarOpen, isDropdownOpen, barraEdicionVisible]);
 
   const toggleDropdown = () => {
     setDropdownOpen(!isDropdownOpen);
@@ -284,7 +331,7 @@ export default function ComentariosClasificados() {
       `"${comment.comentario.replace(/"/g, '""')}"`,
       mapGravedad(comment?.gravedad ? comment.gravedad : 'Desconocida'),
       comment.comentario.sitioWeb.nombre,
-      format(parseISO(comment.fechaClasificacion), 'dd-MM-yyyy'),
+      isValid(parseISO(comment.fechaClasificacion)) ? format(parseISO(comment.fechaClasificacion), 'dd-MM-yyyy') : "Fecha Inválida",
     ]);
 
     if (commentsToDownload.length === 0) {
@@ -313,8 +360,225 @@ export default function ComentariosClasificados() {
     document.body.removeChild(link);
   };
 
+  // Funciones para editar puntuación
+  const editarComentario = (comentario) => {
+    setComentarioSeleccionado(comentario);
+    setBarraEdicionVisible(true);
+    setPuntuacion({
+      intensidadPrivacidad: comentario.intensidadPrivacidad || '',
+      elementoTiempo: comentario.elementoTiempo || '',
+      empatiaPrivacidad: comentario.empatiaPrivacidad || '',
+      interesPublico: comentario.interesPublico || '',
+      caracterPersonaPublico: comentario.caracterPersonaPublico || '',
+      origenInformacion: comentario.origenInformacion || '',
+      empatiaExpresion: comentario.empatiaExpresion || ''
+    });
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    let parsedValue = value;
+
+    if (name === "empatiaPrivacidad" || name === "empatiaExpresion") {
+      parsedValue = parseFloat(value);
+    } else if (name !== "notas") {
+      parsedValue = parseInt(value, 10);
+    }
+
+    setPuntuacion({ ...puntuacion, [name]: parsedValue });
+  };
+
+  const enviarEdicion = async () => {
+    try {
+      const comentarioId = comentarioSeleccionado.comentario.id; // Asegúrate de obtener el ID correcto
+
+      const response = await api.post("/comments/clasificar", {
+        comentarioScrapedId: comentarioId,
+        clasificadorId: user.id,
+        intensidadPrivacidad: Number(puntuacion.intensidadPrivacidad),
+        elementoTiempo: Number(puntuacion.elementoTiempo),
+        empatiaPrivacidad: Number(puntuacion.empatiaPrivacidad),
+        interesPublico: Number(puntuacion.interesPublico),
+        caracterPersonaPublico: Number(puntuacion.caracterPersonaPublico),
+        origenInformacion: Number(puntuacion.origenInformacion),
+        empatiaExpresion: Number(puntuacion.empatiaExpresion),
+        userId: user.id
+      });
+
+      console.log('Edición de clasificación guardada:', response.data);
+
+      if (response.status === 200) {
+        setBarraEdicionVisible(false);
+        toast.success("Edición de clasificación guardada exitosamente", {
+          position: "top-right",
+          autoClose: 5000,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        // Actualizar el comentario en el estado
+        setComentarios((prevComentarios) =>
+          prevComentarios.map((comentario) =>
+            comentario.comentario.id === comentarioId
+              ? { ...comentario, ...puntuacion }
+              : comentario
+          )
+        );
+        // Resetear el formulario de edición
+        setComentarioSeleccionado(null);
+        setPuntuacion({
+          intensidadPrivacidad: '',
+          elementoTiempo: '',
+          empatiaPrivacidad: '',
+          interesPublico: '',
+          caracterPersonaPublico: '',
+          origenInformacion: '',
+          empatiaExpresion: ''
+        });
+      }
+    } catch (error) {
+      console.error("Error al guardar la edición de clasificación", error);
+      console.log("Respuesta del servidor:", error.response?.data);
+      toast.error("Error al guardar la edición de clasificación: " + (error.response?.data?.msg || error.message), {
+        position: "top-right",
+        autoClose: 5000,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+  };
+
+  // Funciones para manejar la eliminación de comentarios
+  const confirmarEliminarComentario = (comentario) => {
+    setComentarioAEliminar(comentario);
+    setMostrarModalEliminar(true);
+    setPassword("");
+    setReason("");
+  };
+
+  const manejarEliminarComentario = () => {
+    // Simular la eliminación: remover el comentario del estado
+    setComentarios((prevComentarios) =>
+      prevComentarios.filter(
+        (comentario) => comentario.comentario.id !== comentarioAEliminar.comentario.id
+      )
+    );
+
+    // Almacenar el comentario eliminado para poder deshacer
+    setComentarioEliminado(comentarioAEliminar);
+
+    // Mostrar el toast de eliminación
+    const now = new Date();
+    const formattedDate = format(now, "dd-MM-yyyy HH:mm:ss");
+    const toastId = toast.success(
+      <div className="flex flex-col">
+        <div>Comentario borrado exitosamente.</div>
+        <div className="text-sm text-gray-600">Fecha y hora: {formattedDate}</div>
+        <button
+          onClick={() => deshacerEliminacion()}
+          className="mt-2 text-blue-500 underline text-sm"
+        >
+          Deshacer
+        </button>
+      </div>,
+      {
+        position: "top-right",
+        autoClose: 5000,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      }
+    );
+
+    // Cerrar el modal y resetear estados
+    setMostrarModalEliminar(false);
+    setComentarioAEliminar(null);
+    setPassword("");
+    setReason("");
+  };
+
+  const manejarCancelarEliminar = () => {
+    setMostrarModalEliminar(false);
+    setComentarioAEliminar(null);
+    setPassword("");
+    setReason("");
+  };
+
+  const deshacerEliminacion = () => {
+    if (comentarioEliminado) {
+      setComentarios((prevComentarios) => [comentarioEliminado, ...prevComentarios]);
+      toast.dismiss(); // Cerrar el toast actual
+      toast.info("Eliminación deshecha.", {
+        position: "top-right",
+        autoClose: 3000,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      setComentarioEliminado(null);
+    }
+  };
+
+  // Modal para confirmar la eliminación de un comentario con campos de contraseña y motivo
+  const modalEliminarComentario = (
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-md shadow-lg max-w-md w-full">
+        <h3 className="text-lg font-semibold mb-2">¿Está seguro de eliminar este comentario?</h3>
+        <p className="text-sm text-gray-900 mb-4">
+          Esta acción no se puede deshacer. Por favor, ingresa una contraseña y un motivo para la eliminación.
+        </p>
+        <form onSubmit={(e) => { e.preventDefault(); manejarEliminarComentario(); }}>
+          {/* Campo de Contraseña */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Contraseña
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="********"
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          {/* Campo de Motivo */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Motivo de la eliminación
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Ingresa el motivo (opcional)"
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
+              required
+            ></textarea>
+          </div>
+          <div className="flex justify-end space-x-2 mt-6">
+            <button
+              type="button"
+              onClick={manejarCancelarEliminar}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+            >
+              Eliminar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
   // Calcular el número total de columnas
-  const baseColumns = 5;
+  const baseColumns = 8; // Ajusta según tus columnas base
   const detailedColumns = 6;
   const totalColumns = showDetailedColumns
     ? baseColumns + detailedColumns
@@ -322,6 +586,9 @@ export default function ComentariosClasificados() {
 
   return (
     <div className="p-8 bg-[#FAF9F8] flex-1 relative">
+      {/* Contenedor de Toasts */}
+      <ToastContainer />
+
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">
         Comentarios clasificados
       </h2>
@@ -333,7 +600,7 @@ export default function ComentariosClasificados() {
             <button
               ref={calendarButtonRef}
               onClick={toggleCalendar}
-              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
+              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm hover:bg-gray-100"
             >
               <PlusIcon className="w-5 h-5 text-gray-500" />
               <span>
@@ -357,7 +624,7 @@ export default function ComentariosClasificados() {
             <button
               ref={gravedadButtonRef}
               onClick={handleGravedadClick}
-              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm"
+              className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm hover:bg-gray-100"
             >
               <PlusIcon className="w-5 h-5 text-gray-500" />
               <span>Gravedad</span>
@@ -414,6 +681,7 @@ export default function ComentariosClasificados() {
         </div>
       </div>
 
+      {/* Tabla de Comentarios */}
       <table className="min-w-full bg-white shadow-md rounded-lg table-fixed border-collapse">
         <thead>
           <tr>
@@ -497,17 +765,24 @@ export default function ComentariosClasificados() {
                     : 'latercera.com'}
                 </td>
                 <td className="px-6 py-4">
-                  {format(
-                    parseISO(comentario.fechaClasificacion),
-                    'dd-MM-yyyy'
-                  )}
+                  {isValid(parseISO(comentario.fechaClasificacion))
+                    ? format(parseISO(comentario.fechaClasificacion), 'dd-MM-yyyy')
+                    : "Fecha Inválida"}
                 </td>
                 <td className="px-6 py-4 flex justify-end space-x-2">
-                  <button className="text-gray-500 hover:text-red-600">
-                    <TrashIcon className="h-5 w-5" />
+                  <button
+                    onClick={() => confirmarEliminarComentario(comentario)}
+                    className="text-gray-400 hover:text-red-500 cursor-pointer"
+                    aria-label="Eliminar comentario"
+                  >
+                    <TrashIcon className="w-5 h-5" />
                   </button>
 
-                  <button className="text-gray-500 hover:text-blue-600">
+                  <button
+                    className="text-gray-500 hover:text-blue-600"
+                    onClick={() => editarComentario(comentario)}
+                    aria-label="Editar comentario"
+                  >
                     <PencilIcon className="h-5 w-5" />
                   </button>
                 </td>
@@ -531,6 +806,201 @@ export default function ComentariosClasificados() {
           onPageChange={handlePageChange}
         />
       </div>
+
+      {/* Modal de Eliminación */}
+      {mostrarModalEliminar && modalEliminarComentario}
+
+      {/* Panel lateral para editar puntuación */}
+      {barraEdicionVisible && (
+        <div className="fixed right-0 top-0 h-screen w-[430px] bg-white shadow-lg p-6 opacity-100 border-l border-l-gray-300 overflow-y-auto z-20" ref={puntuacionRef}>
+          <div className="flex justify-between items-start">
+            <h2 className="text-xl font-bold">
+              Edición de clasificación de comentario
+            </h2>
+            <button
+              onClick={() => {
+                setBarraEdicionVisible(false);
+                setComentarioSeleccionado(null);
+                setPuntuacion({
+                  intensidadPrivacidad: '',
+                  elementoTiempo: '',
+                  empatiaPrivacidad: '',
+                  interesPublico: '',
+                  caracterPersonaPublico: '',
+                  origenInformacion: '',
+                  empatiaExpresion: ''
+                });
+              }}
+              className="text-gray-500 hover:text-gray-700 text-lg"
+              aria-label="Cerrar barra de edición"
+            >
+              &#10005;
+            </button>
+          </div>
+          <br />
+          <p>
+            <strong>Comentario:</strong>
+          </p>
+          <p>{comentarioSeleccionado?.comentario?.comentario}</p>
+
+          <div className="mt-4">
+            <label className="block mt-2">
+              Privacidad intrusiva:
+              <input
+                type="number"
+                min="1"
+                max="3"
+                name="intensidadPrivacidad"
+                value={puntuacion.intensidadPrivacidad}
+                onChange={handleInputChange}
+                placeholder="PR"
+                className="border rounded w-full mt-1 p-1"
+                required
+              />
+            </label>
+            <p className="text-gray-500 text-sm mt-1">
+              Grado de intrusión en la privacidad. Valor de 1 a 3.
+            </p>
+
+            <label className="block mt-4">
+              Tiempo (0-1):
+              <input
+                type="number"
+                min="0"
+                max="1"
+                name="elementoTiempo"
+                value={puntuacion.elementoTiempo}
+                onChange={handleInputChange}
+                placeholder="T"
+                step="0.1"
+                className="border rounded w-full mt-1 p-1"
+                required
+              />
+            </label>
+            <p className="text-gray-500 text-sm mt-1">
+              Tiempo relacionado con la información (antigüedad). Valor de 0 a 1.
+            </p>
+
+            <label className="block mt-4">
+              Empatía hacia la privacidad (0-1):
+              <input
+                type="number"
+                min="0"
+                max="1"
+                name="empatiaPrivacidad"
+                value={puntuacion.empatiaPrivacidad}
+                onChange={handleInputChange}
+                placeholder="E.Privacidad"
+                className="border rounded w-full mt-1 p-1"
+                required
+              />
+            </label>
+            <p className="text-gray-500 text-sm mt-1">
+              Empatía hacia la privacidad de la persona. Valor de 0 a 1.
+            </p>
+
+            <label className="block mt-4">
+              Interés público (1-3):
+              <input
+                type="number"
+                min="1"
+                max="3"
+                name="interesPublico"
+                value={puntuacion.interesPublico}
+                onChange={handleInputChange}
+                placeholder="IP"
+                className="border rounded w-full mt-1 p-1"
+                required
+              />
+            </label>
+            <p className="text-gray-500 text-sm mt-1">
+              Nivel de interés público sobre el asunto. Valor de 1 a 3.
+            </p>
+
+            <label className="block mt-4">
+              Figura pública (1-2):
+              <input
+                type="number"
+                min="1"
+                max="2"
+                name="caracterPersonaPublico"
+                value={puntuacion.caracterPersonaPublico}
+                onChange={handleInputChange}
+                placeholder="PF"
+                className="border rounded w-full mt-1 p-1"
+                required
+              />
+            </label>
+            <p className="text-gray-500 text-sm mt-1">
+              Indica si es una figura pública sobre el asunto. Valor de 1 a 2.
+            </p>
+
+            <label className="block mt-4">
+              Origen de la información (-0.75 - 0):
+              <input
+                type="number"
+                min="-0.75"
+                max="0"
+                name="origenInformacion"
+                placeholder="OI"
+                step={0.05}
+                value={puntuacion.origenInformacion}
+                onChange={handleInputChange}
+                className="border rounded w-full mt-1 p-1"
+                required
+              />
+            </label>
+            <p className="text-gray-500 text-sm mt-1">
+              Origen de la información, si es legal o cuestionable. Valor de -0.75 a 0.
+            </p>
+
+            <label className="block mt-4">
+              Empatía hacia la libertad de expresión (0-1):
+              <input
+                type="number"
+                min="0"
+                max="1"
+                name="empatiaExpresion"
+                value={puntuacion.empatiaExpresion}
+                onChange={handleInputChange}
+                placeholder="E.Libertad"
+                className="border rounded w-full mt-1 p-1"
+                required
+              />
+            </label>
+            <p className="text-gray-500 text-sm mt-1">
+              Empatía hacia la libertad de expresión. Valor de 0 a 1.
+            </p>
+          </div>
+
+          <div className="flex mt-6 justify-between">
+            <button
+              onClick={() => {
+                setBarraEdicionVisible(false);
+                setComentarioSeleccionado(null);
+                setPuntuacion({
+                  intensidadPrivacidad: '',
+                  elementoTiempo: '',
+                  empatiaPrivacidad: '',
+                  interesPublico: '',
+                  caracterPersonaPublico: '',
+                  origenInformacion: '',
+                  empatiaExpresion: ''
+                });
+              }}
+              className="bg-red-600 text-white py-2 px-4 rounded w-[48%]"
+            >
+              Cancelar
+            </button>
+            <button
+              className="bg-blue-600 text-white py-2 px-4 rounded w-[48%]"
+              onClick={enviarEdicion}
+            >
+              Completar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

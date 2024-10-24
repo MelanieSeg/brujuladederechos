@@ -1,4 +1,5 @@
 // src/ComentariosPendientes.js
+
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import api from "../services/axios";
@@ -9,6 +10,8 @@ import Paginacion from "./Objects/Paginacion";
 import { useAuth } from "../hooks/useAuth";
 import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
+import { ToastContainer, toast } from "react-toastify"; // Importar ToastContainer y toast
+import "react-toastify/dist/ReactToastify.css"; // Importar estilos de react-toastify
 
 export default function ComentariosPendientes() {
   const { user } = useAuth();
@@ -184,7 +187,8 @@ export default function ComentariosPendientes() {
 
       if (response.status === 200) {
         setBarraClasificacionVisible(false);
-        alert("Clasificación guardada exitosamente");
+        // Reemplazar alert por toast
+        mostrarToastClasificacionExitoso();
         // Resetear el formulario de clasificación
         setClasificacion({
           intensidadPrivacidad: '',
@@ -199,8 +203,33 @@ export default function ComentariosPendientes() {
     } catch (error) {
       console.error("Error al guardar la clasificación", error);
       console.log("Respuesta del servidor:", error.response?.data);
-      alert("Error al guardar la clasificación: " + (error.response?.data?.msg || error.message));
+      toast.error("Error al guardar la clasificación: " + (error.response?.data?.msg || error.message));
     }
+  };
+
+  // Función para mostrar el toast de clasificación exitosa
+  const mostrarToastClasificacionExitoso = () => {
+    const now = new Date();
+    const formattedDate = format(now, "dd-MM-yyyy HH:mm:ss");
+    const toastId = toast.success(
+      <div className="flex flex-col">
+        <div>Comentario clasificado exitosamente.</div>
+        <div className="text-sm text-gray-600">Fecha y hora: {formattedDate}</div>
+        <button
+          onClick={() => toast.dismiss(toastId)}
+          className="mt-2 text-blue-500 underline text-sm"
+        >
+          Deshacer
+        </button>
+      </div>,
+      {
+        position: "top-right", // Usar cadena de texto en lugar de toast.POSITION.TOP_RIGHT
+        autoClose: 5000, // Duración en milisegundos
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      }
+    );
   };
 
   const columnasPendientes = [
@@ -231,6 +260,9 @@ export default function ComentariosPendientes() {
 
   return (
     <div className="p-8 flex flex-col">
+      {/* Contenedor de Toasts */}
+      <ToastContainer />
+
       <div className="flex-grow">
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">
           Comentarios pendientes
@@ -374,6 +406,7 @@ export default function ComentariosPendientes() {
             <button
               onClick={() => setBarraClasificacionVisible(false)}
               className="text-gray-500 hover:text-gray-700 text-lg"
+              aria-label="Cerrar barra de clasificación"
             >
               &#10005;
             </button>

@@ -1,8 +1,7 @@
 // src/ComentariosRecolectados.js
 
 import React, { useState, useRef, useEffect } from "react";
-import { PlusIcon } from "@heroicons/react/20/solid";
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import api from "../services/axios";
 import { format, parseISO, isValid } from "date-fns";
 import { truncateComentario } from "../utils/truncarComentario";
@@ -10,6 +9,8 @@ import Calendario from "./Objects/Calendario";
 import Paginacion from "./Objects/Paginacion";
 import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ComentariosRecolectados() {
   const [defaultComentarios] = useState([
@@ -73,6 +74,12 @@ export default function ComentariosRecolectados() {
   const dateDropdownRef = useRef(null);
   const dateButtonRef = useRef(null);
   const calendarRef = useRef(null);
+
+  // Estados para manejar la eliminación
+  const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
+  const [comentarioAEliminar, setComentarioAEliminar] = useState(null);
+  const [password, setPassword] = useState("");
+  const [reason, setReason] = useState("");
 
   useEffect(() => {
     const fetchComentarios = async () => {
@@ -259,8 +266,111 @@ export default function ComentariosRecolectados() {
   );
   const totalPages = Math.ceil(filteredComments.length / commentsPerPage);
 
+  // Funciones para manejar la eliminación de comentarios
+  const confirmarEliminarComentario = (comentario) => {
+    setComentarioAEliminar(comentario);
+    setMostrarModalEliminar(true);
+    setPassword("");
+    setReason("");
+  };
+
+  const manejarEliminarComentario = () => {
+    const now = new Date();
+    const formattedDate = format(now, "dd-MM-yyyy HH:mm:ss");
+    const toastId = toast.success(
+      <div className="flex flex-col">
+        <div>Comentario borrado exitosamente.</div>
+        <div className="text-sm text-gray-600">Fecha y hora: {formattedDate}</div>
+        <button
+          onClick={() => toast.dismiss(toastId)}
+          className="mt-2 text-blue-500 underline text-sm"
+        >
+          Deshacer
+        </button>
+      </div>,
+      {
+        position: "top-right", // Corregido de toast.POSITION.TOP_RIGHT a "top-right"
+        autoClose: 5000, // Duración en milisegundos
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      }
+    );
+    setMostrarModalEliminar(false);
+    setComentarioAEliminar(null);
+    setPassword("");
+    setReason("");
+  };
+
+  const manejarCancelarEliminar = () => {
+    setMostrarModalEliminar(false);
+    setComentarioAEliminar(null);
+    setPassword("");
+    setReason("");
+  };
+
+  // Modal para confirmar la eliminación de un comentario con campos de contraseña y motivo
+  const modalEliminarComentario = (
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-md shadow-lg max-w-md w-full">
+        <h3 className="text-lg font-semibold mb-2">¿Está seguro de eliminar este comentario?</h3>
+        <p className="text-sm text-gray-900 mb-4">
+          Esta acción no se puede deshacer. Por favor, ingresa una contraseña y un motivo para la eliminación.
+        </p>
+        <form onSubmit={(e) => { e.preventDefault(); manejarEliminarComentario(); }}>
+          {/* Campo de Contraseña */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Contraseña
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="********"
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              // No es requerido para permitir entradas vacías
+            />
+          </div>
+          {/* Campo de Motivo */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Motivo de la eliminación
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Ingresa el motivo (opcional)"
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
+              // No es requerido para permitir entradas vacías
+            ></textarea>
+          </div>
+          <div className="flex justify-end space-x-2 mt-6">
+            <button
+              type="button"
+              onClick={manejarCancelarEliminar}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+            >
+              Eliminar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
   return (
     <div className="p-8 bg-[#FAF9F8] flex-1 relative">
+      {/* Contenedor de Toasts */}
+      <ToastContainer />
+
       <div className="flex-grow">
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">
           Comentarios recolectados
@@ -413,7 +523,13 @@ export default function ComentariosRecolectados() {
                       }
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer" />
+                      <button
+                        onClick={() => confirmarEliminarComentario(comentario)}
+                        className="text-gray-400 hover:text-red-500 cursor-pointer"
+                        aria-label="Eliminar comentario"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -434,6 +550,9 @@ export default function ComentariosRecolectados() {
           totalPaginas={totalPages}
           onPageChange={handlePageClick}
         />
+
+        {/* Modal de Eliminación */}
+        {mostrarModalEliminar && modalEliminarComentario}
       </div>
     </div>
   );
