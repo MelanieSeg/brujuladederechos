@@ -7,13 +7,13 @@ import { format, parseISO, isValid } from "date-fns";
 import Calendario from './Objects/Calendario';
 import Paginacion from "./Objects/Paginacion";
 import { useAuth } from "../hooks/useAuth";
-
-// Importación del componente Formulario
 import Formulario from "./Objects/Formulario";
+import Cargando from "./Objects/Cargando";
 
 export default function ComentariosPendientes() {
   const { user } = useAuth();
   const [comentarios, setComentarios] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [paginaActual, setPaginaActual] = useState(1);
   const [comentariosPorPagina] = useState(10);
   const [fechaDesde, setFechaDesde] = useState("");
@@ -38,12 +38,15 @@ export default function ComentariosPendientes() {
 
   useEffect(() => {
     const fetchComentarios = async () => {
+      setLoading(true);
       try {
         const response = await api.get("/comments/get-all");
         setComentarios(response.data.data);
         setComentariosFiltrados(response.data.data);
       } catch (err) {
         console.error("Error al obtener los comentarios", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -184,13 +187,13 @@ export default function ComentariosPendientes() {
         alert("Clasificación guardada exitosamente");
         // Resetear el formulario de clasificación
         setClasificacion({
-          intensidadPrivacidad: 0,
-          elementoTiempo: 0,
-          empatiaPrivacidad: 0,
-          interesPublico: 0,
-          caracterPersonaPublico: 0,
-          origenInformacion: 0,
-          empatiaExpresion: 0
+          intensidadPrivacidad: '',
+          elementoTiempo: '',
+          empatiaPrivacidad: '',
+          interesPublico: '',
+          caracterPersonaPublico: '',
+          origenInformacion: '',
+          empatiaExpresion: ''
         });
       }
     } catch (error) {
@@ -200,7 +203,6 @@ export default function ComentariosPendientes() {
     }
   };
 
-  // Definir las columnas específicas para "Comentarios Pendientes" con nombres correctos
   const columnasPendientes = [
     {
       title: "Comentario",
@@ -213,13 +215,12 @@ export default function ComentariosPendientes() {
       halign: 'left',
     },
     {
-      title: "Fecha",
+      title: "Fecha de Clasificación",
       width: 100,
       halign: 'center',
     },
   ];
 
-  // Definir la función formatData para transformar cada comentario en una fila
   const formatData = (comentario) => [
     comentario.comentario,
     comentario.sourceUrl,
@@ -299,7 +300,6 @@ export default function ComentariosPendientes() {
               onChange={handleFechaHastaChange}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
-            {/* Utilizar el componente Formulario con columnas específicas */}
             <Formulario 
               comentariosFiltrados={comentariosFiltrados} 
               columns={columnasPendientes} 
@@ -315,32 +315,46 @@ export default function ComentariosPendientes() {
               <tr>
                 <th className="px-6 py-4 text-left font-medium text-gray-500">Comentario</th>
                 <th className="px-6 py-4 text-left font-medium text-gray-500">Sitio web</th>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">Fecha </th>
+                <th className="px-6 py-4 text-left font-medium text-gray-500">Fecha de clasificación</th>
                 <th className="p-2 text-left"></th>
               </tr>
             </thead>
             <tbody>
-              {comentariosAMostrar.map((comentario, index) => (
-                <tr key={index} className="border-b">
-                  <td className="px-6 py-4">
-                    {truncateComentario(comentario.comentario)}
-                  </td>
-                  <td className="p-2">{comentario.sourceUrl}</td>
-                  <td className="p-2">
-                    {isValid(parseISO(comentario.fechaScraping)) 
-                      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
-                      : "Fecha Inválida"}
-                  </td>
-                  <td className="p-2">
-                    <button
-                      className="bg-blue-600 text-white py-2 px-4 rounded-lg"
-                      onClick={() => clasificarComentario(comentario)}
-                    >
-                      Clasificar
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-4 text-center">
+                    <Cargando />
                   </td>
                 </tr>
-              ))}
+              ) : comentariosAMostrar.length > 0 ? (
+                comentariosAMostrar.map((comentario, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="px-6 py-4">
+                      {truncateComentario(comentario.comentario)}
+                    </td>
+                    <td className="p-2">{comentario.sourceUrl}</td>
+                    <td className="p-2">
+                      {isValid(parseISO(comentario.fechaScraping)) 
+                        ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
+                        : "Fecha Inválida"}
+                    </td>
+                    <td className="p-2">
+                      <button
+                        className="bg-blue-600 text-white py-2 px-4 rounded-lg"
+                        onClick={() => clasificarComentario(comentario)}
+                      >
+                        Clasificar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="px-6 py-4 text-center">
+                    No hay comentarios para mostrar.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

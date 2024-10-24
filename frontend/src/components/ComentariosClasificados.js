@@ -2,14 +2,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/16/solid';
 import { TrashIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { format, formatISO, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import Calendario from './Objects/Calendario';
 import Paginacion from './Objects/Paginacion';
 import api from '../services/axios';
 import { truncateComentario } from '../utils/truncarComentario';
+import Cargando from './Objects/Cargando';
 
 export default function ComentariosClasificados() {
-  const [comentarios, setComentarios] = useState([])
+  const [comentarios, setComentarios] = useState([]);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [selectedGravedad, setSelectedGravedad] = useState({
     Baja: true,
@@ -24,6 +25,9 @@ export default function ComentariosClasificados() {
 
   const [showDetailedColumns, setShowDetailedColumns] = useState(false);
 
+  // Estado de carga
+  const [loading, setLoading] = useState(true);
+
   // Estados para paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const commentsPerPage = 10;
@@ -33,21 +37,21 @@ export default function ComentariosClasificados() {
   const dropdownRef = useRef(null);
   const gravedadButtonRef = useRef(null);
 
-
   useEffect(() => {
     const fetchComentariosClasificados = async () => {
       try {
-
-        const response = await api.get("/comments/get-all-classified-comments")
+        const response = await api.get('/comments/get-all-classified-comments');
         console.log(response.data.data);
-        setComentarios(response.data.data)
+        setComentarios(response.data.data);
       } catch (err) {
-        setComentarios([])
-        console.log("Error al obtener los comentarios")
+        setComentarios([]);
+        console.log('Error al obtener los comentarios');
+      } finally {
+        setLoading(false);
       }
-    }
-    fetchComentariosClasificados()
-  }, [])
+    };
+    fetchComentariosClasificados();
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -142,7 +146,10 @@ export default function ComentariosClasificados() {
 
   const renderCalendar = () => {
     return (
-      <div ref={calendarRef} className="absolute top-full left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+      <div
+        ref={calendarRef}
+        className="absolute top-full left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
+      >
         <Calendario onDateSelect={handleDateSelect} />
       </div>
     );
@@ -214,10 +221,12 @@ export default function ComentariosClasificados() {
   };
 
   const filteredComentarios = comentarios.filter((comentario) => {
-    const gravedadMapeada = mapGravedad(comentario.gravedad ? comentario.gravedad : 'Desconocida');
-    console.log(gravedadMapeada)
-    const gravedadMatch = 'Desconocida';
-    console.log(gravedadMatch)
+    const gravedadMapeada = mapGravedad(
+      comentario.gravedad ? comentario.gravedad : 'Desconocida'
+    );
+
+    const gravedadMatch =
+      selectedGravedad[gravedadMapeada] || gravedadMapeada === 'Desconocida';
 
     let dateMatch = true;
     if (selectedDate) {
@@ -275,7 +284,7 @@ export default function ComentariosClasificados() {
       `"${comment.comentario.replace(/"/g, '""')}"`,
       mapGravedad(comment?.gravedad ? comment.gravedad : 'Desconocida'),
       comment.comentario.sitioWeb.nombre,
-      format(parseISO(comment.fechaClasificacion), "dd-MM-yyyy"),
+      format(parseISO(comment.fechaClasificacion), 'dd-MM-yyyy'),
     ]);
 
     if (commentsToDownload.length === 0) {
@@ -283,8 +292,12 @@ export default function ComentariosClasificados() {
       return;
     }
 
-    const headers = ['Comentario', 'Gravedad', 'Sitio web', 'Fecha de clasificación'];
-
+    const headers = [
+      'Comentario',
+      'Gravedad',
+      'Sitio web',
+      'Fecha de clasificación',
+    ];
 
     let csvContent =
       headers.join(',') + '\n' + rows.map((e) => e.join(',')).join('\n');
@@ -299,6 +312,13 @@ export default function ComentariosClasificados() {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Calcular el número total de columnas
+  const baseColumns = 5;
+  const detailedColumns = 6;
+  const totalColumns = showDetailedColumns
+    ? baseColumns + detailedColumns
+    : baseColumns;
 
   return (
     <div className="p-8 bg-[#FAF9F8] flex-1 relative">
@@ -319,7 +339,8 @@ export default function ComentariosClasificados() {
               <span>
                 {selectedDate ? (
                   <span>
-                    Fecha: <span className="ml-2 mx-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full">
+                    Fecha:{' '}
+                    <span className="ml-2 mx-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full">
                       {format(new Date(selectedDate), 'dd/MM/yyyy')}
                     </span>
                   </span>
@@ -435,45 +456,70 @@ export default function ComentariosClasificados() {
           </tr>
         </thead>
         <tbody>
-          {currentComentarios.map((comentario, index) => (
-            <tr key={index} className="border-t border-gray-200">
-              <td className="px-6 py-4">
-                <input type="checkbox" className="mr-2" />
-                {truncateComentario(comentario.comentario.comentario)}
-              </td>
-              {/* Renderizar los datos adicionales si showDetailedColumns es true */}
-              {showDetailedColumns && (
-                <>
-                  <td className="px-6 py-4">{comentario.t}</td>
-                  <td className="px-6 py-4">{comentario.ePrivacidad}</td>
-                  <td className="px-6 py-4">{comentario.pi}</td>
-                  <td className="px-6 py-4">{comentario.pf}</td>
-                  <td className="px-6 py-4">{comentario.oi}</td>
-                  <td className="px-6 py-4">{comentario.eLibertad}</td>
-                </>
-              )}
-              <td className="px-6 py-4">
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${getBadgeColor(
-                    comentario?.gravedad
-                  )}`}
-                >
-                  {mapGravedad(comentario?.gravedad ? comentario.gravedad : 'Desconocida')}
-                </span>
-              </td>
-              <td className="px-6 py-4">{comentario.comentario?.sitioWeb?.nombre ? comentario?.comentario?.sitioWeb?.nombre : "latercera.com"}</td>
-              <td className="px-6 py-4">{format(parseISO(comentario.fechaClasificacion), "dd-MM-yyyy")}</td>
-              <td className="px-6 py-4 flex justify-end space-x-2">
-                <button className="text-gray-500 hover:text-red-600">
-                  <TrashIcon className="h-5 w-5" />
-                </button>
-
-                <button className="text-gray-500 hover:text-blue-600">
-                  <PencilIcon className="h-5 w-5" />
-                </button>
+          {loading ? (
+            <tr>
+              <td colSpan={totalColumns} className="px-6 py-4 text-center">
+                <Cargando />
               </td>
             </tr>
-          ))}
+          ) : currentComentarios.length > 0 ? (
+            currentComentarios.map((comentario, index) => (
+              <tr key={index} className="border-t border-gray-200">
+                <td className="px-6 py-4">
+                  <input type="checkbox" className="mr-2" />
+                  {truncateComentario(comentario.comentario.comentario)}
+                </td>
+                {/* Renderizar los datos adicionales si showDetailedColumns es true */}
+                {showDetailedColumns && (
+                  <>
+                    <td className="px-6 py-4">{comentario.t}</td>
+                    <td className="px-6 py-4">{comentario.ePrivacidad}</td>
+                    <td className="px-6 py-4">{comentario.pi}</td>
+                    <td className="px-6 py-4">{comentario.pf}</td>
+                    <td className="px-6 py-4">{comentario.oi}</td>
+                    <td className="px-6 py-4">{comentario.eLibertad}</td>
+                  </>
+                )}
+                <td className="px-6 py-4">
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${getBadgeColor(
+                      comentario?.gravedad
+                    )}`}
+                  >
+                    {mapGravedad(
+                      comentario?.gravedad ? comentario.gravedad : 'Desconocida'
+                    )}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  {comentario.comentario?.sitioWeb?.nombre
+                    ? comentario?.comentario?.sitioWeb?.nombre
+                    : 'latercera.com'}
+                </td>
+                <td className="px-6 py-4">
+                  {format(
+                    parseISO(comentario.fechaClasificacion),
+                    'dd-MM-yyyy'
+                  )}
+                </td>
+                <td className="px-6 py-4 flex justify-end space-x-2">
+                  <button className="text-gray-500 hover:text-red-600">
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+
+                  <button className="text-gray-500 hover:text-blue-600">
+                    <PencilIcon className="h-5 w-5" />
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={totalColumns} className="px-6 py-4 text-center">
+                No hay comentarios para mostrar.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
 

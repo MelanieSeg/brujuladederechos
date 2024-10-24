@@ -9,6 +9,7 @@ import { truncateComentario } from "../utils/truncarComentario";
 import Calendario from "./Objects/Calendario";
 import Paginacion from "./Objects/Paginacion";
 import Formulario from "./Objects/Formulario";
+import Cargando from "./Objects/Cargando";
 
 export default function ComentariosRecolectados() {
   const [defaultComentarios] = useState([
@@ -52,6 +53,7 @@ export default function ComentariosRecolectados() {
   ]);
 
   const [comentarios, setComentarios] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
@@ -72,16 +74,16 @@ export default function ComentariosRecolectados() {
   const dateButtonRef = useRef(null);
   const calendarRef = useRef(null);
 
-  // NOTA: los comentarios recolectados van a ser los mismos que los pendientes por ahora, esto hasta que esté la clasificación manual
   useEffect(() => {
     const fetchComentarios = async () => {
       try {
         const response = await api.get("/comments/get-all-comments-scraped");
         setComentarios(response.data.data);
       } catch (err) {
-        // Este set es para evitar errores en producción si no se puede obtener los comentarios
         setComentarios(defaultComentarios);
         console.log("Error al obtener los comentarios", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -90,7 +92,6 @@ export default function ComentariosRecolectados() {
 
   console.log(comentarios);
 
-  // Manejar clics fuera de los dropdowns para cerrarlos
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -177,13 +178,13 @@ export default function ComentariosRecolectados() {
   };
 
   const handleDateClick = (date) => {
-    const formattedDate = date.toISOString().split("T")[0]; // Formateamos la fecha como "YYYY-MM-DD"
+    const formattedDate = date.toISOString().split("T")[0];
     if (selectedDateType === "desde") {
       setFechaDesde(formattedDate);
     } else if (selectedDateType === "hasta") {
       setFechaHasta(formattedDate);
     }
-    setIsCalendarOpen(false); // Cerramos el calendario después de seleccionar la fecha
+    setIsCalendarOpen(false);
   };
 
   const renderDropdown = () => {
@@ -223,7 +224,6 @@ export default function ComentariosRecolectados() {
     );
   };
 
-  // Definir las columnas y la función de formateo específica para esta vista
   const columns = [
     { title: "Comentario", width: 200, halign: 'left' },
     { title: "Estado", width: 60, halign: 'center' },
@@ -232,7 +232,7 @@ export default function ComentariosRecolectados() {
   ];
 
   const formatData = (comentario) => {
-    const comentarioTexto = comentario.comentario; // No truncar para el PDF
+    const comentarioTexto = comentario.comentario;
     const estado =
       comentario.estado === "PENDIENTE_CLASIFICACION" ? "Pendiente" : "Clasificado";
     const sitioWeb = comentario.sourceUrl;
@@ -243,7 +243,6 @@ export default function ComentariosRecolectados() {
     return [comentarioTexto, estado, sitioWeb, fecha];
   };
 
-  // Filtrar comentarios según estado y fechas seleccionadas
   const filteredComments = comentarios.filter((comentario) => {
     const estadoMatch = selectedEstado[comentario.estado];
     const dateMatch =
@@ -252,7 +251,6 @@ export default function ComentariosRecolectados() {
     return estadoMatch && dateMatch;
   });
 
-  // Paginación
   const indexOfLastComment = currentPage * commentsPerPage;
   const indexOfFirstComment = indexOfLastComment - commentsPerPage;
   const currentComments = filteredComments.slice(
@@ -384,35 +382,48 @@ export default function ComentariosRecolectados() {
               </tr>
             </thead>
             <tbody>
-              {currentComments.map((comentario, index) => (
-                <tr key={index} className="border-b border-gray-200">
-                  {/* Truncar el comentario para la vista */}
-                  <td className="px-6 py-4 max-w-xs">
-                    <div className="whitespace-nowrap overflow-hidden overflow-ellipsis">
-                      {truncateComentario(comentario.comentario, 100)}
-                    </div>
-                  </td>
-                  <td className="px-12 py-4">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColor(
-                        comentario.estado
-                      )}`}
-                    >
-                      {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">{comentario.sourceUrl}</td>
-                  <td className="px-6 py-4">
-                    {isValid(parseISO(comentario.fechaScraping)) 
-                      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy") 
-                      : "Fecha Inválida"
-                    }
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer" />
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-4 text-center">
+                    <Cargando />
                   </td>
                 </tr>
-              ))}
+              ) : currentComments.length > 0 ? (
+                currentComments.map((comentario, index) => (
+                  <tr key={index} className="border-b border-gray-200">
+                    <td className="px-6 py-4 max-w-xs">
+                      <div className="whitespace-nowrap overflow-hidden overflow-ellipsis">
+                        {truncateComentario(comentario.comentario, 100)}
+                      </div>
+                    </td>
+                    <td className="px-12 py-4">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColor(
+                          comentario.estado
+                        )}`}
+                      >
+                        {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">{comentario.sourceUrl}</td>
+                    <td className="px-6 py-4">
+                      {isValid(parseISO(comentario.fechaScraping)) 
+                        ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy") 
+                        : "Fecha Inválida"
+                      }
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500 cursor-pointer" />
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-4 text-center">
+                    No hay comentarios para mostrar.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

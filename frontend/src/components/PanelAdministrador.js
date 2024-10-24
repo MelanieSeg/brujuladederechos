@@ -8,6 +8,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import Paginacion from './Objects/Paginacion';
+import Cargando from './Objects/Cargando';
 
 export default function PanelAdministrador() {
   // Datos temporales de moderadores
@@ -33,8 +34,8 @@ export default function PanelAdministrador() {
     { id: 19, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
     { id: 20, nombre: 'Usuario', email: 'usuario.apellido@example.com', estado: 'Activo' },
   ];
-
-  const [moderadores, setModeradores] = useState(datosTemporalesModeradores);
+  const [loading, setLoading] = useState(true);
+  const [moderadores, setModeradores] = useState([]);
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState('');
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -70,6 +71,17 @@ export default function PanelAdministrador() {
     }
   }, [moderadorAEditar]);
 
+  useEffect(() => {
+    // Simula una carga de datos de 2 segundos
+    const timer = setTimeout(() => {
+      setModeradores(datosTemporalesModeradores);
+      setLoading(false);
+    }, 2000);
+
+    // Limpia el timeout si el componente se desmonta
+    return () => clearTimeout(timer);
+  }, []);
+
   // Función para activar o desactivar un moderador
   const manejarActivarDesactivarModerador = (id, nuevoEstado) => {
     setModeradores(
@@ -79,6 +91,7 @@ export default function PanelAdministrador() {
     );
   };
 
+  
   // Función para confirmar la eliminación de un moderador
   const confirmarEliminarModerador = (id) => {
     setModeradorAEliminar(id);
@@ -120,7 +133,9 @@ export default function PanelAdministrador() {
   const handleAgregarModerador = (e) => {
     e.preventDefault();
     // Validaciones si es necesario
-    const newId = moderadores.length ? Math.max(...moderadores.map(m => m.id)) + 1 : 1;
+    const newId = moderadores.length
+      ? Math.max(...moderadores.map((m) => m.id)) + 1
+      : 1;
     const nuevoModerador = {
       id: newId,
       nombre,
@@ -155,10 +170,12 @@ export default function PanelAdministrador() {
       <div className="w-full max-w-md bg-white h-full p-6 shadow-md overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold">Agregar nuevo moderador</h3>
-          <button onClick={() => {
-            setMostrarFormulario(false);
-            resetFormFields();
-          }}>
+          <button
+            onClick={() => {
+              setMostrarFormulario(false);
+              resetFormFields();
+            }}
+          >
             <XMarkIcon className="h-6 w-6 text-gray-700" />
           </button>
         </div>
@@ -261,11 +278,13 @@ export default function PanelAdministrador() {
       <div className="w-full max-w-md bg-white h-full p-6 shadow-md overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold">Editar moderador</h3>
-          <button onClick={() => {
-            setMostrarFormularioEditar(false);
-            setModeradorAEditar(null);
-            resetFormFields();
-          }}>
+          <button
+            onClick={() => {
+              setMostrarFormularioEditar(false);
+              setModeradorAEditar(null);
+              resetFormFields();
+            }}
+          >
             <XMarkIcon className="h-6 w-6 text-gray-700" />
           </button>
         </div>
@@ -388,26 +407,28 @@ export default function PanelAdministrador() {
         Panel de administración
       </h2>
 
-      {/* Barra de Navegación Integrada - Modificada para mantener la longitud y la posición del botón */}
+      {/* Barra de Navegación Integrada */}
       <div className="mb-6 flex items-center justify-between">
-  {/* Contenedor de búsqueda */}
-  <div className="relative flex-grow mr-4" style={{ maxWidth: '300px' }}>
+        {/* Contenedor de búsqueda */}
+        <div className="relative flex-grow mr-4" style={{ maxWidth: '300px' }}>
+          <input
+            type="text"
+            value={busqueda}
+            onChange={manejarCambioBusqueda}
+            placeholder="Buscar moderador..."
+            className="w-full pr-10 p-2 h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+          <MagnifyingGlassIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+        </div>
 
-    <input
-      type="text"
-      value={busqueda}
-      onChange={manejarCambioBusqueda}
-      placeholder="Buscar moderador..."
-      className="w-full pr-10 p-2 h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-    />
-    <MagnifyingGlassIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
-  </div>
-  
-  {/* Botón "Agregar Nuevo Moderador" */}
-  <button className="bg-blue-500 text-white px-4 py-2 rounded-md h-10">
-    Agregar Nuevo Moderador
-  </button>
-</div>
+        {/* Botón "Agregar Nuevo Moderador" */}
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded-md h-10"
+          onClick={() => setMostrarFormulario(true)}
+        >
+          Agregar Nuevo Moderador
+        </button>
+      </div>
 
       <div className="overflow-x-auto bg-white shadow-sm rounded-md">
         <table className="min-w-full bg-white">
@@ -428,66 +449,80 @@ export default function PanelAdministrador() {
             </tr>
           </thead>
           <tbody>
-            {moderadoresAMostrar.map((moderador) => (
-              <tr
-                key={moderador.id}
-                className="border-t border-gray-200 hover:bg-gray-50"
-              >
-                <td className="px-6 py-4 text-gray-700">{moderador.nombre}</td>
-                <td className="px-6 py-4 text-gray-700">{moderador.email}</td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                      moderador.estado === 'Activo'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {moderador.estado}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  {/* Contenedor de los botones de acción */}
-                  <div className="flex items-center justify-between">
-                    {/* Botón Activar/Desactivar alineado con el título "Acciones" */}
-                    <div>
-                      <button
-                        onClick={() =>
-                          manejarActivarDesactivarModerador(
-                            moderador.id,
-                            moderador.estado === 'Activo' ? 'Inactivo' : 'Activo'
-                          )
-                        }
-                        className="px-4 py-1 text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-                        style={{ minWidth: '100px' }}
-                      >
-                        {moderador.estado === 'Activo' ? 'Desactivar' : 'Activar'}
-                      </button>
-                    </div>
-                    {/* Contenedor de los íconos de editar y eliminar */}
-                    <div className="flex items-center space-x-2 ml-4">
-                      <button
-                        onClick={() => {
-                          setModeradorAEditar(moderador);
-                          setMostrarFormularioEditar(true);
-                        }}
-                        className="text-gray-500 hover:text-blue-600"
-                        aria-label="Editar moderador"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => confirmarEliminarModerador(moderador.id)}
-                        className="text-gray-500 hover:text-red-600"
-                        aria-label="Eliminar moderador"
-                      >
-                        <PencilIcon className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-4 text-center">
+                  <Cargando />
                 </td>
               </tr>
-            ))}
+            ) : moderadoresAMostrar.length > 0 ? (
+              moderadoresAMostrar.map((moderador) => (
+                <tr
+                  key={moderador.id}
+                  className="border-t border-gray-200 hover:bg-gray-50"
+                >
+                  <td className="px-6 py-4 text-gray-700">{moderador.nombre}</td>
+                  <td className="px-6 py-4 text-gray-700">{moderador.email}</td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        moderador.estado === 'Activo'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {moderador.estado}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    {/* Contenedor de los botones de acción */}
+                    <div className="flex items-center justify-between">
+                      {/* Botón Activar/Desactivar */}
+                      <div>
+                        <button
+                          onClick={() =>
+                            manejarActivarDesactivarModerador(
+                              moderador.id,
+                              moderador.estado === 'Activo' ? 'Inactivo' : 'Activo'
+                            )
+                          }
+                          className="px-4 py-1 text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                          style={{ minWidth: '100px' }}
+                        >
+                          {moderador.estado === 'Activo' ? 'Desactivar' : 'Activar'}
+                        </button>
+                      </div>
+                      {/* Íconos de editar y eliminar */}
+                      <div className="flex items-center space-x-2 ml-4">
+                        <button
+                          onClick={() => confirmarEliminarModerador(moderador.id)}
+                          className="text-gray-500 hover:text-red-600"
+                          aria-label="Eliminar moderador"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setModeradorAEditar(moderador);
+                            setMostrarFormularioEditar(true);
+                          }}
+                          className="text-gray-500 hover:text-blue-600"
+                          aria-label="Editar moderador"
+                        >
+                          <PencilIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={4} className="px-6 py-4 text-center">
+                  No hay moderadores para mostrar.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -507,4 +542,4 @@ export default function PanelAdministrador() {
       {mostrarModalEliminar && modalEliminarModerador}
     </div>
   );
-}//
+}
