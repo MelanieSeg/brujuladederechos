@@ -21,6 +21,13 @@ export const userSchema = z.object({
 });
 
 
+export const deleteUserByAdmin = z.object({
+  userId: z.string().cuid(),
+  justificacion: z.string().max(255, {
+    message: "La justificacion no puede tener mas de 255 caracteres"
+  }).optional()
+})
+
 export const userIdParamsSchema = z.object({
   id: z.string().cuid()
 }).strict()

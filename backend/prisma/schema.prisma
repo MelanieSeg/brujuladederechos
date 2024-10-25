@@ -72,6 +72,7 @@ model User {
   comentariosClasificados ComentarioClasificado[]
   logAuditorias           LogAuditoria[]
   UserToken               UserToken[]
+  Notificacion            Notificacion[]
 }
 
 model ConfigScraping {
@@ -177,6 +178,17 @@ model UserToken {
   @@index([expireAt])
   @@index([tipo])
   @@unique([userId,tipo],name: "userId_tipo_unique")
+}
+
+
+model Notificacion {
+  id                String   @id @default(cuid())
+  usuarioId         String
+  tipo_notificacion String
+  contenido         String
+  estado            String // la idea es que este en (no_leida), (leida) o (oculta)
+  createdAt         DateTime @default(now())
+  usuario           User     @relation(fields: [usuarioId], references: [id])
 }
 
 enum TipoAccion {

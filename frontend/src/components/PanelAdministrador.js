@@ -12,6 +12,7 @@ import userApi from '../services/axiosUserInstance';
 import FormCreateUser from './forms/Form-crear-usuario';
 import FormUpdateUser from './forms/Form-update-usuario';
 import { useNavigate } from 'react-router-dom';
+import ModalEliminarModerador from './modals/Modal-eliminar-usuario';
 
 export default function PanelAdministrador() {
   const [moderadores, setModeradores] = useState([]);
@@ -100,10 +101,12 @@ export default function PanelAdministrador() {
   };
 
   // Función para eliminar un moderador
-  const manejarEliminarModerador = (userId, motivo) => {
+  const manejarEliminarModerador = () => {
     setModeradores(moderadores.filter((mod) => mod.id !== moderadorAEliminar));
     setMostrarModalEliminar(false);
     setModeradorAEliminar(null);
+
+
   };
 
   // Función para manejar la búsqueda
@@ -181,52 +184,6 @@ export default function PanelAdministrador() {
           </button>
         </div>
         <FormUpdateUser userData={moderadorAEditar} />
-      </div>
-    </div>
-  );
-
-  // Modal para confirmar la eliminación de un moderador
-  const modalEliminarModerador = (
-    <div className="absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-md shadow-lg max-w-sm w-full">
-        <h3 className="text-lg font-semibold mb-2">¿Está seguro?</h3>
-        <p className="text-sm text-gray-900 mb-4">
-          Esta acción no se puede deshacer. Esto eliminará permanentemente la cuenta del moderador y eliminará sus datos de nuestros servidores.
-        </p>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            ¿Por qué desea eliminar a este usuario? (Opcional)
-          </label>
-          <input
-            type="text"
-            placeholder="Ingrese su justificación"
-            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Confirme su contraseña
-          </label>
-          <input
-            type="password"
-            placeholder="********"
-            className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="flex justify-end space-x-2 mt-6">
-          <button
-            onClick={() => setMostrarModalEliminar(false)}
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={manejarEliminarModerador}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-          >
-            Eliminar
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -360,7 +317,14 @@ export default function PanelAdministrador() {
 
       {mostrarFormulario && formularioAgregarModerador}
       {mostrarFormularioEditar && formularioEditarModerador}
-      {mostrarModalEliminar && modalEliminarModerador}
+      {mostrarModalEliminar &&
+        <ModalEliminarModerador
+          isOpen={mostrarModalEliminar}
+          onClose={() => setMostrarModalEliminar(false)}
+          onDelete={manejarEliminarModerador}
+          moderador={moderadorAEliminar}
+        />
+      }
     </div>
   );
 }

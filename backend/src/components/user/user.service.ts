@@ -274,7 +274,6 @@ class UserService {
         return { success: false, data: null, message: `Error, el usuario con el id ${userId} no fue encontrado` };
       }
 
-
       const deleteUser = await this.prisma.user.update({
         where: {
           id: user.id,

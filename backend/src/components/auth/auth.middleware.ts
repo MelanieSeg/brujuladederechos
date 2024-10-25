@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import AuthService from "./auth.service";
 
-interface AuthRequest extends Request {
-  user?: any;
-}
+//interface AuthRequest extends Request {
+//user?: any;
+//}
 
 class AuthMiddleware {
   private AuthService: AuthService;
@@ -11,7 +11,7 @@ class AuthMiddleware {
     this.AuthService = authService;
   }
 
-  authorize = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  authorize = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { authorization } = req.headers;
 

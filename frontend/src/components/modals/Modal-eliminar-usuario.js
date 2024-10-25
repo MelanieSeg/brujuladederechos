@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { deleteUserConfirmSchema } from '../../lib/validations/user';
+import userApi from '../../services/axiosUserInstance';
 
 export default function ModalEliminarModerador({
   isOpen,
@@ -19,9 +20,13 @@ export default function ModalEliminarModerador({
     resolver: yupResolver(deleteUserConfirmSchema),
   });
 
+
+
   const onSubmit = async (data) => {
     try {
-      await onDelete(moderador.id, data);
+      console.log({ data })
+      const response = await userApi.patch("/delete-user", { userId: moderador.id, justificacion: data.justificacion })
+      console.log(response)
       reset();
     } catch (error) {
       console.error('Error al eliminar el moderador:', error);
@@ -58,24 +63,6 @@ export default function ModalEliminarModerador({
             {errors.justificacion && (
               <p className="text-red-500 text-xs mt-1">
                 {errors.justificacion.message}
-              </p>
-            )}
-          </div>
-          {/* Confirmación de Contraseña */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Confirme su contraseña
-            </label>
-            <input
-              type="password"
-              {...register('contrasena')}
-              placeholder="********"
-              className={`mt-1 p-2 w-full border ${errors.contrasena ? 'border-red-500' : 'border-gray-300'
-                } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-            {errors.contrasena && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.contrasena.message}
               </p>
             )}
           </div>
