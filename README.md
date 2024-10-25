@@ -1,7 +1,10 @@
 
 
-### TODO - IGNORAR
+# Tareas Pendientes
 
--[ ] : Crear docker-compose para levantar todo a la vez 
-  -[ ] : Crear dockerfile para backend-nodejs , backend-flask ,frontend, rabbitmq
-
+- [ ] Crear `docker-compose.yml` para levantar todo a la vez.
+- [ ] Crear `Dockerfile` para cada componente:
+  - Backend Node.js
+  - Backend Flask
+  - Frontend
+  - RabbitMQ
