@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import * as jose from "jose";
 import dotenv from "dotenv";
 import { isValid } from "zod";
+import { IUser } from "../../models/user";
 
 
 //TODO: manejar mejor la crear de un new Prisma Client
@@ -29,6 +30,20 @@ interface VerifyRefreshTokenResponse {
   payload: CustomJWTPayload | null;
   msg: string;
 }
+export interface IUserTokenPayload extends jose.JWTPayload {
+  userId: string;
+  email: string;
+  rol: string;
+  iat: number;
+  exp: number;
+}
+
+type VerifyTokenResult =
+  | { isValid: true; payload: IUserTokenPayload }
+  | { isValid: false; payload: null };
+
+
+
 
 class AuthService {
   private prisma: PrismaClient;
@@ -83,7 +98,7 @@ class AuthService {
         token: refreshToken,
         userId: userId,
         expireAt: expireAt,
-        tipo:TipoToken.REFRESH
+        tipo: TipoToken.REFRESH
       },
     });
 
@@ -153,7 +168,7 @@ class AuthService {
     await this.prisma.userToken.deleteMany({
       where: {
         userId: userId,
-        tipo:TipoToken.REFRESH
+        tipo: TipoToken.REFRESH
       },
     });
   };
@@ -174,9 +189,9 @@ class AuthService {
     return { msg: "Se han eliminado todos los refreshTokens expirados" };
   };
 
-  verifyToken = async (jwt: string) => {
+  verifyToken = async (jwt: string): Promise<VerifyTokenResult> => {
     try {
-      const validatedToken = await jose.jwtVerify(jwt, SECRET);
+      const validatedToken = await jose.jwtVerify<IUserTokenPayload>(jwt, SECRET);
       return { isValid: true, payload: validatedToken.payload };
     } catch (err) {
       return { isValid: false, payload: null };

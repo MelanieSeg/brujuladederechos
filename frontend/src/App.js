@@ -15,6 +15,8 @@ import LayoutProtegido from './components/LayoutProtegido';
 import RutasPublicas from './components/RutasPublicas';
 import PanelAdministrador from './components/PanelAdministrador';
 import FormConfirmarUsuario from './components/forms/Form-confirmar-usuario';
+import RequiredRole from './components/RequiredRole';
+import NoAutorizado from './components/NoAutorizado';
 
 function App() {
   const [mostrarNotificaciones, setMostrarNotificaciones] = React.useState(false);
@@ -50,12 +52,18 @@ function App() {
               <Route path="/resumen" element={<Dashboard />} />
               <Route path="/comentarios-recolectados" element={<ComentariosRecolectados />} />
               <Route path="/comentarios-pendientes" element={<ComentariosPendientes />} />
-              <Route path="/panel-administrador" element={<PanelAdministrador />} />
+              <Route path="/panel-administrador" element={
+                <RequiredRole requiredRole={"ADMIN"}>
+                  <PanelAdministrador />
+                </RequiredRole>
+              } />
               <Route path="/comentarios-clasificados" element={<ComentariosClasificados />} />
               <Route path="/historial-de-cambios" element={<HistorialDeCambios />} />
               <Route path="/configuracion" element={<Configuracion />} />
               <Route path="/" element={<Dashboard />} />
             </Route>
+
+            <Route path='/no-autorizado' element={<NoAutorizado />} />
 
             <Route
               path="*"

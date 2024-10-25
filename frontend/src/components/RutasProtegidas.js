@@ -5,6 +5,7 @@ import { useAuth } from "../hooks/useAuth";
 
 const RutasProtegidas = ({ children }) => {
   const { user, isLoading } = useAuth();
+  console.log(user)
 
   if (isLoading) {
     //TODO: Agregar tailwindcss para hacer un Cargando mas acorde 

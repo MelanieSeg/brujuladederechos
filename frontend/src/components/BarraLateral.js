@@ -13,18 +13,18 @@ export default function BarraLateral() {
   const [notificacionesVisibles, setNotificacionesVisibles] = useState(false);
   const notificacionesRef = useRef(null);
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);
-  
+
   const toggleNotificaciones = () => {
     setNotificacionesVisibles(!notificacionesVisibles);
   };
-  
+
   const itemsDelMenu = [
     { nombre: 'Resumen', ruta: '/resumen' },
     { nombre: 'Comentarios recolectados', ruta: '/comentarios-recolectados' },
     { nombre: 'Comentarios pendientes', ruta: '/comentarios-pendientes' },
     { nombre: 'Comentarios clasificados', ruta: '/comentarios-clasificados' },
     { nombre: 'Historial de cambios', ruta: '/historial-de-cambios' },
-    { nombre: 'Panel de administración', ruta: '/panel-administrador' },
+    ...(user?.rol === 'ADMIN' ? [{ nombre: 'Panel de administración', ruta: '/panel-administrador' }] : []),
     { nombre: 'Configuración', ruta: '/configuracion' },
   ];
 
@@ -47,9 +47,8 @@ export default function BarraLateral() {
       </div>
 
       <div
-        className={`h-screen p-5 w-64 shadow-lg flex flex-col justify-between fixed z-10 transform transition-transform duration-300 md:relative ${
-          sidebarVisible ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}
+        className={`h-screen p-5 w-64 shadow-lg flex flex-col justify-between fixed z-10 transform transition-transform duration-300 md:relative ${sidebarVisible ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}
       >
         <div className="flex flex-col flex-grow">
           <div className="hidden md:flex items-center justify-between mb-10">
@@ -71,10 +70,10 @@ export default function BarraLateral() {
                 <button onClick={toggleNotificaciones} className="mt-4">
                   <BellIcon className="h-6 w-6" />
                 </button>
-                 <div ref={notificacionesRef} className="absolute top-0 left-full">
-                  <BarraDeNotificaciones 
-                    visible={notificacionesVisibles} 
-                    onClose={() => setNotificacionesVisibles(false)} 
+                <div ref={notificacionesRef} className="absolute top-0 left-full">
+                  <BarraDeNotificaciones
+                    visible={notificacionesVisibles}
+                    onClose={() => setNotificacionesVisibles(false)}
                   />
                 </div>
               </div>
@@ -85,11 +84,10 @@ export default function BarraLateral() {
             {itemsDelMenu.map((item) => (
               <li
                 key={item.nombre}
-                className={`mb-4 font-semibold p-2 rounded-lg ${
-                  location.pathname === item.ruta
+                className={`mb-4 font-semibold p-2 rounded-lg ${location.pathname === item.ruta
                     ? `${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-300 text-black'}`
                     : `hover:${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`
-                }`}
+                  }`}
               >
                 <Link
                   to={item.ruta}

@@ -25,6 +25,12 @@ export default function ModalEliminarModerador({
   const onSubmit = async (data) => {
     try {
       console.log({ data })
+      console.log({
+        data: {
+          userId: moderador.id,
+          justificacion: data.justificacion
+        }
+      })
       const response = await userApi.patch("/delete-user", { userId: moderador.id, justificacion: data.justificacion })
       console.log(response)
       reset();

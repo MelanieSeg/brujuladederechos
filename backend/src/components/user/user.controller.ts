@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import UserService from "./user.service";
-import { userChangeStateSchema, userIdParamsSchema, userResetPasswordSchema, userSchema, userUpdateSchema } from "../../schemas/user";
+import { deleteUserByAdmin, userChangeStateSchema, userIdParamsSchema, userResetPasswordSchema, userSchema, userUpdateSchema } from "../../schemas/user";
 import { tokenSchema } from "../../schemas/token";
 
 
@@ -90,13 +90,19 @@ class UserController {
 
   deleteUser = async (req: Request, res: Response) => {
     try {
-      console.log(req.user)
-      const validData = userIdParamsSchema.safeParse(req.body);
+
+      const user = req.user
+
+      const validData = deleteUserByAdmin.safeParse(req.body);
       if (!validData.success) {
         return res.status(400).json({ error: "Datos ingresados invalidos" });
       }
 
-      //     const data = await this.userService.deleteUser(validData.data.id);
+      if (!user || user.rol !== "ADMIN" || user.userId === validData.data.userId) {
+        return res.status(401).json({ error: "No estas autorizado para realizar userIdParamsSchemaesta operacion" })
+      }
+
+      const data = await this.userService.deleteUser(validData.data.userId);
 
       return res.status(200).json({
         message: `Se elimino el usuario: ${"tests"}`

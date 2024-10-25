@@ -1,14 +1,8 @@
 import { Request, Response } from "express";
 import CommentsService from "./comments.services";
 import { commentScrappedClassificationSchema } from "../../schemas/commentScrapped";
-import { request } from "http";
 
 
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-  };
-}
 
 class CommentsController {
   private CommentsService: CommentsService;
@@ -57,7 +51,7 @@ class CommentsController {
     }
   }
 
-  clasificateComment = async (req: AuthenticatedRequest, res: Response) => {
+  clasificateComment = async (req: Request, res: Response) => {
     try {
       console.log(req.body)
       const userId = req.body.userId;

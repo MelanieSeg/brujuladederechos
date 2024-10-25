@@ -215,6 +215,9 @@ class UserService {
         emailVerified: true,
         isActive: true
       },
+      where: {
+        isDelete: false
+      }
     });
 
   getUserById = (id: string) =>
@@ -280,7 +283,8 @@ class UserService {
           isDelete: false,
         },
         data: {
-          isDelete: true
+          isDelete: true,
+          isActive: false,
         }
       })
 

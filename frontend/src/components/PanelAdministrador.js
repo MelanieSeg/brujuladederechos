@@ -93,15 +93,15 @@ export default function PanelAdministrador() {
 
 
   };
-
   // Función para confirmar la eliminación de un moderador
-  const confirmarEliminarModerador = (id) => {
-    setModeradorAEliminar(id);
+  const confirmarEliminarModerador = (moderador) => {
+    setModeradorAEliminar(moderador);
     setMostrarModalEliminar(true);
   };
 
   // Función para eliminar un moderador
   const manejarEliminarModerador = () => {
+    console.log("select")
     setModeradores(moderadores.filter((mod) => mod.id !== moderadorAEliminar));
     setMostrarModalEliminar(false);
     setModeradorAEliminar(null);
@@ -293,7 +293,7 @@ export default function PanelAdministrador() {
                       <PencilIcon className="h-5 w-5" />
                     </button>
                     <button
-                      onClick={() => confirmarEliminarModerador(moderador.id)}
+                      onClick={() => confirmarEliminarModerador(moderador)}
                       className="text-gray-500 hover:text-red-600"
                     >
                       <TrashIcon className="h-5 w-5" />

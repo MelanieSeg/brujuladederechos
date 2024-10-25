@@ -35,7 +35,7 @@ class AuthMiddleware {
   };
 
   authorizeRole = (rules: string[]) => {
-    return (req: AuthRequest, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       try {
         const user = req.user;
 
