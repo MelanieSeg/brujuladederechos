@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import UserController from "./user.controller";
 import AuthMiddleware from "../auth/auth.middleware";
 
@@ -43,6 +43,11 @@ class UserRouter {
       this.AuthMiddleware.authorize,
       this.UserController.getUserById,
     );
+    router.patch(
+      "/change-password",
+      this.AuthMiddleware.authorize,
+      this.UserController.changeUserPassword
+    )
 
     return router;
   }

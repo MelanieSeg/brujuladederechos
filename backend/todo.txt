@@ -1,4 +1,8 @@
 
+- [ ] - Cambiar los schemas parar dejarlos como DTO's, esto en operaciones de create-update(patch)
+
+
+
 - [ ] - Probar la confirmacion de email via pasando el token en la url via params.
 Descripción: Confirma el email del usuario utilizando un token de verificación enviado por email.
 

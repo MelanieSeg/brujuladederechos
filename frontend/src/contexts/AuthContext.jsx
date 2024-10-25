@@ -92,7 +92,8 @@ export const AuthProvider = ({ children }) => {
       setAccessToken(null);
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
-      window.location.href = "/auth/login";
+      setIsLoading(false)
+      window.location.href = "/login";
     } catch (error) {
       console.error("Error durante el logout:", error);
     }

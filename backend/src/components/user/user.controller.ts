@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import UserService from "./user.service";
-import { deleteUserByAdmin, userChangeStateSchema, userIdParamsSchema, userResetPasswordSchema, userSchema, userUpdateSchema } from "../../schemas/user";
+import { deleteUserByAdmin, userChangeStateSchema, userIdParamsSchema, userNewPasswordSchema, userResetPasswordSchema, userSchema, userUpdateSchema } from "../../schemas/user";
 import { tokenSchema } from "../../schemas/token";
 
 
@@ -173,6 +173,8 @@ class UserController {
 
   resetPasswordUser = async (req: Request, res: Response) => {
     try {
+
+
       const validData = userResetPasswordSchema.safeParse(req.body);
 
       if (!validData.success) {
@@ -197,6 +199,32 @@ class UserController {
       return res.status(500).json({ error: "Error interno del servidor", err });
     }
   };
+
+  changeUserPassword = async (req: Request, res: Response) => {
+    try {
+
+      const user = req.user;
+
+      const validData = userNewPasswordSchema.safeParse(req.body);
+
+      if (!validData.success) {
+        return res
+          .status(400)
+          .json({ error: `Informacion invalida, ${validData.error}` });
+      }
+
+      if (!user) {
+        return res.status(401).json({ error: "No estas autorizado para realizar userIdParamsSchemaesta operacion" })
+      }
+
+      const data = await this.userService.changePassword({ userId: user.userId, ...validData.data })
+
+      return res.status(200).json({ msg: "Cambio de password exitoso" });
+
+    } catch (err) {
+      return res.status(500).json({ error: "Error interno del servidor", err });
+    }
+  }
 
   getUsers = async (_: Request, res: Response) => {
     try {

@@ -81,3 +81,36 @@ export const userResetPasswordSchema = z.object({
       message: "Token invalido",
     }),
 });
+
+export const userNewPasswordSchema = z.object({
+  currentPassword: z
+    .string()
+    .min(6, {
+      message: "La contraseña tiene que ser de minimo 6 caracteres",
+    })
+    .max(24, {
+      message: "La contraseña no puede superarar los 24 caracteres",
+    }),
+  newPassword: z
+    .string()
+    .min(6, {
+      message: "La contraseña nueva tiene que ser de minimo 6 caracteres",
+    })
+    .max(24, {
+      message: "La contraseña nueva no puede superarar los 24 caracteres",
+    }),
+})
+
+export type UserNewPasswordDto = z.infer<typeof userNewPasswordSchema>
+
+export const userChangePasswordSchema = userNewPasswordSchema.extend({
+  userId: z.string().cuid()
+})
+
+export type UserChangePasswordDto = z.infer<typeof userChangePasswordSchema>
+
+
+
+
+
+

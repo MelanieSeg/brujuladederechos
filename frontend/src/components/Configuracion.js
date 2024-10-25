@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { DarkModeContext } from '../context/DarkModeContext'; // Importar correctamente el contexto de modo oscuro
+import { useAuth } from '../hooks/useAuth';
+import FormChangeUserPassword from './forms/Form-change-password-usuario';
 
 const Configuracion = () => {
+
+
+  const { user, logout } = useAuth()
+
   const { isDarkMode } = useContext(DarkModeContext); // Desestructura correctamente el contexto
   const [webScrapingActivo, setWebScrapingActivo] = useState(false);
   const [frecuenciaScraping, setFrecuenciaScraping] = useState('');
@@ -53,9 +59,8 @@ const Configuracion = () => {
         <div className="mt-4 button-center">
           <button
             onClick={alternarWebScraping}
-            className={`px-6 py-3 text-white rounded-md transition-all duration-300 ${
-              webScrapingActivo ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
-            }`}
+            className={`px-6 py-3 text-white rounded-md transition-all duration-300 ${webScrapingActivo ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
+              }`}
           >
             {webScrapingActivo ? 'Desactivar Web Scraping' : 'Activar Web Scraping'}
           </button>
@@ -64,12 +69,7 @@ const Configuracion = () => {
 
       {/* Cambiar Contraseña */}
       <ConfigSection title="Cambiar Contraseña" isDarkMode={isDarkMode}>
-        <PasswordField label="Contraseña Actual" />
-        <PasswordField label="Nueva Contraseña" />
-        <PasswordField label="Confirmar Nueva Contraseña" />
-        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          Actualizar Contraseña
-        </button>
+        <FormChangeUserPassword logoutFn={logout} />
       </ConfigSection>
 
       {/* Cambiar Foto de Perfil */}

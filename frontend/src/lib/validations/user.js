@@ -13,7 +13,7 @@ export const userSchema = yup.object().shape({
   password: yup
     .string()
     .required('La contraseña es obligatoria')
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .min(6, 'La contraseña debe tener al menos 8 caracteres')
     .matches(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula')
     .matches(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
     .matches(/[0-9]/, 'La contraseña debe contener al menos un número')
@@ -53,3 +53,21 @@ export const deleteUserConfirmSchema = yup.object().shape({
     .max(255, 'La justificación no puede exceder los 255 caracteres')
     .optional(),
 })
+
+export const changePasswordSchema = yup.object().shape({
+  currentPassword: yup.string()
+    .required('La contraseña actual es requerida'),
+  newPassword: yup.string()
+    .required('La nueva contraseña es requerida')
+    .min(6, 'La nueva contraseña debe tener al menos 8 caracteres')
+    .max(24, 'La nueva contraseña no debe tener mas de 24 caracteres')
+    .matches(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula')
+    .matches(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
+    .matches(/[0-9]/, 'La contraseña debe contener al menos un número')
+    .matches(/[@$!%*?&#]/, 'La contraseña debe contener al menos un carácter especial'),
+  confirmNewPassword: yup.string()
+    .oneOf([yup.ref('newPassword'), null], 'Las contraseñas no coinciden')
+    .required('Debes confirmar la nueva contraseña'),
+});
+
+

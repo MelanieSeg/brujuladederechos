@@ -1,4 +1,3 @@
-// src/services/axiosInstance.js
 import axios from "axios";
 
 let isRefreshing = false;
@@ -36,7 +35,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && localStorage.getItem("accessToken")) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -52,7 +51,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const response = await api.post("/auth/refresh-token");
+        const response = await api.post("/refresh-token");
         const { accessToken: newAccessToken, user: refreshedUser } = response.data;
 
         localStorage.setItem("accessToken", newAccessToken);

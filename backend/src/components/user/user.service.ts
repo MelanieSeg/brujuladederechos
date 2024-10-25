@@ -2,7 +2,7 @@ import { PrismaClient, TipoToken, User } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { generateRandomToken } from "../../utils";
 import EmailService from "../email/email.service";
-import { UpdateUserDto, UserChangeStateDto, UserUpdateData } from "../../schemas/user";
+import { UpdateUserDto, UserChangePasswordDto, UserChangeStateDto, UserNewPasswordDto, UserUpdateData } from "../../schemas/user";
 
 class UserService {
   private prisma: PrismaClient;
@@ -204,6 +204,80 @@ class UserService {
       return { success: false };
     }
   };
+
+  changePassword = async (userChangePasswordDto: UserChangePasswordDto) => {
+    try {
+
+      const validateUser = await this.prisma.user.findUnique({
+        where: {
+          id: userChangePasswordDto.userId
+        }
+      })
+
+      if (!validateUser) {
+        return {
+          success: false,
+          message: "Usuario invalido o no existe"
+        }
+      }
+
+      const validatePassword = await bcrypt.compare(userChangePasswordDto.currentPassword, validateUser.password)
+
+      if (!validatePassword) {
+        return {
+          success: false,
+          message: "La Password ingresada el invalida"
+        }
+      }
+
+      const SALT_ROUNDS = 10;
+      const salt = bcrypt.genSaltSync(SALT_ROUNDS);
+
+      const hashedNewPassword = await bcrypt.hash(userChangePasswordDto.newPassword, salt);
+
+
+      await this.prisma.user.update({
+        where: {
+          id: validateUser.id
+        },
+        data: {
+          password: hashedNewPassword
+        }
+      })
+
+      /*
+                        await Promise.all([
+              this.prisma.user.update({
+                data: {
+                  password: hashedPassword,
+                },
+                where: {
+                  id: findUser.id,
+                },
+              }),
+              this.prisma.userToken.delete({
+                where: {
+                  id: validToken.id,
+                },
+              }),
+              this.prisma.userToken.deleteMany({
+                where: {
+                  userId: findUser.id,
+                  tipo: TipoToken.REFRESH
+                }
+              })
+            ]);
+      */
+      return {
+        success: true,
+        msg: "Cambio de password completada con exito",
+      };
+    } catch (err) {
+      return { success: false };
+    }
+  };
+
+
 
   getUsers = () =>
     this.prisma.user.findMany({
