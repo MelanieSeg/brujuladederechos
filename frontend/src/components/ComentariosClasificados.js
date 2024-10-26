@@ -431,7 +431,7 @@ export default function ComentariosClasificados() {
             <th className="px-6 py-4 text-left font-medium text-gray-500">
               Fecha de clasificación
             </th>
-            <th className="px-6 py-4"></th>
+            <th className="px-6 py-4 text-left font-medium text-gray-500">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -463,7 +463,7 @@ export default function ComentariosClasificados() {
               </td>
               <td className="px-6 py-4">{comentario.comentario?.sitioWeb?.nombre ? comentario?.comentario?.sitioWeb?.nombre : "latercera.com"}</td>
               <td className="px-6 py-4">{format(parseISO(comentario.fechaClasificacion), "dd-MM-yyyy")}</td>
-              <td className="px-6 py-4 flex justify-end space-x-2">
+              <td className="px-6 py-4 flex items-center space-x-2">
                 <button className="text-gray-500 hover:text-red-600">
                   <TrashIcon className="h-5 w-5" />
                 </button>

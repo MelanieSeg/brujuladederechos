@@ -190,12 +190,13 @@ export default function PanelAdministrador() {
 
   return (
     <div className="p-8 bg-[#F9F9F9] flex-1 relative">
-      <h2 className="text-3xl font-bold mb-8 text-gray-800">
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800">
         Panel de administración
       </h2>
 
-      {/* Campo de Búsqueda */}
-      <div className="mb-6 w-1/3 relative">
+      <div className="mb-4 flex items-center justify-between">
+        {/* Campo de Búsqueda */}
+      <div className=" w-1/3 relative">
         <input
           type="text"
           value={busqueda}
@@ -205,8 +206,6 @@ export default function PanelAdministrador() {
         />
         <MagnifyingGlassIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
       </div>
-
-      <div className="mb-6 flex justify-end">
         <button
           onClick={() => {
             resetFormFields();
@@ -233,6 +232,9 @@ export default function PanelAdministrador() {
               </th>
               <th className="px-6 py-4 text-left font-semibold text-gray-600">
                 Email verificado
+              </th>
+              <th className="px-6 py-4 text-left font-semibold text-gray-600">
+                Modificar estado
               </th>
               <th className="px-6 py-4 text-left font-semibold text-gray-600">
                 Acciones
@@ -269,36 +271,31 @@ export default function PanelAdministrador() {
 
 
                 </td>
-                <td className="px-6 py-4 flex items-center space-x-4">
+                <td className="px-6 py-4">
                   <button
-                    onClick={() =>
-                      manejarActivarDesactivarModerador(
-                        moderador.id,
-                        moderador.isActive
-                      )
-                    }
+                    onClick={() => manejarActivarDesactivarModerador(moderador.id, moderador.isActive)}
                     className="px-4 py-1 text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                     style={{ minWidth: '100px' }}
                   >
                     {moderador.isActive ? 'Desactivar' : 'Activar'}
                   </button>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => {
-                        setModeradorAEditar(moderador);
-                        setMostrarFormularioEditar(true);
-                      }}
-                      className="text-gray-500 hover:text-blue-600"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => confirmarEliminarModerador(moderador)}
-                      className="text-gray-500 hover:text-red-600"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                  </div>
+                </td>
+                <td className="px-6 py-4 flex items-center space-x-2">
+                  <button
+                    onClick={() => confirmarEliminarModerador(moderador)}
+                    className="text-gray-500 hover:text-red-600"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setModeradorAEditar(moderador);
+                      setMostrarFormularioEditar(true);
+                    }}
+                    className="text-gray-500 hover:text-blue-600"
+                  >
+                    <PencilIcon className="h-5 w-5" />
+                  </button>
                 </td>
               </tr>
             ))}
