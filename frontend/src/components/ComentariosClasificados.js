@@ -10,8 +10,7 @@ import api from '../services/axios';
 import { truncateComentario } from '../utils/truncarComentario';
 import Cargando from './Objects/Cargando';
 import { useAuth } from "../hooks/useAuth";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Toast, showSuccess, showError, showInfo } from "./Objects/Toast"; // Importar Toast y funciones de toast
 
 export default function ComentariosClasificados() {
   const { user } = useAuth();
@@ -409,13 +408,7 @@ export default function ComentariosClasificados() {
 
       if (response.status === 200) {
         setBarraEdicionVisible(false);
-        toast.success("Edición de clasificación guardada exitosamente", {
-          position: "top-right",
-          autoClose: 5000,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        showSuccess("Edición de clasificación guardada exitosamente.");
         // Actualizar el comentario en el estado
         setComentarios((prevComentarios) =>
           prevComentarios.map((comentario) =>
@@ -439,13 +432,7 @@ export default function ComentariosClasificados() {
     } catch (error) {
       console.error("Error al guardar la edición de clasificación", error);
       console.log("Respuesta del servidor:", error.response?.data);
-      toast.error("Error al guardar la edición de clasificación: " + (error.response?.data?.msg || error.message), {
-        position: "top-right",
-        autoClose: 5000,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      showError("Error al guardar la edición de clasificación: " + (error.response?.data?.msg || error.message));
     }
   };
 
@@ -469,27 +456,7 @@ export default function ComentariosClasificados() {
     setComentarioEliminado(comentarioAEliminar);
 
     // Mostrar el toast de eliminación
-    const now = new Date();
-    const formattedDate = format(now, "dd-MM-yyyy HH:mm:ss");
-    const toastId = toast.success(
-      <div className="flex flex-col">
-        <div>Comentario borrado exitosamente.</div>
-        <div className="text-sm text-gray-600">Fecha y hora: {formattedDate}</div>
-        <button
-          onClick={() => deshacerEliminacion()}
-          className="mt-2 text-blue-500 underline text-sm"
-        >
-          Deshacer
-        </button>
-      </div>,
-      {
-        position: "top-right",
-        autoClose: 5000,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      }
-    );
+    showSuccess("Comentario borrado exitosamente.", true, deshacerEliminacion);
 
     // Cerrar el modal y resetear estados
     setMostrarModalEliminar(false);
@@ -508,14 +475,7 @@ export default function ComentariosClasificados() {
   const deshacerEliminacion = () => {
     if (comentarioEliminado) {
       setComentarios((prevComentarios) => [comentarioEliminado, ...prevComentarios]);
-      toast.dismiss(); // Cerrar el toast actual
-      toast.info("Eliminación deshecha.", {
-        position: "top-right",
-        autoClose: 3000,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      showInfo("Eliminación deshecha.");
       setComentarioEliminado(null);
     }
   };
@@ -587,7 +547,7 @@ export default function ComentariosClasificados() {
   return (
     <div className="p-8 bg-[#FAF9F8] flex-1 relative">
       {/* Contenedor de Toasts */}
-      <ToastContainer />
+      <Toast />
 
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">
         Comentarios clasificados
