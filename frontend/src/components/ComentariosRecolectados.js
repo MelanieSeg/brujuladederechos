@@ -9,48 +9,11 @@ import Calendario from "./Objects/Calendario";
 import Paginacion from "./Objects/Paginacion";
 import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Toast, showSuccess, showError } from "./Objects/Toast"; // Importar Toast y funciones de toast
 
 export default function ComentariosRecolectados() {
   const [defaultComentarios] = useState([
-    {
-      comentario: "No me gustó mucho",
-      estado: "CLASIFICADO",
-      sourceUrl: "latercera.com",
-      fechaScraping: "2024-07-04",
-    },
-    {
-      comentario: "Podría ser mejor.",
-      estado: "CLASIFICADO",
-      sourceUrl: "latercera.com",
-      fechaScraping: "2024-07-04",
-    },
-    {
-      comentario: "No estoy satisfecho",
-      estado: "PENDIENTE_CLASIFICACION",
-      sourceUrl: "latercera.com",
-      fechaScraping: "2024-07-04",
-    },
-    {
-      comentario: "Este es el comentario 11",
-      estado: "CLASIFICADO",
-      sourceUrl: "example.com",
-      fechaScraping: "2024-07-04",
-    },
-    {
-      comentario: "Este es el comentario 12",
-      estado: "PENDIENTE_CLASIFICACION",
-      sourceUrl: "example.com",
-      fechaScraping: "2024-07-05",
-    },
-    {
-      comentario: "Este es el comentario 13",
-      estado: "PENDIENTE_CLASIFICACION",
-      sourceUrl: "example.com",
-      fechaScraping: "2024-07-06",
-    },
-    // ... (más comentarios)
+    // Comentarios por defecto si los hay
   ]);
 
   const [comentarios, setComentarios] = useState([]);
@@ -275,31 +238,20 @@ export default function ComentariosRecolectados() {
   };
 
   const manejarEliminarComentario = () => {
-    const now = new Date();
-    const formattedDate = format(now, "dd-MM-yyyy HH:mm:ss");
-    const toastId = toast.success(
-      <div className="flex flex-col">
-        <div>Comentario borrado exitosamente.</div>
-        <div className="text-sm text-gray-600">Fecha y hora: {formattedDate}</div>
-        <button
-          onClick={() => toast.dismiss(toastId)}
-          className="mt-2 text-blue-500 underline text-sm"
-        >
-          Deshacer
-        </button>
-      </div>,
-      {
-        position: "top-right", // Corregido de toast.POSITION.TOP_RIGHT a "top-right"
-        autoClose: 5000, // Duración en milisegundos
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      }
+    //mas adelante se implementara
+    setComentarios((prevComentarios) =>
+      prevComentarios.filter((c) => c.id !== comentarioAEliminar.id)
     );
+
     setMostrarModalEliminar(false);
     setComentarioAEliminar(null);
     setPassword("");
     setReason("");
+
+    // Mostrar toast de éxito utilizando la función importada
+    showSuccess("Comentario borrado exitosamente.", true, () => {
+      // mas adelante se implementara
+    });
   };
 
   const manejarCancelarEliminar = () => {
@@ -369,7 +321,7 @@ export default function ComentariosRecolectados() {
   return (
     <div className="p-8 bg-[#FAF9F8] flex-1 relative">
       {/* Contenedor de Toasts */}
-      <ToastContainer />
+      <Toast />
 
       <div className="flex-grow">
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">
@@ -426,7 +378,7 @@ export default function ComentariosRecolectados() {
               )}
 
               {isCalendarOpen && (
-                <div className="absolute left-0 mt-2 calendario-container z-50">
+                <div ref={calendarRef} className="absolute left-0 mt-2 calendario-container z-50">
                   <Calendario onDateSelect={handleDateClick} />
                 </div>
               )}
@@ -437,8 +389,7 @@ export default function ComentariosRecolectados() {
               <button
                 ref={gravedadButtonRef}
                 onClick={handleGravedadClick}
-                className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm hover:bg-gray-100"
-              >
+                className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm hover:bg-gray-100">
                 <PlusIcon className="w-5 h-5 text-gray-500" />
                 <span>Estado</span>
               </button>

@@ -10,8 +10,7 @@ import Paginacion from "./Objects/Paginacion";
 import { useAuth } from "../hooks/useAuth";
 import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
-import { ToastContainer, toast } from "react-toastify"; // Importar ToastContainer y toast
-import "react-toastify/dist/ReactToastify.css"; // Importar estilos de react-toastify
+import { Toast, showSuccess, showError } from "./Objects/Toast"; // Importar Toast y funciones de toast
 
 export default function ComentariosPendientes() {
   const { user } = useAuth();
@@ -187,8 +186,8 @@ export default function ComentariosPendientes() {
 
       if (response.status === 200) {
         setBarraClasificacionVisible(false);
-        // Reemplazar alert por toast
-        mostrarToastClasificacionExitoso();
+        // Mostrar toast de éxito
+        showSuccess("Comentario clasificado exitosamente.");
         // Resetear el formulario de clasificación
         setClasificacion({
           intensidadPrivacidad: '',
@@ -203,33 +202,8 @@ export default function ComentariosPendientes() {
     } catch (error) {
       console.error("Error al guardar la clasificación", error);
       console.log("Respuesta del servidor:", error.response?.data);
-      toast.error("Error al guardar la clasificación: " + (error.response?.data?.msg || error.message));
+      showError("Error al guardar la clasificación: " + (error.response?.data?.msg || error.message));
     }
-  };
-
-  // Función para mostrar el toast de clasificación exitosa
-  const mostrarToastClasificacionExitoso = () => {
-    const now = new Date();
-    const formattedDate = format(now, "dd-MM-yyyy HH:mm:ss");
-    const toastId = toast.success(
-      <div className="flex flex-col">
-        <div>Comentario clasificado exitosamente.</div>
-        <div className="text-sm text-gray-600">Fecha y hora: {formattedDate}</div>
-        <button
-          onClick={() => toast.dismiss(toastId)}
-          className="mt-2 text-blue-500 underline text-sm"
-        >
-          Deshacer
-        </button>
-      </div>,
-      {
-        position: "top-right", // Usar cadena de texto en lugar de toast.POSITION.TOP_RIGHT
-        autoClose: 5000, // Duración en milisegundos
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      }
-    );
   };
 
   const columnasPendientes = [
@@ -266,7 +240,7 @@ export default function ComentariosPendientes() {
   return (
     <div className="p-8 flex flex-col">
       {/* Contenedor de Toasts */}
-      <ToastContainer />
+      <Toast />
 
       <div className="flex-grow">
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">
