@@ -1,5 +1,6 @@
+// components/PanelAdministrador.js
 import React, { useState, useEffect } from 'react';
-import {//
+import {
   PencilIcon,
   TrashIcon,
   UserPlusIcon,
@@ -7,6 +8,7 @@ import {//
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import Paginacion from './Objects/Paginacion';
+import Cargando from './Objects/Cargando';
 import api from '../services/axios';
 import userApi from '../services/axiosUserInstance';
 import FormCreateUser from './forms/Form-crear-usuario';
@@ -66,6 +68,31 @@ export default function PanelAdministrador() {
       setConfirmarContraseña('');
     }
   }, [moderadorAEditar]);
+  
+  useEffect(() => {
+    // Simula una carga de datos de 2 segundos
+    const timer = setTimeout(() => {
+      setModeradores(datosTemporalesModeradores);
+      setLoading(false);
+    }, 2000);
+
+    // Limpia el timeout si el componente se desmonta
+    return () => clearTimeout(timer);
+  }, []);
+
+
+  console.log(moderadores)
+
+  const cambiarStateUsuario = async function (userId, currentState) {
+    //http://localhost:4000/user/deactivate-user
+    try {
+
+      const response = await userApi.patch("/deactivate-user", { id: userId, isActive: currentState })
+      console.log(response)
+    } catch (err) {
+      console.log(err)
+    }
+  }
 
 
   console.log(moderadores)
@@ -157,10 +184,12 @@ export default function PanelAdministrador() {
       <div className="w-full max-w-md bg-white h-full p-6 shadow-md overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold">Agregar nuevo moderador</h3>
-          <button onClick={() => {
-            setMostrarFormulario(false);
-            resetFormFields();
-          }}>
+          <button
+            onClick={() => {
+              setMostrarFormulario(false);
+              resetFormFields();
+            }}
+          >
             <XMarkIcon className="h-6 w-6 text-gray-700" />
           </button>
         </div>
@@ -175,11 +204,13 @@ export default function PanelAdministrador() {
       <div className="w-full max-w-md bg-white h-full p-6 shadow-md overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold">Editar moderador</h3>
-          <button onClick={() => {
-            setMostrarFormularioEditar(false);
-            setModeradorAEditar(null);
-            resetFormFields();
-          }}>
+          <button
+            onClick={() => {
+              setMostrarFormularioEditar(false);
+              setModeradorAEditar(null);
+              resetFormFields();
+            }}
+          >
             <XMarkIcon className="h-6 w-6 text-gray-700" />
           </button>
         </div>
@@ -189,7 +220,7 @@ export default function PanelAdministrador() {
   );
 
   return (
-    <div className="p-8 bg-[#F9F9F9] flex-1 relative">
+    <div className="p-8 bg-[#FAF9F8] flex-1 relative">
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">
         Panel de administración
       </h2>
@@ -207,13 +238,10 @@ export default function PanelAdministrador() {
         <MagnifyingGlassIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
       </div>
         <button
-          onClick={() => {
-            resetFormFields();
-            setMostrarFormulario(true);
-          }}
-          className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          className="bg-blue-500 text-white px-4 py-2 rounded-md h-10"
+          onClick={() => setMostrarFormulario(true)}
         >
-          <UserPlusIcon className="h-5 w-5 mr-2" /> Agregar nuevo moderador
+          Agregar Nuevo Moderador
         </button>
       </div>
 
@@ -298,13 +326,13 @@ export default function PanelAdministrador() {
                   </button>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Componente de Paginación */}
-      <div className="mt-6">
+      <div className="mt-4">
         <Paginacion
           paginaActual={paginaActual}
           totalPaginas={totalPaginas}
@@ -312,6 +340,7 @@ export default function PanelAdministrador() {
         />
       </div>
 
+      {/* Formularios y Modales */}
       {mostrarFormulario && formularioAgregarModerador}
       {mostrarFormularioEditar && formularioEditarModerador}
       {mostrarModalEliminar &&

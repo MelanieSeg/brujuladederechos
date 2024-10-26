@@ -1,4 +1,5 @@
 // src/ComentariosPendientes.js
+
 import React, { useState, useRef, useEffect } from "react";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import api from "../services/axios";
@@ -7,13 +8,15 @@ import { format, parseISO, isValid } from "date-fns";
 import Calendario from './Objects/Calendario';
 import Paginacion from "./Objects/Paginacion";
 import { useAuth } from "../hooks/useAuth";
-
-// Importación del componente Formulario
 import Formulario from "./Objects/Formulario";
+import Cargando from "./Objects/Cargando";
+import { ToastContainer, toast } from "react-toastify"; // Importar ToastContainer y toast
+import "react-toastify/dist/ReactToastify.css"; // Importar estilos de react-toastify
 
 export default function ComentariosPendientes() {
   const { user } = useAuth();
   const [comentarios, setComentarios] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [paginaActual, setPaginaActual] = useState(1);
   const [comentariosPorPagina] = useState(10);
   const [fechaDesde, setFechaDesde] = useState("");
@@ -38,12 +41,15 @@ export default function ComentariosPendientes() {
 
   useEffect(() => {
     const fetchComentarios = async () => {
+      setLoading(true);
       try {
         const response = await api.get("/comments/get-all-comments-pending");
         setComentarios(response.data.data);
         setComentariosFiltrados(response.data.data);
       } catch (err) {
         console.error("Error al obtener los comentarios", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -181,26 +187,51 @@ export default function ComentariosPendientes() {
 
       if (response.status === 200) {
         setBarraClasificacionVisible(false);
-        alert("Clasificación guardada exitosamente");
+        // Reemplazar alert por toast
+        mostrarToastClasificacionExitoso();
         // Resetear el formulario de clasificación
         setClasificacion({
-          intensidadPrivacidad: 0,
-          elementoTiempo: 0,
-          empatiaPrivacidad: 0,
-          interesPublico: 0,
-          caracterPersonaPublico: 0,
-          origenInformacion: 0,
-          empatiaExpresion: 0
+          intensidadPrivacidad: '',
+          elementoTiempo: '',
+          empatiaPrivacidad: '',
+          interesPublico: '',
+          caracterPersonaPublico: '',
+          origenInformacion: '',
+          empatiaExpresion: ''
         });
       }
     } catch (error) {
       console.error("Error al guardar la clasificación", error);
       console.log("Respuesta del servidor:", error.response?.data);
-      alert("Error al guardar la clasificación: " + (error.response?.data?.msg || error.message));
+      toast.error("Error al guardar la clasificación: " + (error.response?.data?.msg || error.message));
     }
   };
 
-  // Definir las columnas específicas para "Comentarios Pendientes" con nombres correctos
+  // Función para mostrar el toast de clasificación exitosa
+  const mostrarToastClasificacionExitoso = () => {
+    const now = new Date();
+    const formattedDate = format(now, "dd-MM-yyyy HH:mm:ss");
+    const toastId = toast.success(
+      <div className="flex flex-col">
+        <div>Comentario clasificado exitosamente.</div>
+        <div className="text-sm text-gray-600">Fecha y hora: {formattedDate}</div>
+        <button
+          onClick={() => toast.dismiss(toastId)}
+          className="mt-2 text-blue-500 underline text-sm"
+        >
+          Deshacer
+        </button>
+      </div>,
+      {
+        position: "top-right", // Usar cadena de texto en lugar de toast.POSITION.TOP_RIGHT
+        autoClose: 5000, // Duración en milisegundos
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      }
+    );
+  };
+
   const columnasPendientes = [
     {
       title: "Comentario",
@@ -224,7 +255,6 @@ export default function ComentariosPendientes() {
     },
   ];
 
-  // Definir la función formatData para transformar cada comentario en una fila
   const formatData = (comentario) => [
     comentario.comentario,
     comentario.sourceUrl,
@@ -235,6 +265,9 @@ export default function ComentariosPendientes() {
 
   return (
     <div className="p-8 flex flex-col">
+      {/* Contenedor de Toasts */}
+      <ToastContainer />
+
       <div className="flex-grow">
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">
           Comentarios pendientes
@@ -304,10 +337,9 @@ export default function ComentariosPendientes() {
               onChange={handleFechaHastaChange}
               className="border border-gray-300 rounded px-4 py-2 bg-white"
             />
-            {/* Utilizar el componente Formulario con columnas específicas */}
-            <Formulario
-              comentariosFiltrados={comentariosFiltrados}
-              columns={columnasPendientes}
+            <Formulario 
+              comentariosFiltrados={comentariosFiltrados} 
+              columns={columnasPendientes} 
               formatData={formatData}
               fileName="comentarios_pendientes.pdf"
             />
@@ -325,27 +357,41 @@ export default function ComentariosPendientes() {
               </tr>
             </thead>
             <tbody>
-              {comentariosAMostrar.map((comentario, index) => (
-                <tr key={index} className="border-b">
-                  <td className="px-6 py-4">
-                    {truncateComentario(comentario.comentario)}
-                  </td>
-                  <td className="p-2">{comentario.sourceUrl}</td>
-                  <td className="p-2">
-                    {isValid(parseISO(comentario.fechaScraping))
-                      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
-                      : "Fecha Inválida"}
-                  </td>
-                  <td className="p-2">
-                    <button
-                      className="bg-blue-600 text-white py-2 px-4 rounded-lg"
-                      onClick={() => clasificarComentario(comentario)}
-                    >
-                      Clasificar
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-4 text-center">
+                    <Cargando />
                   </td>
                 </tr>
-              ))}
+              ) : comentariosAMostrar.length > 0 ? (
+                comentariosAMostrar.map((comentario, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="px-6 py-4">
+                      {truncateComentario(comentario.comentario)}
+                    </td>
+                    <td className="p-2">{comentario.sourceUrl}</td>
+                    <td className="p-2">
+                      {isValid(parseISO(comentario.fechaScraping)) 
+                        ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
+                        : "Fecha Inválida"}
+                    </td>
+                    <td className="p-2">
+                      <button
+                        className="bg-blue-600 text-white py-2 px-4 rounded-lg"
+                        onClick={() => clasificarComentario(comentario)}
+                      >
+                        Clasificar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="px-6 py-4 text-center">
+                    No hay comentarios para mostrar.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -365,6 +411,7 @@ export default function ComentariosPendientes() {
             <button
               onClick={() => setBarraClasificacionVisible(false)}
               className="text-gray-500 hover:text-gray-700 text-lg"
+              aria-label="Cerrar barra de clasificación"
             >
               &#10005;
             </button>
