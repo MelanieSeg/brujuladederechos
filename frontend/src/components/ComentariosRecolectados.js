@@ -522,10 +522,10 @@ export default function ComentariosRecolectados() {
                         : "Fecha Inválida"
                       }
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 flex items-center space-x-2">
                       <button
                         onClick={() => confirmarEliminarComentario(comentario)}
-                        className="text-gray-400 hover:text-red-500 cursor-pointer"
+                        className="text-gray-500 hover:text-red-600"
                         aria-label="Eliminar comentario"
                       >
                         <TrashIcon className="w-5 h-5" />

@@ -769,10 +769,10 @@ export default function ComentariosClasificados() {
                     ? format(parseISO(comentario.fechaClasificacion), 'dd-MM-yyyy')
                     : "Fecha Inválida"}
                 </td>
-                <td className="px-6 py-4 flex justify-end space-x-2">
+                <td className="px-6 py-4 flex items-center space-x-2">
                   <button
                     onClick={() => confirmarEliminarComentario(comentario)}
-                    className="text-gray-400 hover:text-red-500 cursor-pointer"
+                    className="text-gray-500 hover:text-red-500 cursor-pointer"
                     aria-label="Eliminar comentario"
                   >
                     <TrashIcon className="w-5 h-5" />
