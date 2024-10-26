@@ -25,7 +25,7 @@ export default function PanelAdministrador() {
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
   const [moderadorAEliminar, setModeradorAEliminar] = useState(null);
   const [moderadorAEditar, setModeradorAEditar] = useState(null);
-
+  const [loading, setLoading] = useState(true);
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [contraseña, setContraseña] = useState('');
@@ -49,14 +49,17 @@ export default function PanelAdministrador() {
   useEffect(() => {
     const fetchUsuarios = async () => {
       try {
-        const response = await userApi.get("/")
-        setModeradores(response.data)
+        setLoading(true); // Comienza la carga
+        const response = await userApi.get("/");
+        setModeradores(response.data);
       } catch (err) {
-        console.log(`Error al obtener los usuarios`, err)
+        console.log(`Error al obtener los usuarios`, err);
+      } finally {
+        setLoading(false); // Termina la carga
       }
     }
-    fetchUsuarios()
-  }, [])
+    fetchUsuarios();
+  }, []);
 
 
   useEffect(() => {
@@ -68,17 +71,6 @@ export default function PanelAdministrador() {
       setConfirmarContraseña('');
     }
   }, [moderadorAEditar]);
-  
-  useEffect(() => {
-    // Simula una carga de datos de 2 segundos
-    const timer = setTimeout(() => {
-      setModeradores(datosTemporalesModeradores);
-      setLoading(false);
-    }, 2000);
-
-    // Limpia el timeout si el componente se desmonta
-    return () => clearTimeout(timer);
-  }, []);
 
 
   console.log(moderadores)
@@ -96,17 +88,6 @@ export default function PanelAdministrador() {
 
 
   console.log(moderadores)
-
-  const cambiarStateUsuario = async function (userId, currentState) {
-    //http://localhost:4000/user/deactivate-user
-    try {
-
-      const response = await userApi.patch("/deactivate-user", { id: userId, isActive: currentState })
-      console.log(response)
-    } catch (err) {
-      console.log(err)
-    }
-  }
 
   // Función para activar o desactivar un moderador
   const manejarActivarDesactivarModerador = (id, currentState) => {
@@ -326,7 +307,7 @@ export default function PanelAdministrador() {
                   </button>
                 </td>
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
       </div>
