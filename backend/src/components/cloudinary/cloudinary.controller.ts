@@ -16,15 +16,27 @@ class CloudinaryController {
 
   uploadImage = async (req: Request, res: Response) => {
     try {
-      //TODO: Crear un UploadImageDTO para poder crear las validaciones para el req.body
 
-      const data = req.body
+      const file = req.file
 
-      const uploadImageResult = await this.cloudinaryService.uploadImage(data.image, data.imageId)
+      if (!file) {
+        return res.status(400).json({ message: 'No se ha proporcionado archivo' });
+      }
+
+      const userId = req.user?.userId
+      if (!userId) {
+        return res.status(401).json({ message: 'No estas autorizado para cambiar la imagen de perfil' });
+      }
+
+      const publicId = `profile_${userId}`
+
+      const uploadImageResult = await this.cloudinaryService.uploadImage(file, publicId)
 
       if (!uploadImageResult.success) {
         return res.status(500).json({ msg: uploadImageResult.message })
       }
+
+      //update image del user y eliminar la anterior 
 
       return res.status(200).json({
         url: uploadImageResult.url,

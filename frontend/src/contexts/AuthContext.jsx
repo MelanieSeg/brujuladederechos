@@ -8,7 +8,8 @@ export const AuthContext = createContext({
   accessToken: null,
   isLoading: true,
   login: async () => { },
-  logout: async () => { }
+  logout: async () => { },
+  updateUser: () => { }
 })
 
 
@@ -99,9 +100,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
   // aca indicamos que se renderize solo cuando esta cargando 
   return (
-    <AuthContext.Provider value={{ user, accessToken, login, logout }}>
+    <AuthContext.Provider value={{ user, accessToken, login, logout, updateUser }}>
       {!isLoading && children}
     </AuthContext.Provider>
   )

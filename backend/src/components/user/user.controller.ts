@@ -226,6 +226,44 @@ class UserController {
     }
   }
 
+  uploadImage = async (req: Request, res: Response) => {
+    try {
+
+      console.log(req.body)
+      console.log(req.file)
+      const file = req.file
+
+      if (!file) {
+        return res.status(400).json({ message: 'No se ha proporcionado archivo' });
+      }
+
+      const userId = req.user?.userId
+      if (!userId) {
+        return res.status(401).json({ message: 'No estas autorizado para cambiar la imagen de perfil' });
+      }
+
+      const publicId = `profile_${userId}`
+
+      const uploadImageResult = await this.userService.uploadUserProfilePicture(file, publicId)
+
+      if (!uploadImageResult.success || !uploadImageResult.url) {
+        return res.status(500).json({ msg: uploadImageResult.message })
+      }
+
+      const updatePicture = await this.userService.updateUserProfilePicture(userId, uploadImageResult.url)
+
+      return res.status(200).json({
+        url: uploadImageResult.url,
+        message: updatePicture.message
+      })
+
+    } catch (err) {
+      return res.status(500).json({ msg: `Error interno del servidor, err` })
+    }
+  }
+
+
+
   getUsers = async (_: Request, res: Response) => {
     try {
       const users = await this.userService.getUsers();

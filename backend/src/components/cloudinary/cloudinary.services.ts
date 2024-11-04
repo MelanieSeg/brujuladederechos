@@ -10,23 +10,38 @@ class CloudinaryService {
 
 
 
-  uploadImage = async (image: string, publicId: string) => {
+  uploadImage = async (file: Express.Multer.File, publicId: string) => {
     try {
-      const uploadResult = await this.cloud.uploader
-        .upload(image, {
-          public_id: publicId
-        })
-        .catch((error) => {
-          throw new Error(error)
-        })
 
-      return {
-        success: true,
-        message: "Imagen subida exitosamente ",
-        url: uploadResult.url,
-        url_secure: uploadResult.secure_url
-      }
-
+      return new Promise<{
+        success: boolean;
+        message: string;
+        url?: string;
+        url_secure?: string;
+      }>((resolve, reject) => {
+        const stream = this.cloud.uploader.upload_stream({
+          public_id: publicId,
+          folder: 'profile_images',
+          resource_type: 'image'
+        },
+          (error, result) => {
+            if (error) {
+              resolve({
+                success: false,
+                message: `Error al subir la imagen ${error.message}`
+              })
+            } else {
+              resolve({
+                success: true,
+                message: 'Imagen subida exitosamente',
+                url: result?.url,
+                url_secure: result?.secure_url
+              })
+            }
+          }
+        );
+        stream.end(file.buffer)
+      })
     } catch (err) {
       return {
         success: false,

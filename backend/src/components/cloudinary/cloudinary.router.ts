@@ -1,5 +1,6 @@
 import express from 'express'
 import CloudinaryController from "./cloudinary.controller";
+import upload from './multer.middleware';
 
 
 
@@ -11,7 +12,6 @@ class CloudinaryRouter {
 
   get router() {
     const router = express.Router();
-    router.route('/upload-image').post(this.cloudinaryController.uploadImage)
     return router
   }
 }

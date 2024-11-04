@@ -85,8 +85,8 @@ export default function BarraLateral() {
               <li
                 key={item.nombre}
                 className={`mb-4 font-semibold p-2 rounded-lg ${location.pathname === item.ruta
-                    ? `${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-300 text-black'}`
-                    : `hover:${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`
+                  ? `${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-300 text-black'}`
+                  : `hover:${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`
                   }`}
               >
                 <Link
@@ -107,7 +107,7 @@ export default function BarraLateral() {
               {user ? (
                 <>
                   <img
-                    src={user.profilePicture || 'https://via.placeholder.com/40'}
+                    src={user.image || 'https://via.placeholder.com/40'}
                     alt="Perfil"
                     className="w-10 h-10 rounded-full"
                   />
