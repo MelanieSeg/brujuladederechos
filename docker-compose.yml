@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: scraping_service
+      RABBITMQ_DEFAULT_PASS: your_secure_password
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/usr/src/app
+    command: npm run dev
+    environment:
+      - DATABASE_URL=postgresql://brujula_test_db_owner:EVAIZ5hTRd1K@ep-floral-hall-a56zspl1.us-east-2.aws.neon.tech/brujula_test_db?sslmode=require
+      - JWT_SECRET=SECRET_KEY
+    networks:
+      - app-network
+
+
+  backend-flask:
+    build:
+      context: ./backend-flask
+      dockerfile: Dockerfile
+    container_name: backend-flask
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend-flask/server:/app
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_URL=amqp://scraping_service:your_secure_password@rabbitmq:5672/
+      - DATABASE_URL=postgresql://brujula_test_db_owner:EVAIZ5hTRd1K@ep-floral-hall-a56zspl1.us-east-2.aws.neon.tech/brujula_test_db?sslmode=require
+      - JWT_SECRET=SECRET_KEY
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/src
+      - /src/app_modules
+    depends_on:
+      - backend
+    command: npm start
+    environment:
+      - REACT_APP_BACKEND_URL=http://backend:4000
+    networks:
+      - app-network
+
+volumes:
+  db-data:
+
+networks:
+  app-network:
+    driver: bridge
