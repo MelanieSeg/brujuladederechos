@@ -1,0 +1,11 @@
+Flask
+Scrapy
+scrapy-splash
+pika
+python-dotenv
+six
+pyjwt
+celery
+crochet
+
+

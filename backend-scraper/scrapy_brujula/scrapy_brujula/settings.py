@@ -1,13 +1,24 @@
-# comentarios_emol/settings.py
+# Scrapy settings for scrapy_brujula project
+#
+# For simplicity, this file contains only settings considered important or
+# commonly used. You can find more settings consulting the documentation:
+#
+#     https://docs.scrapy.org/en/latest/topics/settings.html
+#     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
+#     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-BOT_NAME = 'comentarios_emol'
 
-SPIDER_MODULES = ['server.comentarios_emol.spiders']
-NEWSPIDER_MODULE = 'server.comentarios_emol.spiders'
+BOT_NAME = "scrapy_brujula"
 
-# Configuraciones de Scrapy Splash (si las estás usando)
+SPIDER_MODULES = ["scrapy_brujula.spiders"]
+NEWSPIDER_MODULE = "scrapy_brujula.spiders"
+
 SPLASH_URL = os.getenv('SPLASH_URL', 'http://localhost:8050')
+
 
 DOWNLOADER_MIDDLEWARES = {
     'scrapy_splash.SplashCookiesMiddleware': 723,
