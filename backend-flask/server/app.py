@@ -98,13 +98,6 @@ def publish_comments_to_rabbitmq(comments):
             pika.ConnectionParameters(host=RABBITMQ_HOST,port=RABBITMQ_PORT,credentials=credentials)
         )
         channel = connection.channel();
-        
-        ##esto es para asegurarno que el channel existe 
-        # channel.queue_declare(queue=RABBITMQ_QUEUE,durable=True,arguments={
-        #     'x-dead-letter-exchange':DEAD_LETTER_EXCHANGE,
-        #     'x-dead-letter-routing-key':f"{RABBITMQ_QUEUE}_dead"
-        # })
-
         for comment in comments:
             message = json.dumps(comment)        
             channel.basic_publish(

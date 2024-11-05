@@ -18,15 +18,25 @@ class EmolNewsSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Configuración de RabbitMQ
         credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASSWORD)
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host=RABBITMQ_HOST, port=RABBITMQ_PORT, credentials=credentials)
         )
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
+        self.channel.queue_declare(
+            queue=RABBITMQ_QUEUE,
+            durable=True,
+            arguments={
+                'x-dead-letter-exchange': 'comentarios_scraping_queue_dead',  # Cambia al nombre correcto si es necesario
+                'x-dead-letter-routing-key': 'dead_letter_routing_key'  # Cambia al nombre correcto si es necesario
+            }
+        )
+
 
     def close(self, reason):
-        self.connection.close()
+        if self.connection and not self.connection.is_closed:
+            self.connection.close()
         super().close(reason)
 
     def parse(self, response):
@@ -52,13 +62,16 @@ class EmolNewsSpider(scrapy.Spider):
         )
 
     def parse_comments(self, response):
+        self.logger.info("Procesando comentarios de la URL: %s", response.url)
         try:
             data = response.json()
+            self.logger.info("Datos decodificados correctamente.")
         except json.JSONDecodeError:
             self.logger.error(f"No se pudo decodificar JSON para la URL: {response.url}")
             return
 
         comentarios = data.get('comments', [])
+        self.logger.info("Comentarios obtenidos: %s", len(comentarios))
         for comentario in comentarios:
             comment_adjusted = {
                 'id': str(comentario.get('id')),
@@ -80,6 +93,29 @@ class EmolNewsSpider(scrapy.Spider):
                 properties=pika.BasicProperties(delivery_mode=2)
             )
             self.logger.info(f"Comentario publicado en RabbitMQ: {message}")
+        except pika.exceptions.AMQPConnectionError:
+            self.logger.error("Error de conexión con RabbitMQ. Reintentando...")
+            self.reconnect_rabbitmq()
+            self.send_to_rabbitmq(comment)  # Reintentar el envío
+
+    def reconnect_rabbitmq(self):
+        """Función para reestablecer la conexión a RabbitMQ en caso de fallo"""
+        try:
+            credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASSWORD)
+            self.connection = pika.BlockingConnection(
+                pika.ConnectionParameters(host=RABBITMQ_HOST, port=RABBITMQ_PORT, credentials=credentials)
+            )
+            self.channel = self.connection.channel()
+            self.channel.queue_declare(
+                queue=RABBITMQ_QUEUE,
+                durable=True,
+                arguments={
+                    'x-dead-letter-exchange': 'comentarios_scraping_queue_dead',  # Cambia al nombre correcto si es necesario
+                    'x-dead-letter-routing-key': 'dead_letter_routing_key'  # Cambia al nombre correcto si es necesario
+                }
+            )
+
+            self.logger.info("Reconexión a RabbitMQ exitosa.")
         except Exception as e:
-            self.logger.error(f"Error al enviar comentario a RabbitMQ: {e}")
+            self.logger.error(f"No se pudo reconectar a RabbitMQ: {e}")
 

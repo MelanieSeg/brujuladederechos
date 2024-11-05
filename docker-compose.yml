@@ -41,6 +41,7 @@ services:
     depends_on:
       - rabbitmq
       - celery-worker
+    restart: on-failure
     environment:
     - RABBITMQ_URL=amqp://scraping_service:your_secure_password@rabbitmq:5672
     - RABBITMQ_QUEUE=comentarios_scraping_queue
