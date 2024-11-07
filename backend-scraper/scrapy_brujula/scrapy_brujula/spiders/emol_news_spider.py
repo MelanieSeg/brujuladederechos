@@ -11,6 +11,16 @@ RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
 RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
 RABBITMQ_QUEUE = os.getenv('RABBITMQ_QUEUE', 'comentarios_scraping_queue')
 
+
+
+print("Configuración de RabbitMQ:")
+print("Host:", RABBITMQ_HOST)
+print("Puerto:", RABBITMQ_PORT)
+print("Usuario:", RABBITMQ_USER)
+print("Contraseña:", RABBITMQ_PASSWORD)
+print("Cola:", RABBITMQ_QUEUE)
+
+
 class EmolNewsSpider(scrapy.Spider):
     name = "emol_news_spider"
     allowed_domains = ['emol.com', 'cache-comentarios.ecn.cl']
@@ -81,6 +91,7 @@ class EmolNewsSpider(scrapy.Spider):
                 'sourceUrl': response.meta.get('sourceUrl', 'https://www.emol.com'),
                 'news_url': response.meta.get('news_url')
             }
+            self.logger.info(f"Comentario procesado: {comment_adjusted}")
             self.send_to_rabbitmq(comment_adjusted)
 
     def send_to_rabbitmq(self, comment):

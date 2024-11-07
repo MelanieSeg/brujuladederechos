@@ -50,6 +50,8 @@ export default function ComentariosPendientes() {
     fetchComentarios();
   }, []);
 
+  console.log(comentarios)
+
   useEffect(() => {
     filtrarComentarios();
   }, [fechaDesde, fechaHasta, comentarios]);
@@ -412,6 +414,8 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="0"
                 max="1"
+
+                step="0.01"
                 name="empatiaPrivacidad"
                 value={clasificacion.empatiaPrivacidad}
                 onChange={handleInputChange}
@@ -441,10 +445,10 @@ export default function ComentariosPendientes() {
             </p>
 
             <label className="block mt-4">
-              Figura pública (1-2):
+              Figura pública (0-2):
               <input
                 type="number"
-                min="1"
+                min="0"
                 max="2"
                 name="caracterPersonaPublico"
                 value={clasificacion.caracterPersonaPublico}
@@ -454,14 +458,14 @@ export default function ComentariosPendientes() {
               />
             </label>
             <p className="text-gray-500 text-sm mt-1">
-              Indica si es una figura pública sobre el asunto. Valor de 1 a 2.
+              Indica si es una figura pública sobre el asunto. Valor de 0 a 2.
             </p>
 
             <label className="block mt-4">
               Origen de la información (-0.75 - 0):
               <input
                 type="number"
-                min="-0.75"
+                min="-1"
                 max="0"
                 name="origenInformacion"
                 placeholder="OI"
@@ -481,6 +485,7 @@ export default function ComentariosPendientes() {
                 type="number"
                 min="0"
                 max="1"
+                step="0.01"
                 name="empatiaExpresion"
                 value={clasificacion.empatiaExpresion}
                 onChange={handleInputChange}
