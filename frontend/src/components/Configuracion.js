@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { DarkModeContext } from '../context/DarkModeContext'; // Importar correctamente el contexto de modo oscuro
 import { useAuth } from '../hooks/useAuth';
 import FormChangeUserPassword from './forms/Form-change-password-usuario';
+import FormChangeProfilePicture from './forms/Form-upload-image-user';
 
 const Configuracion = () => {
 
@@ -74,13 +75,8 @@ const Configuracion = () => {
 
       {/* Cambiar Foto de Perfil */}
       <ConfigSection title="Cambiar Foto de Perfil" isDarkMode={isDarkMode}>
-        <div>
-          <label className="block mb-1">Seleccionar Imagen:</label>
-          <input type="file" className="w-full" />
-        </div>
-        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          Actualizar Foto
-        </button>
+
+        <FormChangeProfilePicture />
       </ConfigSection>
 
       {/* Actualizar Información de Contacto */}

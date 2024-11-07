@@ -125,7 +125,7 @@ class CommentsService {
           clasificado: false
         },
         orderBy: {
-          fechaScraping: "desc"
+          fechaScraping: "asc"
         }
       })
 
@@ -191,6 +191,8 @@ class CommentsService {
       }
 
       const dataToInsert = comments.map((comment) => {
+        console.log("Fecha recibida : ", comment.fecha)
+        console.log("comentario recibido : ", comment)
 
         const commentDate = parseFecha(String(comment.fecha));
         if (!commentDate) {

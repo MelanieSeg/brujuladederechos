@@ -12,9 +12,44 @@ import jwt  # PyJWT
 from jwt import PyJWTError
 from dotenv import load_dotenv
 import pika
+import logging
+from threading import Thread
+from scrapy import signals
+from scrapy.signalmanager import dispatcher
 
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+#current_dir = os.path.dirname(os.path.abspath(__file__))
+#root_dir = os.path.abspath(os.path.join(current_dir, '..'))
+#sys.path.append(root_dir)  # Asegura que el directorio raíz está en sys.path
+#os.environ.setdefault('SCRAPY_SETTINGS_MODULE', 'server.comentarios_emol.settings')
+# Configuración de logging
+logging.basicConfig(
+    level=logging.DEBUG,  # Cambiar a DEBUG para mayor detalle durante la depuración
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.insert(0, parent_dir)
+logger.debug(f"Current directory: {current_dir}")
+logger.debug(f"Parent directory added to sys.path: {parent_dir}")
+logger.debug(f"sys.path: {sys.path}")
+
+os.environ.setdefault('SCRAPY_SETTINGS_MODULE', 'server.comentarios_emol.settings')
+
+# Prueba de importación
+try:
+    from server.comentarios_emol import settings as scrapy_settings
+    logger.debug("Módulo 'server.comentarios_emol.settings' importado correctamente.")
+except ModuleNotFoundError as e:
+    logger.error(f"Error al importar 'server.comentarios_emol.settings': {e}")
+    sys.exit(1)
+
 
 load_dotenv()
 app=Flask(__name__)
@@ -63,13 +98,6 @@ def publish_comments_to_rabbitmq(comments):
             pika.ConnectionParameters(host=RABBITMQ_HOST,port=RABBITMQ_PORT,credentials=credentials)
         )
         channel = connection.channel();
-        
-        ##esto es para asegurarno que el channel existe 
-        # channel.queue_declare(queue=RABBITMQ_QUEUE,durable=True,arguments={
-        #     'x-dead-letter-exchange':DEAD_LETTER_EXCHANGE,
-        #     'x-dead-letter-routing-key':f"{RABBITMQ_QUEUE}_dead"
-        # })
-
         for comment in comments:
             message = json.dumps(comment)        
             channel.basic_publish(
@@ -101,7 +129,7 @@ def send_comments_to_rabbitmq():
                 }
                 print("Comment adjusted:", comment_adjusted)
                 comments.append(comment_adjusted)
-        comments_to_send = comments[:600]
+        comments_to_send = comments[2555:3000]
 
         publish_comments_to_rabbitmq(comments_to_send)
 
@@ -113,69 +141,22 @@ def run_spider(spider_name, **kwargs):
     try:
         settings = get_project_settings()
         process = CrawlerProcess(settings)
+
+        # Función que se ejecuta cuando el spider termina
+        def spider_closed(spider):
+            send_comments_to_rabbitmq()
+
+        # Conectar la señal
+        dispatcher.connect(spider_closed, signal=signals.spider_closed)
+
         process.crawl(spider_name, **kwargs)
         process.start()  # Bloquea hasta que el spider termine
     except Exception as e:
-        print(f"Error al ejecutar el spider {spider_name}: {e}")
+        logger.exception(f"Error al ejecutar el spider {spider_name}: {e}")
 
-# def send_comments_to_backend():
-#     try:
-#         comments = []
-#         with open('comentarios_emol.json', 'r', encoding='utf-8') as f:
-#             for line in f:
-#                 comment = json.loads(line)
-#                 comment_adjusted = {
-#                     'id': str(comment.get('id')),
-#                     'texto': comment.get('texto'),
-#                     'fecha': int(comment.get('fecha')) if comment.get('fecha') else None,
-#                     'autor': comment.get('autor'),
-#                     'sourceUrl': comment.get('sourceUrl') or 'https://www.emol.com',
-#                     'news_url': comment.get('news_url')
-#                 }
-#                 print("Comment adjusted:", comment_adjusted)
-#                 comments.append(comment_adjusted)
-#         comments_to_send = comments[:200]
 
-#         data = {
-#             "webSiteName": "https://www.emol.com",
-#             "comments": comments_to_send
-#         }
 
-#         token = get_service_token()
-#         if not token:
-#             print("Unable to obtain authentication token.")
-#             return
 
-#         headers = {
-#             'Content-Type': 'application/json',
-#             'Authorization': f'Bearer {token}'
-#         }
-
-#         backend_url = 'http://localhost:4000/scraping/scraping-emol'
-#         response = requests.post(backend_url, json=data, headers=headers)
-
-#         if response.status_code == 200:
-#             print("Comments sent successfully.")
-#         else:
-#             print(f"Failed to send comments. Status code: {response.status_code}")
-#             print(f"Response: {response.text}")
-
-#     except Exception as e:
-#         print(f"Error sending comments to backend: {e}")
-
-# def get_service_token():
-#     service_login_url = 'http://localhost:4000/auth/login'
-#     service_credentials = {
-#         'email': os.getenv('SERVICE_EMAIL'),  # 'service_account@test.com'
-#         'password': os.getenv('SERVICE_PASSWORD')  # 'secure_password'
-#     }
-#     response = requests.post(service_login_url, json=service_credentials)
-#     if response.status_code == 200:
-#         return response.json().get('accessToken')
-#     else:
-#         print(f"Failed to login as service account. Status code: {response.status_code}")
-#         print(f"Response: {response.text}")
-#         return None
 
 @app.route('/api/scrapping/emol/run-comentarios', methods=['POST'])
 @token_required
@@ -193,28 +174,12 @@ def run_comentarios_spider():
 @app.route('/api/scrapping/emol/run-news', methods=['POST'])
 @token_required
 def run_emol_news_spider():
-    spider_process = multiprocessing.Process(target=run_spider, args=('emol_news_spider',))
-    spider_process.start()
-    spider_process.join()
 
-    send_comments_to_rabbitmq()
+    thread = Thread(target=run_spider, args=('emol_news_spider',))
+    thread.start()
 
     return jsonify({"status": "Scraping en news de EMOL iniciado"}), 200
-
-@app.route('/api/scrapping/emol/run_spiders', methods=['POST'])
-@token_required
-def run_general_spider():
-    data = request.get_json()
-    spider_name = data.get("spider_name") if data else None
-
-    if not spider_name:
-        return jsonify({"error": "El nombre del spider a ejecutar es requerido"}), 400
-
-    spider_args = data.get('args', {})
-
-    spider_process = multiprocessing.Process(target=run_spider, args=(spider_name,), kwargs=spider_args)
-    spider_process.start()
-    return jsonify({"status": f"Spider {spider_name} ejecutado"}), 200
+    #send_comments_to_rabbitmq()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

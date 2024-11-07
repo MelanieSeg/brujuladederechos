@@ -3,13 +3,16 @@ import bcrypt from "bcrypt";
 import { generateRandomToken } from "../../utils";
 import EmailService from "../email/email.service";
 import { UpdateUserDto, UserChangePasswordDto, UserChangeStateDto, UserNewPasswordDto, UserUpdateData } from "../../schemas/user";
+import CloudinaryService from "../cloudinary/cloudinary.services";
 
 class UserService {
   private prisma: PrismaClient;
   private EmailService: EmailService;
-  constructor(emailService: EmailService) {
+  private cloudService: CloudinaryService
+  constructor(emailService: EmailService, CloudinaryService: CloudinaryService) {
     this.prisma = new PrismaClient();
     this.EmailService = emailService;
+    this.cloudService = CloudinaryService
   }
 
   addUser = async (user: User) => {
@@ -376,6 +379,45 @@ class UserService {
       }
     }
   }
+
+  uploadUserProfilePicture = async (file: Express.Multer.File, publicId: string) => {
+    return this.cloudService.uploadImage(file, publicId)
+  }
+
+  updateUserProfilePicture = async (userId: string, imageUrl: string) => {
+    try {
+      const user = await this.getUserById(userId)
+
+      if (!user) {
+        return {
+          success: false,
+          message: 'El usuario no existe'
+        }
+      }
+
+      const updatedUser = await this.prisma.user.update({
+        where: {
+          id: user.id
+        },
+        data: {
+          image: imageUrl
+        }
+      })
+
+      return {
+        success: true,
+        message: 'Imagen Actualizada exitosamente'
+      }
+
+    } catch (err) {
+      return {
+        success: false,
+        message: err
+      }
+
+    }
+  }
+
 
   updateUserData = async (user: UpdateUserDto, id: string) => {
     try {

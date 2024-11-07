@@ -1,6 +1,7 @@
 import express from "express";
 import UserController from "./user.controller";
 import AuthMiddleware from "../auth/auth.middleware";
+import upload from "../cloudinary/multer.middleware";
 
 class UserRouter {
   private UserController: UserController;
@@ -23,6 +24,7 @@ class UserRouter {
       this.UserController.deleteUser
     )
 
+    router.post('/upload-image', upload.single('image'), this.AuthMiddleware.authorize, this.UserController.uploadImage)
     router.route("/me").get(this.UserController.getUserById);
     router
       .route("/confirmar-usuario")
