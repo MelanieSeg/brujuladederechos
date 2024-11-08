@@ -93,7 +93,7 @@ export default function HistorialDeCambios() {
   };
 
   return (
-    <div className={`p-8 flex flex-col h-screen ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
+    <div className={`p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
       <div className="flex-grow">
         <h2 className={`text-2xl font-semibold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Historial de cambios</h2>
 
