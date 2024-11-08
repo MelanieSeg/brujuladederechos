@@ -15,6 +15,7 @@ import {
   Legend,
   Filler
 } from 'chart.js';
+import { useSocket } from '../hooks/useSocket';
 
 // Registrar los componentes de Chart.js necesarios
 ChartJS.register(
@@ -31,12 +32,38 @@ ChartJS.register(
 
 export default function Dashboard() {
   // Estado inicial con datos temporales
+  const [notificaciones, setNotificaciones] = useState([]);
+  const socket = useSocket()
   const [periodo, setPeriodo] = useState('Diario');
   const [selectedMetric, setSelectedMetric] = useState('Total de comentarios analizados');
   const [totalComentarios, setTotalComentarios] = useState(0);
   const [tasaAprobacion, setTasaAprobacion] = useState(0);
   const [barThickness, setBarThickness] = useState(30);
-  
+
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("nueva_notificacion", (notificacion) => {
+      setNotificaciones((prev) => [notificacion, ...prev]);
+    });
+
+    socket.on("connect", () => {
+      console.log("Socket.IO conectado");
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log("Socket.IO desconectado:", reason);
+    });
+
+    return () => {
+      socket.off("nueva_notificacion");
+      socket.off("connect");
+      socket.off("disconnect");
+    };
+  }, [socket]);
+
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -53,7 +80,12 @@ export default function Dashboard() {
       window.removeEventListener('orientationchange', handleResize);
     };
   }, []);
-  
+
+
+  console.log({
+    notificaciones
+  })
+
   // Datos temporales para demostración (serán reemplazados por datos del backend)
   const datosTemporales = {
     totalComentarios: 573,
@@ -111,7 +143,7 @@ export default function Dashboard() {
     const month = now.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    
+
     // Ajustar para que la semana comience en lunes (1) en lugar de domingo (0)
     const firstDayOfWeek = firstDay.getDay() || 7;
     const lastDayOfWeek = lastDay.getDay() || 7;
@@ -225,7 +257,7 @@ export default function Dashboard() {
       },
     },
   };
-  
+
   useEffect(() => {
     const datos = datosTemporalesPorPeriodo[periodo];
     setTotalComentarios(datos.totalComentarios);
@@ -338,7 +370,7 @@ export default function Dashboard() {
         return null;
     }
   };
-  
+
   const { data } = getChartData() || {};
 
   // Obtener el mes y año actual
@@ -354,10 +386,10 @@ export default function Dashboard() {
           <button
             key={period}
             onClick={() => {
-              setPeriodo(period); }}
-            className={`px-4 py-2 rounded-full text-gray-600 border ${
-              periodo === period ? 'bg-gray-300 ring-2 ring-indigo-500' : 'bg-white hover:bg-gray-200'
-            }`}
+              setPeriodo(period);
+            }}
+            className={`px-4 py-2 rounded-full text-gray-600 border ${periodo === period ? 'bg-gray-300 ring-2 ring-indigo-500' : 'bg-white hover:bg-gray-200'
+              }`}
           >
             {period}
           </button>
@@ -369,18 +401,16 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-6 mb-8">
           <div
             onClick={() => setSelectedMetric('Total de comentarios analizados')}
-            className={`bg-white shadow-md p-6 rounded-lg cursor-pointer ${
-              selectedMetric === 'Total de comentarios analizados' ? 'ring-2 ring-indigo-500' : ''
-            }`}
+            className={`bg-white shadow-md p-6 rounded-lg cursor-pointer ${selectedMetric === 'Total de comentarios analizados' ? 'ring-2 ring-indigo-500' : ''
+              }`}
           >
             <h2 className="text-gray-500 text-sm">Total de comentarios analizados</h2>
             <p className="text-3xl font-bold mt-2">{totalComentarios}</p>
           </div>
           <div
             onClick={() => setSelectedMetric('Tasa de aprobación')}
-            className={`bg-white shadow-md p-6 rounded-lg cursor-pointer ${
-              selectedMetric === 'Tasa de aprobación' ? 'ring-2  ring-indigo-500' : ''
-            }`}
+            className={`bg-white shadow-md p-6 rounded-lg cursor-pointer ${selectedMetric === 'Tasa de aprobación' ? 'ring-2  ring-indigo-500' : ''
+              }`}
           >
             <h2 className="text-gray-500 text-sm">Tasa de aprobación</h2>
             <p className="text-3xl font-bold mt-2">{tasaAprobacion}%</p>
@@ -388,7 +418,7 @@ export default function Dashboard() {
         </div>
       )}
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {data && periodo !== 'Anual' && (
           <div className="bg-white shadow-md p-6 rounded-lg col-span-2">
             <h2 className="text-lg font-bold mb-4">{selectedMetric}</h2>
@@ -430,37 +460,37 @@ export default function Dashboard() {
         </div>
       )}
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Gráfico de barras para "Anual" */}
-      {periodo === 'Anual' && (
-        <div className="bg-white shadow-md p-6 rounded-lg">
-          <h2 className="text-lg font-bold mb-4">Total de comentarios clasificados</h2>
-          <div className="h-64">
-            <Bar data={datosBarra} options={opcionesBarra} />
-          </div>
-        </div>
-      )}
-
-      {/* Gráfico circular con leyenda personalizada para "Anual" */}
-      {periodo === 'Anual' && (
-        <div className="bg-white shadow-md p-6 rounded-lg flex">
-          <div className="w-2/3">
-            <h2 className="text-lg font-bold mb-4">Comentarios por sitio web</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico de barras para "Anual" */}
+        {periodo === 'Anual' && (
+          <div className="bg-white shadow-md p-6 rounded-lg">
+            <h2 className="text-lg font-bold mb-4">Total de comentarios clasificados</h2>
             <div className="h-64">
-              <Pie data={datosCircular} options={opcionesCircular} />
+              <Bar data={datosBarra} options={opcionesBarra} />
             </div>
           </div>
-          <div className="w-1/3 flex flex-col justify-center ml-8 flex-wrap overflow-hidden">
-            {leyendaCircular.map((item, index) => (
-              <div key={index} className="flex items-center mb-4">
-                <div className="w-4 h-4" style={{ backgroundColor: item.color }}></div>
-                <span className="ml-2 text-sm">{item.label}</span>
+        )}
+
+        {/* Gráfico circular con leyenda personalizada para "Anual" */}
+        {periodo === 'Anual' && (
+          <div className="bg-white shadow-md p-6 rounded-lg flex">
+            <div className="w-2/3">
+              <h2 className="text-lg font-bold mb-4">Comentarios por sitio web</h2>
+              <div className="h-64">
+                <Pie data={datosCircular} options={opcionesCircular} />
               </div>
-            ))}
+            </div>
+            <div className="w-1/3 flex flex-col justify-center ml-8 flex-wrap overflow-hidden">
+              {leyendaCircular.map((item, index) => (
+                <div key={index} className="flex items-center mb-4">
+                  <div className="w-4 h-4" style={{ backgroundColor: item.color }}></div>
+                  <span className="ml-2 text-sm">{item.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
 
       {/* Tabla de últimos comentarios */}
       <div className="mt-8 bg-white shadow-md p-6 rounded-lg">
@@ -470,9 +500,8 @@ export default function Dashboard() {
             <li key={index} className="border-b py-4 flex justify-between">
               <span>{comentario.texto}</span>
               <span
-                className={`font-semibold ${
-                  comentario.estado === 'Aceptado' ? 'text-green-600' : 'text-red-600'
-                }`}
+                className={`font-semibold ${comentario.estado === 'Aceptado' ? 'text-green-600' : 'text-red-600'
+                  }`}
               >
                 {comentario.estado}
               </span>
