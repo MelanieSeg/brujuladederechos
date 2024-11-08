@@ -1,8 +1,7 @@
-"use client"
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
 import { Bar, Pie, Line } from 'react-chartjs-2';
+import { ThemeContext } from '../utils/ThemeContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -36,7 +35,9 @@ export default function Dashboard() {
   const [totalComentarios, setTotalComentarios] = useState(0);
   const [tasaAprobacion, setTasaAprobacion] = useState(0);
   const [barThickness, setBarThickness] = useState(30);
+  const { isDarkMode } = useContext(ThemeContext);
   
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -130,12 +131,12 @@ export default function Dashboard() {
     datasets: [
       {
         label: 'Comentarios clasificados',
-        backgroundColor: '#4F46E5',
-        borderColor: '#4F46E5',
-        borderWidth: 1,
-        hoverBackgroundColor: '#6366F1',
-        hoverBorderColor: '#6366F1',
-        data: datosTemporales.datosBarra.slice(0, periodo === 'Mensual' ? labelsSemanasDelMes.length : 12),
+      backgroundColor: isDarkMode ? '#818CF8' : '#4F46E5',
+      borderColor: isDarkMode ? '#818CF8' : '#4F46E5',
+      borderWidth: 1,
+      hoverBackgroundColor: isDarkMode ? '#A5B4FC' : '#6366F1',
+      hoverBorderColor: isDarkMode ? '#A5B4FC' : '#6366F1',
+      data: datosTemporales.datosBarra.slice(0, periodo === 'Mensual' ? labelsSemanasDelMes.length : 12),
       },
     ],
   };
@@ -200,13 +201,20 @@ export default function Dashboard() {
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { stepSize: 25 },
+        ticks: { stepSize: 25, color: isDarkMode ? '#E5E7EB' : '#4B5563'  },
       },
     },
     plugins: {
       legend: {
         display: true,
         position: 'top',
+        labels: {
+          color: isDarkMode ? '#E5E7EB' : '#4B5563',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
+        }
       },
       tooltip: {
         callbacks: {
@@ -233,6 +241,10 @@ export default function Dashboard() {
   }, [periodo]);
 
   const getChartData = () => {
+    const lightLineColor = '#4F46E5';
+    const darkLineColor = '#818CF8';
+    const lightFillColor = 'rgba(79, 70, 229, 0.2)';
+    const darkFillColor = 'rgba(129, 140, 248, 0.2)';
     switch (selectedMetric) {
       case 'Total de comentarios analizados':
         switch (periodo) {
@@ -245,8 +257,8 @@ export default function Dashboard() {
                     label: 'Total de comentarios analizados',
                     data: datosTemporales.datosLineaClasificaciones,
                     fill: true,
-                    borderColor: '#4F46E5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                    borderColor: isDarkMode ? darkLineColor : lightLineColor,
+                    backgroundColor: isDarkMode ? darkFillColor : lightFillColor,
                   },
                 ],
               },
@@ -260,8 +272,8 @@ export default function Dashboard() {
                     label: 'Total de comentarios analizados (Semanal)',
                     data: datosTemporales.datosLineaClasificaciones.slice(0, 7),
                     fill: true,
-                    borderColor: '#4F46E5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                    borderColor: isDarkMode ? darkLineColor : lightLineColor,
+                    backgroundColor: isDarkMode ? darkFillColor : lightFillColor,
                   },
                 ],
               },
@@ -275,8 +287,8 @@ export default function Dashboard() {
                     label: 'Total de comentarios analizados (Mensual)',
                     data: datosTemporales.datosBarra.slice(0, labelsSemanasDelMes.length),
                     fill: true,
-                    borderColor: '#4F46E5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                    borderColor: isDarkMode ? darkLineColor : lightLineColor,
+                    backgroundColor: isDarkMode ? darkFillColor : lightFillColor,
                   },
                 ],
               },
@@ -295,8 +307,8 @@ export default function Dashboard() {
                     label: 'Tasa de aprobación',
                     data: datosTemporales.datosLineaTasaAprobacion,
                     fill: true,
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    borderColor: isDarkMode ? '#34D399' : '#10B981',
+                    backgroundColor: isDarkMode ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.2)',
                   },
                 ],
               },
@@ -347,7 +359,7 @@ export default function Dashboard() {
   const currentYear = currentDate.getFullYear();
 
   return (
-    <div className="p-8 bg-gray-100 flex-1 w-full">
+    <div className="p-8 bg-gray-100 dark:bg-gray-700 flex-1 w-full">
       {/* Botones de selección de período */}
       <div className="mb-6 flex space-x-2">
         {['Diario', 'Semanal', 'Mensual', 'Anual'].map((period) => (
@@ -355,9 +367,11 @@ export default function Dashboard() {
             key={period}
             onClick={() => {
               setPeriodo(period); }}
-            className={`px-4 py-2 rounded-full text-gray-600 border ${
-              periodo === period ? 'bg-gray-300 ring-2 ring-indigo-500' : 'bg-white hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
+              ${periodo === period 
+                ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500' 
+                : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
           >
             {period}
           </button>
@@ -369,36 +383,62 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-6 mb-8">
           <div
             onClick={() => setSelectedMetric('Total de comentarios analizados')}
-            className={`bg-white shadow-md p-6 rounded-lg cursor-pointer ${
-              selectedMetric === 'Total de comentarios analizados' ? 'ring-2 ring-indigo-500' : ''
-            }`}
+            className={`bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg cursor-pointer
+              ${selectedMetric === 'Total de comentarios analizados' 
+                ? 'ring-2 ring-indigo-500' 
+                : ''
+              }`}
           >
-            <h2 className="text-gray-500 text-sm">Total de comentarios analizados</h2>
-            <p className="text-3xl font-bold mt-2">{totalComentarios}</p>
+            <h2 className="text-gray-500 dark:text-gray-400 text-sm">Total de comentarios analizados</h2>
+            <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{totalComentarios}</p>
           </div>
           <div
             onClick={() => setSelectedMetric('Tasa de aprobación')}
-            className={`bg-white shadow-md p-6 rounded-lg cursor-pointer ${
-              selectedMetric === 'Tasa de aprobación' ? 'ring-2  ring-indigo-500' : ''
-            }`}
+            className={`bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg cursor-pointer
+              ${selectedMetric === 'Tasa de aprobación' 
+                ? 'ring-2 ring-indigo-500' 
+                : ''
+              }`}
           >
-            <h2 className="text-gray-500 text-sm">Tasa de aprobación</h2>
-            <p className="text-3xl font-bold mt-2">{tasaAprobacion}%</p>
+            <h2 className="text-gray-500 dark:text-gray-400 text-sm">Tasa de aprobación</h2>
+            <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{tasaAprobacion}%</p>
           </div>
         </div>
       )}
 
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {data && periodo !== 'Anual' && (
-          <div className="bg-white shadow-md p-6 rounded-lg col-span-2">
-            <h2 className="text-lg font-bold mb-4">{selectedMetric}</h2>
+          <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg col-span-2">
+            <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">{selectedMetric}</h2>
             {periodo === 'Mensual' && (
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 Mes actual: {currentMonth} del {currentYear}
               </p>
             )}
             <div className="h-[300px] w-full">
-              <Line data={data} options={opcionesLinea} />
+              <Line data={data} options={{
+                ...opcionesLinea,
+                scales: {
+                  ...opcionesLinea.scales,
+                  y: {
+                    ...opcionesLinea.scales.y,
+                    grid: {
+                      color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    },
+                    ticks: {
+                      color: isDarkMode ? '#fff' : '#666',
+                    }
+                  },
+                  x: {
+                    grid: {
+                      color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    },
+                    ticks: {
+                      color: isDarkMode ? '#fff' : '#666',
+                    }
+                  }
+                }
+              }} />
             </div>
           </div>
         )}
@@ -406,72 +446,100 @@ export default function Dashboard() {
       {/* Mostrar estadísticas cuando el período es "Anual" */}
       {periodo === 'Anual' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white shadow-md p-6 rounded-lg flex items-start justify-between">
+          <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg flex items-start justify-between">
             <div>
-              <h2 className="text-gray-500 text-sm">Comentarios pendientes</h2>
-              <p className="text-3xl font-bold mt-2">{datosTemporales.comentariosPendientes}</p>
+              <h2 className="text-gray-500 dark:text-gray-400 text-sm">Comentarios pendientes</h2>
+              <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{datosTemporales.comentariosPendientes}</p>
             </div>
-            <InformationCircleIcon className="h-6 w-6 text-gray-400 ml-4 mt-1" />
+            <InformationCircleIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 ml-4 mt-1" />
           </div>
-          <div className="bg-white shadow-md p-6 rounded-lg flex items-start justify-between">
+          <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg flex items-start justify-between">
             <div>
-              <h2 className="text-gray-500 text-sm">Comentarios clasificados</h2>
-              <p className="text-3xl font-bold mt-2">{datosTemporales.comentariosClasificados}</p>
+              <h2 className="text-gray-500 dark:text-gray-400 text-sm">Comentarios clasificados</h2>
+              <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{datosTemporales.comentariosClasificados}</p>
             </div>
-            <InformationCircleIcon className="h-6 w-6 text-gray-400 ml-4 mt-1" />
+            <InformationCircleIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 ml-4 mt-1" />
           </div>
-          <div className="bg-white shadow-md p-6 rounded-lg flex items-start justify-between">
+          <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg flex items-start justify-between">
             <div>
-              <h2 className="text-gray-500 text-sm">Comentarios graves</h2>
-              <p className="text-3xl font-bold mt-2">{datosTemporales.comentariosGraves}</p>
+              <h2 className="text-gray-500 dark:text-gray-400 text-sm">Comentarios graves</h2>
+              <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{datosTemporales.comentariosGraves}</p>
             </div>
-            <InformationCircleIcon className="h-6 w-6 text-gray-400 ml-4 mt-1" />
+            <InformationCircleIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 ml-4 mt-1" />
           </div>
         </div>
       )}
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Gráfico de barras para "Anual" */}
       {periodo === 'Anual' && (
-        <div className="bg-white shadow-md p-6 rounded-lg">
-          <h2 className="text-lg font-bold mb-4">Total de comentarios clasificados</h2>
-          <div className="h-64">
-            <Bar data={datosBarra} options={opcionesBarra} />
-          </div>
-        </div>
-      )}
-
-      {/* Gráfico circular con leyenda personalizada para "Anual" */}
-      {periodo === 'Anual' && (
-        <div className="bg-white shadow-md p-6 rounded-lg flex">
-          <div className="w-2/3">
-            <h2 className="text-lg font-bold mb-4">Comentarios por sitio web</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg">
+            <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+              Total de comentarios clasificados
+            </h2>
             <div className="h-64">
-              <Pie data={datosCircular} options={opcionesCircular} />
+              <Bar data={datosBarra} options={{
+                ...opcionesBarra,
+                scales: {
+                  ...opcionesBarra.scales,
+                  y: {
+                    ...opcionesBarra.scales.y,
+                    grid: {
+                      color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    },
+                    ticks: {
+                      color: isDarkMode ? '#fff' : '#666',
+                    }
+                  },
+                  x: {
+                    grid: {
+                      color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    },
+                    ticks: {
+                      color: isDarkMode ? '#fff' : '#666',
+                    }
+                  }
+                }
+              }} />
             </div>
           </div>
-          <div className="w-1/3 flex flex-col justify-center ml-8 flex-wrap overflow-hidden">
-            {leyendaCircular.map((item, index) => (
-              <div key={index} className="flex items-center mb-4">
-                <div className="w-4 h-4" style={{ backgroundColor: item.color }}></div>
-                <span className="ml-2 text-sm">{item.label}</span>
+
+          {/* Gráfico circular */}
+          <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg flex">
+            <div className="w-2/3">
+              <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+                Comentarios por sitio web
+              </h2>
+              <div className="h-64">
+                <Pie data={datosCircular} options={opcionesCircular} />
               </div>
-            ))}
+            </div>
+            <div className="w-1/3 flex flex-col justify-center ml-8 flex-wrap overflow-hidden">
+              {leyendaCircular.map((item, index) => (
+                <div key={index} className="flex items-center mb-4">
+                  <div className="w-4 h-4" style={{ backgroundColor: item.color }}></div>
+                  <span className="ml-2 text-sm dark:text-gray-200">{item.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
-    </div>
 
       {/* Tabla de últimos comentarios */}
-      <div className="mt-8 bg-white shadow-md p-6 rounded-lg">
-        <h2 className="text-lg font-bold mb-4">Últimos comentarios clasificados</h2>
+      <div className="mt-8 bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg">
+        <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+          Últimos comentarios clasificados
+        </h2>
         <ul>
           {datosTemporales.ultimosComentarios.map((comentario, index) => (
-            <li key={index} className="border-b py-4 flex justify-between">
-              <span>{comentario.texto}</span>
+            <li key={index} className="border-b dark:border-gray-700 py-4 flex justify-between">
+              <span className="dark:text-gray-200">{comentario.texto}</span>
               <span
                 className={`font-semibold ${
-                  comentario.estado === 'Aceptado' ? 'text-green-600' : 'text-red-600'
+                  comentario.estado === 'Aceptado' 
+                    ? 'text-green-600 dark:text-green-400' 
+                    : 'text-red-600 dark:text-red-400'
                 }`}
               >
                 {comentario.estado}

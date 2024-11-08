@@ -1,16 +1,16 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { ThemeContext } from '../../utils/ThemeContext';
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { changePasswordSchema } from "../../lib/validations/user";
 import userApi from "../../services/axiosUserInstance";
 
-
 export default function FormChangeUserPassword({ logoutFn }) {
   const [apiError, setApiError] = useState(null);
   const [apiSuccess, setApiSuccess] = useState(null);
   const navigate = useNavigate()
-
+  const { isDarkMode } = useContext(ThemeContext);
 
   const {
     register,
@@ -49,13 +49,16 @@ export default function FormChangeUserPassword({ logoutFn }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="mb-4">
-        <label className="block mb-1">Contraseña Actual:</label>
+        <label className={`block mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Contraseña Actual:</label>
         <input
           type="password"
           {...register('currentPassword')}
           placeholder="Contraseña Actual"
-          className={`w-full px-3 py-2 border rounded-md ${errors.currentPassword ? 'border-red-500' : 'border-gray-300'
-            }`}
+          className={`w-full px-3 py-2 rounded-md border ${
+            isDarkMode 
+              ? 'bg-gray-700 text-white border-gray-600 focus:ring-blue-500' 
+              : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-400'
+          }`} 
         />
         {errors.currentPassword && (
           <p className="text-red-500 text-xs mt-1">{errors.currentPassword.message}</p>
@@ -63,13 +66,12 @@ export default function FormChangeUserPassword({ logoutFn }) {
       </div>
 
       <div className="mb-4">
-        <label className="block mb-1">Nueva Contraseña:</label>
+        <label className={`block mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Nueva Contraseña:</label>
         <input
           type="password"
           {...register('newPassword')}
           placeholder="Nueva Contraseña"
-          className={`w-full px-3 py-2 border rounded-md ${errors.newPassword ? 'border-red-500' : 'border-gray-300'
-            }`}
+          className={`w-full px-3 py-2 border rounded-md ${errors.newPassword ? 'border-red-500' : (isDarkMode ? 'border-gray-600' : 'border-gray-300')}`}
         />
         {errors.newPassword && (
           <p className="text-red-500 text-xs mt-1">{errors.newPassword.message}</p>
@@ -77,14 +79,13 @@ export default function FormChangeUserPassword({ logoutFn }) {
       </div>
 
       <div className="mb-4">
-        <label className="block mb-1">Confirmar Nueva Contraseña:</label>
+        <label className={`block mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Confirmar Nueva Contraseña:</label>
         <input
           type="password"
           {...register('confirmNewPassword')}
           placeholder="Confirmar Nueva Contraseña"
-          className={`w-full px-3 py-2 border rounded-md ${errors.confirmNewPassword ? 'border-red-500' : 'border-gray-300'
-            }`}
-        />
+          className={`w-full px-3 py-2 border rounded-md ${errors.confirmNewPassword ? 'border-red-500' : (isDarkMode ? 'border-gray-600' : 'border-gray-300')}`}
+          />
         {errors.confirmNewPassword && (
           <p className="text-red-500 text-xs mt-1">{errors.confirmNewPassword.message}</p>
         )}
@@ -100,9 +101,7 @@ export default function FormChangeUserPassword({ logoutFn }) {
       <button
         type="submit"
         disabled={isSubmitting}
-        className={`mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-      >
+        className={`mt-4 w-full px-4 py-2 rounded-md ${isDarkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'} ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
         {isSubmitting ? 'Actualizando...' : 'Actualizar Contraseña'}
       </button>
     </form>

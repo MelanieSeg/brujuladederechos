@@ -1,6 +1,4 @@
-// src/ComentariosRecolectados.js
-
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import api from "../services/axios";
 import { format, parseISO, isValid } from "date-fns";
@@ -9,16 +7,17 @@ import Calendario from "./Objects/Calendario";
 import Paginacion from "./Objects/Paginacion";
 import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
-import { Toast, showSuccess, showError } from "./Objects/Toast"; // Importar Toast y funciones de toast
+import { Toast, showSuccess} from "./Objects/Toast";
+import { ThemeContext } from '../utils/ThemeContext';
 
 export default function ComentariosRecolectados() {
   const [defaultComentarios] = useState([
-    // Comentarios por defecto si los hay
+    
   ]);
 
   const [comentarios, setComentarios] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const { isDarkMode } = useContext(ThemeContext);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -118,11 +117,17 @@ export default function ComentariosRecolectados() {
   const getBadgeColor = (estado) => {
     switch (estado) {
       case "PENDIENTE_CLASIFICACION":
-        return "bg-gray-300 text-gray-800";
+        return isDarkMode 
+          ? "bg-gray-600 text-gray-200" 
+          : "bg-gray-300 text-gray-800";
       case "CLASIFICADO":
-        return "bg-gray-200 text-gray-800";
+        return isDarkMode 
+          ? "bg-gray-700 text-gray-200" 
+          : "bg-gray-200 text-gray-800";
       default:
-        return "bg-gray-500 text-white";
+        return isDarkMode 
+          ? "bg-gray-500 text-white" 
+          : "bg-gray-500 text-white";
     }
   };
 
@@ -159,18 +164,30 @@ export default function ComentariosRecolectados() {
 
   const renderDropdown = () => {
     return isDropdownOpen && (
-      <div ref={dropdownRef} className="absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+      <div 
+        ref={dropdownRef} 
+        className={`absolute mt-2 w-56 rounded-md shadow-lg ring-1 z-10 
+          ${isDarkMode 
+            ? 'bg-gray-800 ring-gray-700 text-white' 
+            : 'bg-white ring-black ring-opacity-5 text-gray-700'
+          }`}
+      >
         <div className="py-1">
-          <div className="px-4 py-2 text-sm text-gray-700 font-semibold">Prioridad</div>
           <div className="px-4 py-2">
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={selectedEstado.PENDIENTE_CLASIFICACION}
                 onChange={() => handleEstadoChange("PENDIENTE_CLASIFICACION")}
-                className="form-checkbox text-gray-500"
+                className={`form-checkbox 
+                  ${isDarkMode 
+                    ? 'text-indigo-400 bg-gray-700 border-gray-600' 
+                    : 'text-gray-500'
+                  }`}
               />
-              <span className="text-gray-700">Pendiente</span>
+              <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>
+                Pendiente
+              </span>
             </label>
           </div>
           <div className="px-4 py-2">
@@ -179,13 +196,26 @@ export default function ComentariosRecolectados() {
                 type="checkbox"
                 checked={selectedEstado.CLASIFICADO}
                 onChange={() => handleEstadoChange("CLASIFICADO")}
-                className="form-checkbox text-gray-500"
+                className={`form-checkbox 
+                  ${isDarkMode 
+                    ? 'text-indigo-400 bg-gray-700 border-gray-600' 
+                    : 'text-gray-500'
+                  }`}
               />
-              <span className="text-gray-700">Clasificado</span>
+              <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>
+                Clasificado
+              </span>
             </label>
           </div>
-          <div className="border-t border-gray-200">
-            <button onClick={limpiarSeleccion} className="w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100">
+          <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+            <button 
+              onClick={limpiarSeleccion} 
+              className={`block w-full text-left px-4 py-2 text-sm 
+                ${isDarkMode 
+                  ? 'text-gray-400 hover:bg-gray-700' 
+                  : 'text-gray-500 hover:bg-gray-100'
+                }`}
+            >
               Limpiar
             </button>
           </div>
@@ -263,52 +293,56 @@ export default function ComentariosRecolectados() {
 
   // Modal para confirmar la eliminación de un comentario con campos de contraseña y motivo
   const modalEliminarComentario = (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-md shadow-lg max-w-md w-full">
-        <h3 className="text-lg font-semibold mb-2">¿Está seguro de eliminar este comentario?</h3>
-        <p className="text-sm text-gray-900 mb-4">
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 
+      ${isDarkMode ? 'bg-opacity-70' : 'bg-opacity-50'}`}>
+      <div className={`
+        ${isDarkMode 
+          ? 'bg-gray-800 text-gray-200 border border-gray-700' 
+          : 'bg-white text-gray-900'}
+        p-6 rounded-md shadow-lg max-w-md w-full`}>
+        <h3 className={`text-lg font-semibold mb-2 
+          ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          ¿Está seguro de eliminar este comentario?
+        </h3>
+        <p className={`text-sm mb-4 
+          ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
           Esta acción no se puede deshacer. Por favor, ingresa una contraseña y un motivo para la eliminación.
         </p>
         <form onSubmit={(e) => { e.preventDefault(); manejarEliminarComentario(); }}>
-          {/* Campo de Contraseña */}
+          {/* Campos de formulario */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="********"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              // No es requerido para permitir entradas vacías
-            />
-          </div>
-          {/* Campo de Motivo */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className={`block text-sm font-medium 
+              ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
               Motivo de la eliminación
             </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Ingresa el motivo (opcional)"
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 
+                ${isDarkMode 
+                  ? 'bg-gray-700 text-white border-gray-600 focus:ring-indigo-500' 
+                  : 'border-gray-300 focus:ring-blue-500'}`}
               rows={3}
-              // No es requerido para permitir entradas vacías
             ></textarea>
           </div>
           <div className="flex justify-end space-x-2 mt-6">
             <button
               type="button"
               onClick={manejarCancelarEliminar}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+              className={`px-4 py-2 rounded-md 
+                ${isDarkMode 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+              className={`px-4 py-2 rounded-md 
+                ${isDarkMode 
+                  ? 'bg-red-700 text-white hover:bg-red-600' 
+                  : 'bg-red-600 text-white hover:bg-red-700'}`}
             >
               Eliminar
             </button>
@@ -319,12 +353,12 @@ export default function ComentariosRecolectados() {
   );
 
   return (
-    <div className="p-8 bg-[#FAF9F8] flex-1 relative">
+    <div className={`p-8 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} flex-1 w-full`}>
       {/* Contenedor de Toasts */}
       <Toast />
 
       <div className="flex-grow">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+        <h2 className={`text-2xl font-semibold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
           Comentarios recolectados
         </h2>
 
@@ -335,40 +369,80 @@ export default function ComentariosRecolectados() {
               <button
                 ref={dateButtonRef}
                 onClick={toggleDateDropdown}
-                className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm hover:bg-gray-100"
+                className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
+                  ${isDateDropdownOpen 
+                    ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500' 
+                    : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
               >
-                <PlusIcon className="w-5 h-5 text-gray-500" />
+                <div className="flex items-center space-x-2">
+                <PlusIcon className={`w-5 h-5 ${
+                isDarkMode 
+                  ? 'text-white group-hover:text-gray-200' 
+                  : 'text-gray-500'
+              }`}  />
                 <span>Fecha</span>
+                </div>
               </button>
               {isDateDropdownOpen && (
                 <div
                   ref={dateDropdownRef}
-                  className="absolute mt-2 w-48 bg-white rounded-md shadow-lg z-20"
+                  className={`absolute mt-2 w-48 rounded-md shadow-lg z-20 
+                    ${isDarkMode 
+                      ? 'bg-gray-800 border border-gray-700 text-white' 
+                      : 'bg-white text-gray-700'
+                    }`}
                 >
                   <button
-                    className="block w-full text-left px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
+                    className={`block w-full text-left px-4 py-2 text-base 
+                      ${isDarkMode 
+                        ? 'hover:bg-gray-700 text-gray-300' 
+                        : 'hover:bg-gray-100 text-gray-700'
+                      }`}
                     onClick={() => handleDateOptionClick("desde")}
                   >
                     Desde 
                     {fechaDesde && (
-                      <span className="ml-2 mx-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full">
+                      <span className={`ml-2 mx-2 text-sm px-2 py-1 rounded-full 
+                        ${isDarkMode 
+                          ? 'bg-gray-700 text-gray-300' 
+                          : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
                         {fechaDesde}
                       </span>
                     )}
                   </button>
                   <button
-                    className="block w-full text-left px-4 py-2 text-base text-gray-700 hover:bg-gray-100"
+                    className={`block w-full text-left px-4 py-2 text-base 
+                      ${isDarkMode 
+                        ? 'hover:bg-gray-700 text-gray-300' 
+                        : 'hover:bg-gray-100 text-gray-700'
+                      }`}
                     onClick={() => handleDateOptionClick("hasta")}
                   >
                     Hasta {fechaHasta && (
-                      <span className="ml-2 bg-gray-100 text-sm text-gray-700 px-2 py-1 rounded-full ">
+                      <span className={`ml-2 text-sm px-2 py-1 rounded-full 
+                        ${isDarkMode 
+                          ? 'bg-gray-700 text-gray-300' 
+                          : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
                         {fechaHasta}
                       </span>
                     )}
                   </button>
-                  <div className="border-t border-gray-200">
+                  <div className={`border-t 
+                  ${isDarkMode 
+                    ? 'border-gray-700' 
+                    : 'border-gray-200'
+                  }`}>
                     <button
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100"
+                      className={`block w-full text-left px-4 py-2 text-sm 
+                        ${isDarkMode 
+                          ? 'text-gray-400 hover:bg-gray-700' 
+                          : 'text-gray-500 hover:bg-gray-100'
+                        }`}
                       onClick={() => handleDateOptionClick("eliminar")}
                     >
                       Limpiar
@@ -389,9 +463,19 @@ export default function ComentariosRecolectados() {
               <button
                 ref={gravedadButtonRef}
                 onClick={handleGravedadClick}
-                className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 bg-white shadow-sm hover:bg-gray-100">
-                <PlusIcon className="w-5 h-5 text-gray-500" />
+                className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
+                  ${isDropdownOpen 
+                    ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500' 
+                    : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}>
+                <div className="flex items-center space-x-2">
+                <PlusIcon className={`w-5 h-5 ${
+                isDarkMode 
+                  ? 'text-white group-hover:text-gray-200' 
+                  : 'text-gray-500'
+              }`}  />
                 <span>Estado</span>
+                </div>
               </button>
               {isDropdownOpen && renderDropdown()}
             </div>
@@ -403,14 +487,20 @@ export default function ComentariosRecolectados() {
               type="date"
               value={fechaDesde}
               onChange={(e) => setFechaDesde(e.target.value)}
-              className="border border-gray-300 rounded px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`border rounded px-4 py-2 focus:outline-none focus:ring-2 
+                ${isDarkMode 
+                  ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500' 
+                  : 'bg-white border-gray-300 focus:ring-blue-500'}`}
             />
-            <span>-</span>
+            <span className={isDarkMode ? 'text-white' : 'text-gray-800'}>-</span>
             <input
               type="date"
               value={fechaHasta}
               onChange={(e) => setFechaHasta(e.target.value)}
-              className="border border-gray-300 rounded px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`border rounded px-4 py-2 focus:outline-none focus:ring-2 
+                ${isDarkMode 
+                  ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500' 
+                  : 'bg-white border-gray-300 focus:ring-blue-500'}`}
             />
             {/* Componente Formulario para descargar el PDF */}
             <Formulario 
@@ -424,23 +514,21 @@ export default function ComentariosRecolectados() {
 
         {/* Tabla de Comentarios */}
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white shadow-md rounded-lg border-collapse">
-            <thead>
-              <tr>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">
-                  Comentario
+          <table className={`min-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg border-collapse`}>
+          <thead>
+            <tr className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              {['Comentario', 'Sitio web', 'Fecha', 'Acciones'].map((header) => (
+                <th 
+                  key={header} 
+                  className={`px-6 py-4 text-left font-medium border-b
+                    ${isDarkMode 
+                      ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-300'
+                    }`}
+                >
+                  {header}
                 </th>
-                <th className="px-12 py-4 text-left font-medium text-gray-500">
-                  Estado
-                </th>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">
-                  Sitio Web
-                </th>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">
-                  Fecha
-                </th>
-                <th className="px-6 py-4 text-left font-medium text-gray-500">Acciones</th>
-              </tr>
+              ))}
+            </tr>
             </thead>
             <tbody>
               {loading ? (
@@ -451,23 +539,23 @@ export default function ComentariosRecolectados() {
                 </tr>
               ) : currentComments.length > 0 ? (
                 currentComments.map((comentario, index) => (
-                  <tr key={index} className="border-b border-gray-200">
-                    <td className="px-6 py-4 max-w-xs">
+                  <tr key={index} className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                       <div className="whitespace-nowrap overflow-hidden overflow-ellipsis">
                         {truncateComentario(comentario.comentario, 100)}
                       </div>
                     </td>
                     <td className="px-12 py-4">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColor(
-                          comentario.estado
-                        )}`}
-                      >
-                        {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">{comentario.sourceUrl}</td>
-                    <td className="px-6 py-4">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColor(
+                        comentario.estado
+                      )}`}
+                    >
+                      {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
+                    </span>
+                  </td>
+                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{comentario.sourceUrl}</td>
+                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                       {isValid(parseISO(comentario.fechaScraping)) 
                         ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy") 
                         : "Fecha Inválida"
@@ -479,7 +567,12 @@ export default function ComentariosRecolectados() {
                         className="text-gray-500 hover:text-red-600"
                         aria-label="Eliminar comentario"
                       >
-                        <TrashIcon className="w-5 h-5" />
+                        <TrashIcon className={`w-5 h-5 ${
+                      isDarkMode 
+                        ? 'text-gray-400 hover:text-red-400' 
+                        : 'text-gray-400 hover:text-red-500'
+                    } cursor-pointer`} 
+                  />
                       </button>
                     </td>
                   </tr>
