@@ -258,7 +258,30 @@ class UserController {
       })
 
     } catch (err) {
-      return res.status(500).json({ msg: `Error interno del servidor, err` })
+      return res.status(500).json({ msg: `Error interno del servidor, ${err}` })
+    }
+  }
+
+  getUserNotifications = async (req: Request, res: Response) => {
+
+    try {
+
+      const userId = req.user?.userId
+      if (!userId) {
+        return res.status(401).json({ message: 'No estas autorizado para cambiar la imagen de perfil' });
+      }
+
+      const notifications = await this.userService.getUserNotifications(userId);
+
+
+      return res.status(200).json({
+        data: notifications.data
+      })
+
+
+
+    } catch (err) {
+      return res.status(500).json({ msg: `Error interno del servidor, ${err}` })
     }
   }
 

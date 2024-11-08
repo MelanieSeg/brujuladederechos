@@ -1,8 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, TipoNotificacion, TipoNotificacionApp } from "@prisma/client";
 import amqp, { Channel, Connection, ConsumeMessage } from "amqplib";
 import dotenv from "dotenv";
 import { cleanComment, parseFecha } from "../../utils";
 import CommentsService from "./comments.services";
+import NotificationsService from "../notifications/notifications.services";
 
 
 dotenv.config()
@@ -17,6 +18,8 @@ class CommentsConsumer {
   private channel!: Channel;
   private queue: string;
   private commentsService: CommentsService
+  private notificationsService: NotificationsService
+  private totalCommentsInsertCount: number = 0;
 
   //Los parametros para el batching( para hacer el INSERT por lotes)
   private batchSize: number = 10;
@@ -27,9 +30,10 @@ class CommentsConsumer {
   private notificationChannel!: Channel;
 
 
-  constructor(commentsServices: CommentsService) {
+  constructor(commentsServices: CommentsService, notificationsService: NotificationsService) {
     this.queue = process.env.RABBITMQ_QUEUE || 'comentarios_scraping_queue';
     this.commentsService = commentsServices;
+    this.notificationsService = notificationsService
   }
 
 
@@ -57,7 +61,13 @@ class CommentsConsumer {
 
       this.notificationChannel = await this.connection.createChannel();
       await this.notificationChannel.assertExchange('notifications_exchange', 'direct', { durable: true });
-      await this.notificationChannel.assertQueue(NOTIFICATION_QUEUE, { durable: true });
+      await this.notificationChannel.assertQueue(NOTIFICATION_QUEUE, {
+        durable: true,
+        arguments: {
+          'x-dead-letter-exchange': 'notificaciones_insert_dead',
+          'x-dead-letter-routing-key': 'dead_letter_routing_key',
+        },
+      });
       await this.notificationChannel.bindQueue(NOTIFICATION_QUEUE, 'notifications_exchange', 'notifications');
 
 
@@ -142,15 +152,30 @@ class CommentsConsumer {
         msgs.forEach(msg => this.channel.ack(msg));
         console.log(`[x] Insertados ${comments.length} comentarios exitosamente.`);
 
-        // Crear una notificación por lote
-        const batchNotification = {
-          batchId: Date.now(),
-          cantidad: comments.length,
-          fuente: webSiteName,
-          fecha: new Date().toISOString(),
-        };
+        this.totalCommentsInsertCount += comments.length
+        // Verificar si la cola está vacía
+        const queueInfo = await this.channel.checkQueue(this.queue);
+        if (queueInfo.messageCount === 0) {
+          // Crear y publicar la notif
+          const totalNotification = {
+            tipo: "TOTAL_COMMENTS_INSERTED",
+            totalComentarios: this.totalCommentsInsertCount,
+            fecha: new Date().toISOString(),
+          };
+          await this.publishTotalNotification(totalNotification);
 
-        this.publishBatchNotification(batchNotification)
+          // Resetear el el contador de cometnarios totales
+          this.totalCommentsInsertCount = 0;
+
+          await this.notificationsService.createGlobalNotification({
+            message: `Se insertaron ${totalNotification.totalComentarios} comentarios exitosamente`,
+            typeNotificationApp: TipoNotificacionApp.INSERT_COMENTARIOS,
+            type: TipoNotificacion.GLOBAL
+          })
+
+
+        }
+
 
       } else {
         console.error(`Error al insertar comentarios: ${result.msg}`);
@@ -161,17 +186,15 @@ class CommentsConsumer {
       msgs.forEach(msg => this.channel.nack(msg, false, true));
     }
   };
-
-  private publishBatchNotification = async (notification: any) => {
+  private publishTotalNotification = async (notification: any) => {
     try {
       const payload = Buffer.from(JSON.stringify(notification));
       this.notificationChannel.publish('notifications_exchange', 'notifications', payload);
-      console.log(`Notificación de lote publicada: ${JSON.stringify(notification)}`);
+      console.log(`Notificación total publicada: ${JSON.stringify(notification)}`);
     } catch (err) {
-      console.error('Error al publicar notificación de lote:', err);
-      // Opcional: Manejar el error según tus necesidades
+      console.error('Error al publicar notificación total:', err);
     }
-  }
+  };
 
 
   close = async () => {

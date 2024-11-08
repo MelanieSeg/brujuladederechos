@@ -73,6 +73,7 @@ model User {
   logAuditorias           LogAuditoria[]
   UserToken               UserToken[]
   Notificacion            Notificacion[]
+  UserNotifications UserNotifications[]
 }
 
 model ConfigScraping {
@@ -191,9 +192,49 @@ model Notificacion {
   usuario           User     @relation(fields: [usuarioId], references: [id])
 }
 
+
+model Notification {
+  id String @id @default(cuid())
+  message String
+  type TipoNotificacion
+  tipoNotificacionApp TipoNotificacionApp
+  createdAt         DateTime @default(now())
+
+  userNotifications UserNotifications[]
+}
+
+model UserNotifications{
+  id String @id @default(cuid())
+  notificationId String
+  userId String
+  isRead Boolean
+  
+  createdAt         DateTime @default(now())
+
+  notification Notification @relation(fields:[notificationId], references:[id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([notificationId])  
+  @@index([userId]) 
+}
+
 enum TipoAccion {
   MODIFICACION
   ELIMINACION
+}
+
+enum TipoNotificacion{
+  GLOBAL
+  INDIVIDUAL
+}
+
+
+enum TipoNotificacionApp{
+  INSERT_COMENTARIOS
+  INFORME
+  URGENTE
+  CAMBIO_CONFIG
+  RESUMEN
 }
 
 enum MotivoModificacion {

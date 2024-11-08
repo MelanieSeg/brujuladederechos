@@ -16,6 +16,7 @@ import {
   Filler
 } from 'chart.js';
 import { useSocket } from '../hooks/useSocket';
+import { toast } from 'sonner';
 
 // Registrar los componentes de Chart.js necesarios
 ChartJS.register(
@@ -45,7 +46,15 @@ export default function Dashboard() {
     if (!socket) return;
 
     socket.on("nueva_notificacion", (notificacion) => {
-      setNotificaciones((prev) => [notificacion, ...prev]);
+      if (notificacion.tipo === "TOTAL_COMMENTS_INSERTED") {
+        toast.success(`Se insertaron ${notificacion.totalComentarios} comentarios exitosamente.`, {
+          duration: 5000,
+        });
+
+        setTotalComentarios(prev => prev + notificacion.totalComentarios);
+      } else {
+        setNotificaciones((prev) => [notificacion, ...prev]);
+      }
     });
 
     socket.on("connect", () => {

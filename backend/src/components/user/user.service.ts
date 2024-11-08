@@ -419,6 +419,68 @@ class UserService {
   }
 
 
+  getUserNotifications = async (userId: string) => {
+
+    try {
+
+      const user = this.getUserById(userId);
+
+      if (!user) {
+        return {
+          message: "Usuario no encontrado",
+          success: false,
+          data: null
+        }
+      }
+
+
+      const [userGlobalNotifcations, userIndividualNotifications] = await Promise.all([
+        this.prisma.notification.findMany({
+
+          where: {
+            type: "GLOBAL",
+            userNotifications: {
+              none: {
+                userId: userId,
+                isRead: false
+              }
+            }
+          }
+        }),
+        this.prisma.userNotifications.findMany({
+          where: {
+            isRead: false,
+            userId: userId
+          }, include: {
+            notification: true
+          }
+        })
+
+      ])
+      const comentariosNoLeidos = [
+        ...userGlobalNotifcations,
+        ...userIndividualNotifications.map((n) => n.notification),
+      ];
+
+
+      return {
+        message: "Se obtuvieron todas las notificaciones del usuario ",
+        success: true,
+        data: comentariosNoLeidos
+      }
+
+
+
+    } catch (err) {
+      return {
+        message: err,
+        success: false,
+        data: null
+      }
+    }
+  }
+
+
   updateUserData = async (user: UpdateUserDto, id: string) => {
     try {
       const userExist = await this.getUserById(id);

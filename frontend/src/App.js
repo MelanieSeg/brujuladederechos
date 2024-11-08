@@ -18,6 +18,7 @@ import FormConfirmarUsuario from './components/forms/Form-confirmar-usuario';
 import RequiredRole from './components/RequiredRole';
 import NoAutorizado from './components/NoAutorizado';
 import { SocketProvider } from './contexts/SocketContext';
+import { Toaster } from 'sonner';
 
 function App() {
   const [mostrarNotificaciones, setMostrarNotificaciones] = React.useState(false);
@@ -28,6 +29,7 @@ function App() {
 
   return (
     <ThemeProvider>
+      <Toaster position={"top-right"} />
       <AuthProvider>
         <SocketProvider>
           <Router>

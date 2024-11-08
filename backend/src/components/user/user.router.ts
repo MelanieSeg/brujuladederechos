@@ -25,6 +25,7 @@ class UserRouter {
     )
 
     router.post('/upload-image', upload.single('image'), this.AuthMiddleware.authorize, this.UserController.uploadImage)
+    router.post('/get-user-notifications', this.AuthMiddleware.authorize, this.UserController.getUserNotifications)
     router.route("/me").get(this.UserController.getUserById);
     router
       .route("/confirmar-usuario")
