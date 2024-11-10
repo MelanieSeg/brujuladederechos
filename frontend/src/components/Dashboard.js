@@ -14,6 +14,8 @@ import {
   Legend,
   Filler
 } from 'chart.js';
+import { useSocket } from '../hooks/useSocket';
+import { toast } from 'sonner';
 
 // Registrar los componentes de Chart.js necesarios
 ChartJS.register(
@@ -30,6 +32,8 @@ ChartJS.register(
 
 export default function Dashboard() {
   // Estado inicial con datos temporales
+  const [notificaciones, setNotificaciones] = useState([]);
+  const socket = useSocket()
   const [periodo, setPeriodo] = useState('Diario');
   const [selectedMetric, setSelectedMetric] = useState('Total de comentarios analizados');
   const [totalComentarios, setTotalComentarios] = useState(0);
@@ -37,6 +41,39 @@ export default function Dashboard() {
   const [barThickness, setBarThickness] = useState(30);
   const { isDarkMode } = useContext(ThemeContext);
   
+
+
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("nueva_notificacion", (notificacion) => {
+      if (notificacion.tipo === "TOTAL_COMMENTS_INSERTED") {
+        toast.success(`Se insertaron ${notificacion.totalComentarios} comentarios exitosamente.`, {
+          duration: 5000,
+        });
+
+        setTotalComentarios(prev => prev + notificacion.totalComentarios);
+      } else {
+        setNotificaciones((prev) => [notificacion, ...prev]);
+      }
+    });
+
+    socket.on("connect", () => {
+      console.log("Socket.IO conectado");
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log("Socket.IO desconectado:", reason);
+    });
+
+    return () => {
+      socket.off("nueva_notificacion");
+      socket.off("connect");
+      socket.off("disconnect");
+    };
+  }, [socket]);
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -54,7 +91,12 @@ export default function Dashboard() {
       window.removeEventListener('orientationchange', handleResize);
     };
   }, []);
-  
+
+
+  console.log({
+    notificaciones
+  })
+
   // Datos temporales para demostración (serán reemplazados por datos del backend)
   const datosTemporales = {
     totalComentarios: 573,
@@ -112,7 +154,7 @@ export default function Dashboard() {
     const month = now.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    
+
     // Ajustar para que la semana comience en lunes (1) en lugar de domingo (0)
     const firstDayOfWeek = firstDay.getDay() || 7;
     const lastDayOfWeek = lastDay.getDay() || 7;
@@ -233,7 +275,7 @@ export default function Dashboard() {
       },
     },
   };
-  
+
   useEffect(() => {
     const datos = datosTemporalesPorPeriodo[periodo];
     setTotalComentarios(datos.totalComentarios);
@@ -350,7 +392,7 @@ export default function Dashboard() {
         return null;
     }
   };
-  
+
   const { data } = getChartData() || {};
 
   // Obtener el mes y año actual
@@ -406,7 +448,7 @@ export default function Dashboard() {
         </div>
       )}
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {data && periodo !== 'Anual' && (
           <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg col-span-2">
             <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">{selectedMetric}</h2>

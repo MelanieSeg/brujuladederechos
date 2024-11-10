@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X as XMarkIcon, AlertTriangle, CheckCircle, BarChart2, MessageSquare, Settings } from 'lucide-react';
-
+import { useAuth } from "../hooks/useAuth";
+import userApi from '../services/axiosUserInstance';
 const Notificacion = ({ mensaje, tipo, icono: IconoComponente, onClose }) => {
+
+
+
+
   const getStyle = () => {
     switch (tipo) {
-      case 'Actualización':
+      case "INSERT_COMENTARIOS":
         return 'bg-blue-50 border-blue-200 text-blue-800';
       case 'Informe':
         return 'bg-green-50 border-green-200 text-green-800';
@@ -31,6 +36,35 @@ const Notificacion = ({ mensaje, tipo, icono: IconoComponente, onClose }) => {
 };
 
 const BarraDeNotificaciones = ({ visible, onClose }) => {
+  const { user } = useAuth()
+
+  const [userNotifications, setUserNotifications] = useState([])
+
+
+
+  useEffect(() => {
+
+
+    async function getUserNotifications() {
+      try {
+
+        const response = await userApi.post("get-user-notifications")
+        console.log(response)
+        setUserNotifications(response.data.data)
+
+      } catch (err) {
+        console.log("[ERROR AL CONSEGUIR LAS NOTIFICACIONES DEL USUARIO]", err)
+      }
+    }
+
+    getUserNotifications()
+
+
+  }, [])
+
+
+
+
   const [categoriaActiva, setCategoriaActiva] = useState('todas');
   const [notifications, setNotifications] = useState([
     {
@@ -89,23 +123,22 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
             <button
               key={categoria.key}
               onClick={() => setCategoriaActiva(categoria.key)}
-              className={`px-2 py-1 text-sm rounded-full whitespace-nowrap mr-2 ${
-                categoria.key === categoriaActiva 
-                  ? 'bg-gray-200 text-black' 
-                  : 'bg-write text-gray-600 hover:bg-gray-200'
-              }`} >
+              className={`px-2 py-1 text-sm rounded-full whitespace-nowrap mr-2 ${categoria.key === categoriaActiva
+                ? 'bg-gray-200 text-black'
+                : 'bg-write text-gray-600 hover:bg-gray-200'
+                }`} >
               {categoria.label}
             </button>
-          ) ).filter(Boolean)}
+          )).filter(Boolean)}
         </div>
       </div>
       <div className="flex flex-wrap gap-2 p-4">
-        {filteredNotifications.map((notification, index) => (
+        {userNotifications.map((notification, index) => (
           <Notificacion
             key={index}
-            mensaje={notification.mensaje}
-            tipo={notification.tipo}
-            icono={notification.icono}
+            mensaje={notification.message}
+            tipo={notification.tipoNotificacionApp}
+            icono={MessageSquare}
             onClose={() => removeNotification(index)}
           />
         ))}
