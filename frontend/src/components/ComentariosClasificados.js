@@ -4,6 +4,7 @@ import { TrashIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { format, parseISO, isValid } from 'date-fns';
 import Calendario from './Objects/Calendario';
 import Paginacion from './Objects/Paginacion';
+import Formulario from "./Objects/Formulario";
 import api from '../services/axios';
 import { truncateComentario } from '../utils/truncarComentario';
 import Cargando from './Objects/Cargando';
@@ -299,65 +300,38 @@ export default function ComentariosClasificados() {
     setPaginaActual(pageNumber);
   };
 
-  const handleDownload = () => {
-    if (!startDate || !endDate) {
-      alert('Por favor, seleccione ambas fechas para descargar el reporte.');
-      return;
-    }
+  const columnasClasificados = [
+    {
+      title: "Comentario",
+      width: 250,
+      halign: 'left',
+    },
+    {
+      title: "Gravedad",
+      width: 100,
+      halign: 'center',
+    },
+    {
+      title: "Sitio Web",
+      width: 80,
+      halign: 'center',
+    },
+    {
+      title: "Fecha de Clasificación",
+      width: 80,
+      halign: 'center',
+    },
+  ];
 
-    if (startDate > endDate) {
-      alert('La fecha de inicio debe ser anterior o igual a la fecha de fin.');
-      return;
-    }
-
-    const commentsToDownload = comentarios.filter((comentario) => {
-      const comentarioDate = new Date(comentario.fechaClasificacion);
-      comentarioDate.setHours(0, 0, 0, 0);
-
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-
-      const end = new Date(endDate);
-      end.setHours(0, 0, 0, 0);
-
-      return (
-        comentarioDate.getTime() >= start.getTime() &&
-        comentarioDate.getTime() <= end.getTime()
-      );
-    });
-
-    const rows = commentsToDownload.map((comment) => [
-      `"${comment.comentario.replace(/"/g, '""')}"`,
-      mapGravedad(comment?.gravedad ? comment.gravedad : 'Desconocida'),
-      comment.comentario.sitioWeb.nombre,
-      isValid(parseISO(comment.fechaClasificacion)) ? format(parseISO(comment.fechaClasificacion), 'dd-MM-yyyy') : "Fecha Inválida",
-    ]);
-
-    if (commentsToDownload.length === 0) {
-      alert('No hay comentarios en el rango de fechas seleccionado.');
-      return;
-    }
-
-    const headers = [
-      'Comentario',
-      'Gravedad',
-      'Sitio web',
-      'Fecha de clasificación',
-    ];
-
-    let csvContent =
-      headers.join(',') + '\n' + rows.map((e) => e.join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-
-    link.href = url;
-    link.setAttribute('download', 'reporte_comentarios.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const formatData = (comentario) => [
+    comentario.comentario.comentario, // Texto del comentario
+    mapGravedad(comentario?.gravedad ? comentario.gravedad : 'Desconocida'), // Gravedad
+    comentario.comentario.sitioWeb?.nombre || 'Sin sitio web', // Sitio web
+    isValid(parseISO(comentario.fechaClasificacion))
+      ? format(parseISO(comentario.fechaClasificacion), "dd-MM-yyyy")
+      : "Fecha Inválida"
+  ];
+  
 
   // Funciones para editar puntuación
   const editarComentario = (comentario) => {
@@ -658,12 +632,13 @@ export default function ComentariosClasificados() {
               setEndDate(date);
             }}
           />
-          <button
-            className="bg-black text-white px-4 py-2 rounded-md"
-            onClick={handleDownload}
-          >
-            Descargar
-          </button>
+          <Formulario 
+                comentariosFiltrados={filteredComentarios} 
+                columns={columnasClasificados} 
+                formatData={formatData}
+                fileName="comentarios_clasificados.pdf"
+              />
+          
         </div>
       </div>
 
