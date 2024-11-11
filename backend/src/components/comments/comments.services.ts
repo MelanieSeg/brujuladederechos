@@ -83,6 +83,9 @@ class CommentsService {
               sitioWeb: true
             }
           }
+        },
+        orderBy: {
+          fechaClasificacion: "desc"
         }
       });
       //conversar el tema que es mejor implementar paginacion desde backend en la consulta que implementarla desde el front
@@ -100,7 +103,11 @@ class CommentsService {
 
   getAllComments = async () => {
     try {
-      const comments = await this.prisma.comentarioScraped.findMany();
+      const comments = await this.prisma.comentarioScraped.findMany({
+        orderBy: {
+          fechaScraping: "desc"
+        }
+      });
 
       return {
         data: comments,
@@ -110,6 +117,27 @@ class CommentsService {
       return { data: null, msg: err };
     }
   };
+
+  getAllCommentsPending = async () => {
+    try {
+      const pendingComments = await this.prisma.comentarioScraped.findMany({
+        where: {
+          clasificado: false
+        },
+        orderBy: {
+          fechaScraping: "asc"
+        }
+      })
+
+      return {
+        data: pendingComments,
+        message: "Se obtuvieron todo los comentarios pendientes exitosamente"
+      }
+
+    } catch (err) {
+      return { data: null, message: err }
+    }
+  }
   addComment = async (comments: CommentScrapped[], webSiteName: string) => {
     try {
       const findWebsite = await this.getWebSite(webSiteName);
@@ -163,7 +191,6 @@ class CommentsService {
       }
 
       const dataToInsert = comments.map((comment) => {
-
         const commentDate = parseFecha(String(comment.fecha));
         if (!commentDate) {
           return {

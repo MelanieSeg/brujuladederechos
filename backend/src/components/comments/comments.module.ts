@@ -5,11 +5,13 @@ import AuthService from "../auth/auth.service";
 import CommentsRouter from "./comments.router";
 import CommentsConsumer from "./comments.consumer";
 import ibfRoutes from "./ibfRoutes";  // Importa el router de ibfRoutes
+import NotificationsService from "../notifications/notifications.services";
 
 const commentsService = new CommentsService();
+const notificationService = new NotificationsService();
 const commentsController = new CommentsController(commentsService);
 const commentsRouter = new CommentsRouter(commentsController);
-const commentsConsumer = new CommentsConsumer(commentsService);
+const commentsConsumer = new CommentsConsumer(commentsService, notificationService);
 
 const initialize = async () => {
     try {
@@ -21,7 +23,7 @@ const initialize = async () => {
 };
 
 // Añadir la ruta IBF al router de comentarios
-commentsRouter.router.use('/ibf', ibfRoutes); 
+commentsRouter.router.use('/ibf', ibfRoutes);
 
 export default {
     router: commentsRouter.router,

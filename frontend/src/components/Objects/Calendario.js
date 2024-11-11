@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, addMonths } from "date-fns";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { es } from "date-fns/locale";
+import { ThemeContext } from '../../utils/ThemeContext';
 
 function Calendario({ onDateSelect }) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
-
+    const { isDarkMode } = useContext(ThemeContext);
     // Nombres de los meses en español
     const monthNames = [
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -32,7 +33,14 @@ function Calendario({ onDateSelect }) {
             <>
                 <div className="grid grid-cols-7">
                     {dayNames.map(day => (
-                        <div key={day} className="py-1 text-center font-bold text-gray-500 text-xs">
+                        <div 
+                            key={day} 
+                            className={`py-1 text-center font-bold text-xs 
+                                ${isDarkMode 
+                                    ? 'text-gray-400' 
+                                    : 'text-gray-500'
+                                }`}
+                        >
                             {day}
                         </div>
                     ))}
@@ -42,13 +50,19 @@ function Calendario({ onDateSelect }) {
                         <button
                             key={day}
                             onClick={() => handleDateClick(day.getDate())}
-                            className={`py-1 rounded-md w-6 h-6 flex items-center justify-center text-xs ${  /* Reducimos el tamaño de los botones y la fuente */
-                                selectedDate && format(day, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
-                                    ? "bg-black text-white"
-                                    : monthStart.getMonth() !== day.getMonth()
-                                    ? "text-gray-300"
-                                    : "text-black hover:bg-black hover:text-white"
-                            }`}
+                            className={`py-1 rounded-md w-6 h-6 flex items-center justify-center text-xs 
+                                ${isDarkMode 
+                                    ? (selectedDate && format(day, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
+                                        ? "bg-indigo-700 text-white" 
+                                        : monthStart.getMonth() !== day.getMonth()
+                                            ? "text-gray-600" 
+                                            : "text-gray-200 hover:bg-gray-700 hover:text-white")
+                                    : (selectedDate && format(day, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
+                                        ? "bg-black text-white" 
+                                        : monthStart.getMonth() !== day.getMonth()
+                                            ? "text-gray-300" 
+                                            : "text-black hover:bg-black hover:text-white")
+                                }`}
                         >
                             {format(day, "d")}
                         </button>
@@ -59,22 +73,47 @@ function Calendario({ onDateSelect }) {
     };
 
     return (
-        <div className="p-2 rounded-lg shadow-xl bg-white w-48 z-10"> {/* Reducimos el padding y el ancho del contenedor */}
+        <div 
+            className={`p-2 rounded-lg shadow-xl w-48 z-10 
+                ${isDarkMode 
+                    ? 'bg-gray-800 border border-gray-700' 
+                    : 'bg-white'
+                }`}
+        >
             <div className="flex justify-between items-center mb-2">
-                <button onClick={() => setCurrentDate(addMonths(currentDate, -1))} className="p-1 bg-gray-200 hover:bg-gray-300 rounded-md">
-                    <ChevronLeftIcon className="w-4 h-4" /> {/* Reducimos el tamaño del ícono */}
+                <button 
+                    onClick={() => setCurrentDate(addMonths(currentDate, -1))} 
+                    className={`p-1 rounded-md 
+                        ${isDarkMode 
+                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                            : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                >
+                    <ChevronLeftIcon className="w-4 h-4" />
                 </button>
-                <span className="font-bold text-sm"> {/* Reducimos el tamaño de la fuente del mes */}
+                <span 
+                    className={`font-bold text-sm 
+                        ${isDarkMode 
+                            ? 'text-gray-200' 
+                            : 'text-black'
+                        }`}
+                >
                     {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </span>
-                <button onClick={() => setCurrentDate(addMonths(currentDate, 1))} className="p-1 bg-gray-200 hover:bg-gray-300 rounded-md">
-                    <ChevronRightIcon className="w-4 h-4" /> {/* Reducimos el tamaño del ícono */}
+                <button 
+                    onClick={() => setCurrentDate(addMonths(currentDate, 1))} 
+                    className={`p-1 rounded-md 
+                        ${isDarkMode 
+                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                            : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                >
+                    <ChevronRightIcon className="w-4 h-4" />
                 </button>
             </div>
             {renderDays()}
         </div>
     );
 }
-
 
 export default Calendario;

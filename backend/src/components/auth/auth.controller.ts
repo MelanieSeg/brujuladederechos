@@ -40,6 +40,12 @@ class AuthController {
         });
       }
 
+      if (!validUser.isActive) {
+        return res.status(403).json({
+          error: "Tu cuenta está desactivada y no puedes acceder a la aplicación."
+        });
+      }
+
       const { isValid, accessToken, refreshToken } =
         await this.AuhtService.login(validUser, password);
       if (!isValid) {
@@ -104,7 +110,8 @@ class AuthController {
       res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
+        maxAge: 0
       });
 
       return res.status(200).json({ msg: "Cierre de sesion exitoso" });

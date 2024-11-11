@@ -2,14 +2,17 @@ import { PrismaClient, TipoToken, User } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { generateRandomToken } from "../../utils";
 import EmailService from "../email/email.service";
-import { isValid } from "zod";
+import { UpdateUserDto, UserChangePasswordDto, UserChangeStateDto, UserNewPasswordDto, UserUpdateData } from "../../schemas/user";
+import CloudinaryService from "../cloudinary/cloudinary.services";
 
 class UserService {
   private prisma: PrismaClient;
   private EmailService: EmailService;
-  constructor(emailService: EmailService) {
+  private cloudService: CloudinaryService
+  constructor(emailService: EmailService, CloudinaryService: CloudinaryService) {
     this.prisma = new PrismaClient();
     this.EmailService = emailService;
+    this.cloudService = CloudinaryService
   }
 
   addUser = async (user: User) => {
@@ -41,10 +44,10 @@ class UserService {
 
   confirmEmail = async (token: string) => {
     try {
-      const validConfirmToken = await this.prisma.userToken.findUnique({
+      const validConfirmToken = await this.prisma.userToken.findFirst({
         where: {
           token: token,
-          tipo:TipoToken.VERIFICATION,
+          tipo: TipoToken.VERIFICATION,
           expireAt: {
             gt: new Date(),
           },
@@ -145,7 +148,7 @@ class UserService {
       const validToken = await this.prisma.userToken.findUnique({
         where: {
           token: token,
-          tipo:TipoToken.RESET_PASSWORD,
+          tipo: TipoToken.RESET_PASSWORD,
           expireAt: {
             gt: new Date(),
           },
@@ -189,9 +192,9 @@ class UserService {
           },
         }),
         this.prisma.userToken.deleteMany({
-          where:{
-            userId:findUser.id,
-            tipo:TipoToken.REFRESH
+          where: {
+            userId: findUser.id,
+            tipo: TipoToken.REFRESH
           }
         })
       ]);
@@ -205,6 +208,80 @@ class UserService {
     }
   };
 
+  changePassword = async (userChangePasswordDto: UserChangePasswordDto) => {
+    try {
+
+      const validateUser = await this.prisma.user.findUnique({
+        where: {
+          id: userChangePasswordDto.userId
+        }
+      })
+
+      if (!validateUser) {
+        return {
+          success: false,
+          message: "Usuario invalido o no existe"
+        }
+      }
+
+      const validatePassword = await bcrypt.compare(userChangePasswordDto.currentPassword, validateUser.password)
+
+      if (!validatePassword) {
+        return {
+          success: false,
+          message: "La Password ingresada el invalida"
+        }
+      }
+
+      const SALT_ROUNDS = 10;
+      const salt = bcrypt.genSaltSync(SALT_ROUNDS);
+
+      const hashedNewPassword = await bcrypt.hash(userChangePasswordDto.newPassword, salt);
+
+
+      await this.prisma.user.update({
+        where: {
+          id: validateUser.id
+        },
+        data: {
+          password: hashedNewPassword
+        }
+      })
+
+      /*
+                        await Promise.all([
+              this.prisma.user.update({
+                data: {
+                  password: hashedPassword,
+                },
+                where: {
+                  id: findUser.id,
+                },
+              }),
+              this.prisma.userToken.delete({
+                where: {
+                  id: validToken.id,
+                },
+              }),
+              this.prisma.userToken.deleteMany({
+                where: {
+                  userId: findUser.id,
+                  tipo: TipoToken.REFRESH
+                }
+              })
+            ]);
+      */
+      return {
+        success: true,
+        msg: "Cambio de password completada con exito",
+      };
+    } catch (err) {
+      return { success: false };
+    }
+  };
+
+
+
   getUsers = () =>
     this.prisma.user.findMany({
       select: {
@@ -212,8 +289,12 @@ class UserService {
         email: true,
         rol: true,
         name: true,
-        emailVerified:true,
+        emailVerified: true,
+        isActive: true
       },
+      where: {
+        isDelete: false
+      }
     });
 
   getUserById = (id: string) =>
@@ -229,6 +310,224 @@ class UserService {
         email: email,
       },
     });
+
+  changeUserState = async (userChangeStateDto: UserChangeStateDto) => {
+    try {
+      const user = await this.getUserById(userChangeStateDto.id);
+
+      if (!user) {
+        return { success: false, data: null, message: `Error, el usuario con el id ${userChangeStateDto.id} no fue encontrado` };
+      }
+
+      //NOTA: El usuario no lo podemos eliminiar por que existen existe la posibilidad
+      // de que este haya clasificado comentario por lo que no se puede eliminar de la base de datos
+      // por lo que solo lo vamos a "desactivar" o quitar el accesso
+      //
+      const deactivatedUser = await this.prisma.user.update({
+        where: {
+          id: user.id
+        },
+        data: {
+          isActive: !userChangeStateDto.isActive
+        }
+      })
+
+      //TODO: Aca hay que crear un registro de auditoria que al usuario "x" se le quito el acceso
+
+      return {
+        success: true,
+        data: deactivatedUser,
+        message: `Se elimino el acceso al usuario ${deactivatedUser.name}`
+      }
+
+    } catch (err) {
+      return { success: false, data: null, message: "Error al intentar eliminar usuario" };
+    }
+  }
+
+  deleteUser = async (userId: string) => {
+    try {
+
+      const user = await this.getUserById(userId);
+
+      if (!user) {
+        return { success: false, data: null, message: `Error, el usuario con el id ${userId} no fue encontrado` };
+      }
+
+      const deleteUser = await this.prisma.user.update({
+        where: {
+          id: user.id,
+          isDelete: false,
+        },
+        data: {
+          isDelete: true,
+          isActive: false,
+        }
+      })
+
+      if (!deleteUser) {
+        return { success: false, data: null, message: `Error, no se pude eliminar el usuario, puede que el usuario ingresado ya haya sido "eliminado"` };
+      }
+
+      return { success: true, data: deleteUser, message: `El usuario: ${deleteUser.name} ha sido eliminado exitosamente` };
+
+    } catch (err) {
+      return {
+        success: false,
+        data: null,
+        message: `Error al intentar eliminar un usuario. ERROR: ${err}`
+      }
+    }
+  }
+
+  uploadUserProfilePicture = async (file: Express.Multer.File, publicId: string) => {
+    return this.cloudService.uploadImage(file, publicId)
+  }
+
+  updateUserProfilePicture = async (userId: string, imageUrl: string) => {
+    try {
+      const user = await this.getUserById(userId)
+
+      if (!user) {
+        return {
+          success: false,
+          message: 'El usuario no existe'
+        }
+      }
+
+      const updatedUser = await this.prisma.user.update({
+        where: {
+          id: user.id
+        },
+        data: {
+          image: imageUrl
+        }
+      })
+
+      return {
+        success: true,
+        message: 'Imagen Actualizada exitosamente'
+      }
+
+    } catch (err) {
+      return {
+        success: false,
+        message: err
+      }
+
+    }
+  }
+
+
+  getUserNotifications = async (userId: string) => {
+
+    try {
+
+      const user = this.getUserById(userId);
+
+      if (!user) {
+        return {
+          message: "Usuario no encontrado",
+          success: false,
+          data: null
+        }
+      }
+
+
+      const [userGlobalNotifcations, userIndividualNotifications] = await Promise.all([
+        this.prisma.notification.findMany({
+
+          where: {
+            type: "GLOBAL",
+            userNotifications: {
+              none: {
+                userId: userId,
+                isRead: false
+              }
+            }
+          }
+        }),
+        this.prisma.userNotifications.findMany({
+          where: {
+            isRead: false,
+            userId: userId
+          }, include: {
+            notification: true
+          }
+        })
+
+      ])
+      const comentariosNoLeidos = [
+        ...userGlobalNotifcations,
+        ...userIndividualNotifications.map((n) => n.notification),
+      ];
+
+
+      return {
+        message: "Se obtuvieron todas las notificaciones del usuario ",
+        success: true,
+        data: comentariosNoLeidos
+      }
+
+
+
+    } catch (err) {
+      return {
+        message: err,
+        success: false,
+        data: null
+      }
+    }
+  }
+
+
+  updateUserData = async (user: UpdateUserDto, id: string) => {
+    try {
+      const userExist = await this.getUserById(id);
+
+      if (!userExist) {
+        return {
+          success: false,
+          data: null,
+          message: `El usuario con id: ${id} no fue encontrado`
+        }
+      }
+
+      if (user.email) {
+        const emailInUse = await this.getUserbyEmail(user.email);
+
+        if (emailInUse && emailInUse.id !== userExist.id) {
+          return {
+            success: false,
+            data: null,
+            message: `El email ingresado ya esta en uso`
+          }
+        }
+      }
+
+      const updatedUser = await this.prisma.user.update({
+        where: {
+          id: id
+        },
+        data: {
+          ...user
+        }
+      })
+
+      return {
+        success: true,
+        data: updatedUser,
+        message: `Se actualizo la informacion del usuario: ${updatedUser.name} con exito`
+      }
+
+    } catch (err) {
+      return {
+        success: false,
+        data: null,
+        message: `Error interno al intentar realizar un UPDATE en la data del usuario: ${user.name}`
+      }
+    }
+  }
 }
 
 export default UserService;

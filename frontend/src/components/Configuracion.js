@@ -1,8 +1,15 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { DarkModeContext } from '../context/DarkModeContext'; // Importar correctamente el contexto de modo oscuro
+import { ThemeContext } from '../utils/ThemeContext';
+import { useAuth } from '../hooks/useAuth';
+import FormChangeUserPassword from './forms/Form-change-password-usuario';
+import FormChangeProfilePicture from './forms/Form-upload-image-user';
 
 const Configuracion = () => {
-  const { isDarkMode } = useContext(DarkModeContext); // Desestructura correctamente el contexto
+
+
+  const { user, logout } = useAuth()
+
+  const { isDarkMode } = useContext(ThemeContext);
   const [webScrapingActivo, setWebScrapingActivo] = useState(false);
   const [frecuenciaScraping, setFrecuenciaScraping] = useState('');
 
@@ -30,23 +37,29 @@ const Configuracion = () => {
   };
 
   return (
-    <div className={`p-8 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} flex-1`}>
+    <div className={`p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
       <h2 className="text-2xl font-semibold mb-6">Configuración</h2>
 
       {/* Frecuencia de Web Scraping */}
       <ConfigSection title="Ajuste de Frecuencia de Web Scraping" isDarkMode={isDarkMode}>
         <div className="space-y-4">
           {['1hr', '6hr', '12hr', '24hr'].map((option) => (
-            <label key={option} className="flex items-center">
+            <label 
+              key={option} 
+              className={`flex items-center ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+            >
               <input
                 type="radio"
                 name="scrapingFrequency"
                 value={option}
                 checked={frecuenciaScraping === option}
                 onChange={manejarCambioFrecuencia}
-                className="toggle-button"
+                className={`mr-2 ${isDarkMode 
+                  ? 'text-blue-500 bg-gray-700 border-gray-600' 
+                  : 'text-blue-600'
+                }`}
               />
-              <span className="ml-2 text-lg">Cada {option.replace('hr', ' hora')}{option !== '1hr' ? 's' : ''}</span>
+              <span className="text-lg">Cada {option.replace('hr', ' hora')}{option !== '1hr' ? 's' : ''}</span>
             </label>
           ))}
         </div>
@@ -54,7 +67,9 @@ const Configuracion = () => {
           <button
             onClick={alternarWebScraping}
             className={`px-6 py-3 text-white rounded-md transition-all duration-300 ${
-              webScrapingActivo ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
+              webScrapingActivo 
+                ? 'bg-green-500 hover:bg-green-600' 
+                : 'bg-red-500 hover:bg-red-600'
             }`}
           >
             {webScrapingActivo ? 'Desactivar Web Scraping' : 'Activar Web Scraping'}
@@ -64,30 +79,33 @@ const Configuracion = () => {
 
       {/* Cambiar Contraseña */}
       <ConfigSection title="Cambiar Contraseña" isDarkMode={isDarkMode}>
-        <PasswordField label="Contraseña Actual" />
-        <PasswordField label="Nueva Contraseña" />
-        <PasswordField label="Confirmar Nueva Contraseña" />
-        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          Actualizar Contraseña
-        </button>
+        <FormChangeUserPassword logoutFn={logout} />
       </ConfigSection>
 
       {/* Cambiar Foto de Perfil */}
       <ConfigSection title="Cambiar Foto de Perfil" isDarkMode={isDarkMode}>
-        <div>
-          <label className="block mb-1">Seleccionar Imagen:</label>
-          <input type="file" className="w-full" />
-        </div>
-        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          Actualizar Foto
-        </button>
+        <FormChangeProfilePicture />
       </ConfigSection>
 
       {/* Actualizar Información de Contacto */}
       <ConfigSection title="Actualizar Información de Contacto" isDarkMode={isDarkMode}>
-        <InputField label="Correo Electrónico" type="email" />
-        <InputField label="Dirección" type="text" />
-        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+        <InputField 
+          label="Correo Electrónico" 
+          type="email" 
+          isDarkMode={isDarkMode} 
+        />
+        <InputField 
+          label="Dirección" 
+          type="text" 
+          isDarkMode={isDarkMode} 
+        />
+        <button 
+          className={`mt-4 w-full px-4 py-2 rounded-md ${
+            isDarkMode 
+              ? 'bg-blue-700 text-white hover:bg-blue-600' 
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
+        >
           Actualizar Información
         </button>
       </ConfigSection>
@@ -95,9 +113,18 @@ const Configuracion = () => {
       {/* Preferencias de Comunicación */}
       <ConfigSection title="Preferencias de Comunicación" isDarkMode={isDarkMode}>
         <div className="space-y-2">
-          <CheckboxField label="Recibir Actualizaciones por Email" />
+          <CheckboxField 
+            label="Recibir Actualizaciones por Email" 
+            isDarkMode={isDarkMode} 
+          />
         </div>
-        <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+        <button 
+          className={`mt-4 w-full px-4 py-2 rounded-md ${
+            isDarkMode 
+              ? 'bg-blue-700 text-white hover:bg-blue-600' 
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
+        >
           Guardar Preferencias
         </button>
       </ConfigSection>
@@ -105,32 +132,59 @@ const Configuracion = () => {
   );
 };
 
-// Componentes reutilizables
+// Componentes reutilizables con soporte para modo oscuro
 
 const ConfigSection = ({ title, children, isDarkMode }) => (
-  <div className={`shadow-md rounded-lg p-6 mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-    <h3 className="text-xl font-semibold mb-4">{title}</h3>
+  <div className={`shadow-md rounded-lg p-6 mb-6 ${
+    isDarkMode 
+      ? 'bg-gray-800 border border-gray-700' 
+      : 'bg-white border border-gray-200'
+  }`}>
+    <h3 className={`text-xl font-semibold mb-4 ${
+      isDarkMode 
+        ? 'text-gray-200' 
+        : 'text-gray-900'
+    }`}>
+      {title}
+    </h3>
     {children}
   </div>
 );
 
-const PasswordField = ({ label }) => (
+const InputField = ({ label, type, isDarkMode }) => (
   <div className="mb-4">
-    <label className="block mb-1">{label}:</label>
-    <input type="password" placeholder={label} className="w-full px-3 py-2 border rounded-md" />
+    <label className={`block mb-1 ${
+      isDarkMode 
+        ? 'text-gray-300' 
+        : 'text-gray-700'
+    }`}>
+      {label}:
+    </label>
+    <input 
+      type={type} 
+      placeholder={label} 
+      className={`w-full px-3 py-2 rounded-md border ${
+        isDarkMode 
+          ? 'bg-gray-700 text-white border-gray-600 focus:ring-blue-500' 
+          : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-400'
+      }`} 
+    />
   </div>
 );
 
-const InputField = ({ label, type }) => (
-  <div className="mb-4">
-    <label className="block mb-1">{label}:</label>
-    <input type={type} placeholder={label} className="w-full px-3 py-2 border rounded-md" />
-  </div>
-);
-
-const CheckboxField = ({ label }) => (
-  <label className="flex items-center space-x-2">
-    <input type="checkbox" className="form-checkbox text-blue-600" />
+const CheckboxField = ({ label, isDarkMode }) => (
+  <label className={`flex items-center space-x-2 ${
+    isDarkMode 
+      ? 'text-gray-300' 
+      : 'text-gray-700'
+  }`}>
+    <input 
+      type="checkbox" 
+      className={`form-checkbox ${
+        isDarkMode 
+          ? 'text-blue-500 bg-gray-700 border-gray-600' 
+          : 'text-blue-600' }`} 
+    />
     <span>{label}</span>
   </label>
 );

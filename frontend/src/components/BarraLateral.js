@@ -1,16 +1,22 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import { BellIcon, Bars3Icon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
 import { SunIcon, MoonIcon } from '@heroicons/react/24/solid';
-import { ThemeContext } from '../utils/ThemeContext'; // Importamos el contexto del tema
-import { useAuth } from '../hooks/useAuth'; // Autenticación
+import { ThemeContext } from '../utils/ThemeContext';
+import BarraDeNotificaciones from './BarraDeNotificaciones';
+import { useAuth } from '../hooks/useAuth';
 
-export default function BarraLateral({ alternarNotificaciones }) {
-  const { user, isLoading, logout } = useAuth(); // Obtenemos datos de autenticación
-
+export default function BarraLateral() {
+  const { user, isLoading, logout } = useAuth();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const location = useLocation();
-  const { isDarkMode, toggleTheme } = useContext(ThemeContext); // Usamos el contexto global del tema
+  const [notificacionesVisibles, setNotificacionesVisibles] = useState(false);
+  const notificacionesRef = useRef(null);
+  const { isDarkMode, toggleTheme } = useContext(ThemeContext);
+
+  const toggleNotificaciones = () => {
+    setNotificacionesVisibles(!notificacionesVisibles);
+  };
 
   const itemsDelMenu = [
     { nombre: 'Resumen', ruta: '/resumen' },
@@ -18,7 +24,7 @@ export default function BarraLateral({ alternarNotificaciones }) {
     { nombre: 'Comentarios pendientes', ruta: '/comentarios-pendientes' },
     { nombre: 'Comentarios clasificados', ruta: '/comentarios-clasificados' },
     { nombre: 'Historial de cambios', ruta: '/historial-de-cambios' },
-    { nombre: 'Panel de administración', ruta: '/panel-administracion' }, // Nuevo apartado
+    ...(user?.rol === 'ADMIN' ? [{ nombre: 'Panel de administración', ruta: '/panel-administrador' }] : []),
     { nombre: 'Configuración', ruta: '/configuracion' },
   ];
 
@@ -36,49 +42,52 @@ export default function BarraLateral({ alternarNotificaciones }) {
 
   return (
     <div>
-      {/* Icono de hamburguesa visible solo en pantallas pequeñas */}
       <div className="md:hidden p-4 ml-4">
         <Bars3Icon className="h-8 w-8 text-gray-600 dark:text-white cursor-pointer" onClick={toggleSidebar} />
       </div>
 
-      {/* Barra lateral */}
       <div
-        className={`h-screen p-5 w-64 shadow-lg flex flex-col justify-between fixed z-10 transform transition-transform duration-300 md:relative ${
-          sidebarVisible ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`} // Usamos el estado del contexto
+        className={`h-screen p-5 w-64 shadow-lg flex flex-col justify-between fixed z-10 transform transition-transform duration-300 md:relative ${sidebarVisible ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}
       >
         <div className="flex flex-col flex-grow">
-          {/* Encabezado y campana */}
           <div className="hidden md:flex items-center justify-between mb-10">
             <h1 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               Brújula de Derechos Digitales
             </h1>
             <div className="flex items-center space-x-4">
-              <BellIcon className="h-6 w-6 cursor-pointer" onClick={alternarNotificaciones} />
-              {/* Botón de modo claro/oscuro */}
               <button
-                onClick={toggleTheme} // Alternamos entre modo oscuro y claro usando el contexto
+                onClick={toggleTheme}
                 className={`p-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}
               >
                 {isDarkMode ? (
-                  <SunIcon className="h-6 w-6 text-white" /> // Icono de sol en modo oscuro
+                  <SunIcon className="h-6 w-6 text-white" />
                 ) : (
-                  <MoonIcon className="h-6 w-6 text-black" /> // Icono de luna en modo claro
+                  <MoonIcon className="h-6 w-6 text-black" />
                 )}
               </button>
+              <div className="relative">
+                <button onClick={toggleNotificaciones} className="mt-4">
+                  <BellIcon className="h-6 w-6" />
+                </button>
+                <div ref={notificacionesRef} className="absolute top-0 left-full">
+                  <BarraDeNotificaciones
+                    visible={notificacionesVisibles}
+                    onClose={() => setNotificacionesVisibles(false)}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Menú */}
           <ul>
             {itemsDelMenu.map((item) => (
               <li
                 key={item.nombre}
-                className={`mb-4 font-semibold p-2 rounded-lg ${
-                  location.pathname === item.ruta
-                    ? `${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-300 text-black'}`
-                    : `hover:${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`
-                }`}
+                className={`mb-4 font-semibold p-2 rounded-lg ${location.pathname === item.ruta
+                  ? `${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-300 text-black'}`
+                  : `hover:${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`
+                  }`}
               >
                 <Link
                   to={item.ruta}
@@ -93,13 +102,12 @@ export default function BarraLateral({ alternarNotificaciones }) {
             ))}
           </ul>
 
-          {/* Sección de foto de perfil y cerrar sesión */}
           <div className={`mt-auto p-4 border-t ${isDarkMode ? 'border-gray-600' : 'border-gray-200'} flex justify-between items-center`}>
             <div className="flex items-center space-x-4">
               {user ? (
                 <>
                   <img
-                    src={user.profilePicture || 'https://via.placeholder.com/40'}
+                    src={user.image || 'https://via.placeholder.com/40'}
                     alt="Perfil"
                     className="w-10 h-10 rounded-full"
                   />

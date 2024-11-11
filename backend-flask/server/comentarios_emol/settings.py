@@ -1,12 +1,13 @@
 # comentarios_emol/settings.py
+import os
 
 BOT_NAME = 'comentarios_emol'
 
-SPIDER_MODULES = ['comentarios_emol.spiders']
-NEWSPIDER_MODULE = 'comentarios_emol.spiders'
+SPIDER_MODULES = ['server.comentarios_emol.spiders']
+NEWSPIDER_MODULE = 'server.comentarios_emol.spiders'
 
 # Configuraciones de Scrapy Splash (si las estás usando)
-SPLASH_URL = 'http://localhost:8050'
+SPLASH_URL = os.getenv('SPLASH_URL', 'http://localhost:8050')
 
 DOWNLOADER_MIDDLEWARES = {
     'scrapy_splash.SplashCookiesMiddleware': 723,

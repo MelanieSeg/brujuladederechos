@@ -20,6 +20,7 @@ class EmailService {
 
   sendEmailVerification = async (userData: sendEmailInterface) => {
     const token = await this.createVerificationToken(userData.id);
+    const confirmationLink = `http://localhost:3000/confirmar-cuenta?token=${token}`;
     await this.transport.sendMail({
       from: "Brujula_de_derechos <Admin@brujula_dd.com>",
       to: userData.userEmail,
@@ -27,8 +28,8 @@ class EmailService {
       text: "Brujula de derechos digitales - Confirma tu cuenta",
       html: `<p>Hola : ${userData.userName}, se ha creado una cuante en nuestra aplicacion de Brujula de derechos digitales con el rol de ${userData.rol}. Para poder usar nuestra aplicacion porfavor confirma tu cuenta  </p>
               <p>Ingresa al siguiente enlace:</p>
-<a href="# TODO: agregar la direccion que se va a crear en el frontend">Verificar cuenta</a>
 <p> y ingresa el siguiente codigo:<b>${token}</b> </p>
+<a href="${confirmationLink}">Verificar cuenta</a></p>
 <p>este token expira en: 10 minutos</p>
 `,
     });
@@ -58,10 +59,12 @@ class EmailService {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
 
     const tokenRecord = await this.prisma.userToken.upsert({
-      where: { userId_tipo_unique:{
-        userId:userId,
-        tipo:TipoToken.VERIFICATION
-      }},
+      where: {
+        userId_tipo_unique: {
+          userId: userId,
+          tipo: TipoToken.VERIFICATION
+        }
+      },
       update: {
         token: generatedToken,
         expireAt: expiresAt,
@@ -70,7 +73,7 @@ class EmailService {
         token: generatedToken,
         userId: userId,
         expireAt: expiresAt,
-        tipo:TipoToken.VERIFICATION
+        tipo: TipoToken.VERIFICATION
       },
     });
 
@@ -83,10 +86,12 @@ class EmailService {
     const generatedToken = generateRandomToken();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
     const tokenRecord = await this.prisma.userToken.upsert({
-      where: { userId_tipo_unique:{
-        userId:userId,
-        tipo:TipoToken.RESET_PASSWORD
-      } },
+      where: {
+        userId_tipo_unique: {
+          userId: userId,
+          tipo: TipoToken.RESET_PASSWORD
+        }
+      },
       update: {
         token: generatedToken,
         expireAt: expiresAt,
@@ -94,7 +99,7 @@ class EmailService {
       create: {
         token: generatedToken,
         userId: userId,
-        tipo:TipoToken.RESET_PASSWORD,
+        tipo: TipoToken.RESET_PASSWORD,
         expireAt: expiresAt,
       },
     });
