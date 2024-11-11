@@ -752,12 +752,13 @@ export default function ComentariosClasificados() {
                 {/* Renderizar los datos adicionales si showDetailedColumns es true */}
                 {showDetailedColumns && (
                   <>
-                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.t}</td>
-                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.ePrivacidad}</td>
-                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.pi}</td>
-                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.pf}</td>
-                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.oi}</td>
-                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.eLibertad}</td>
+                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.intensidadPrivacidad}</td>
+                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.elementoTiempo}</td>
+                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.empatiaPrivacidad}</td>
+                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.interesPublico}</td>
+                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.caracterPersonaPublico}</td>
+                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.origenInformacion }</td>
+                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.empatiaPrivacidad}</td>
                   </>
                 )}
                 <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
