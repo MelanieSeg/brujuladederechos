@@ -57,9 +57,7 @@ export default function FormChangeUserPassword({ logoutFn }) {
           className={`w-full px-3 py-2 rounded-md border ${
             isDarkMode 
               ? 'bg-gray-700 text-white border-gray-600 focus:ring-blue-500' 
-              : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-400'
-          }`} 
-        />
+              : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-400'}`} />
         {errors.currentPassword && (
           <p className="text-red-500 text-xs mt-1">{errors.currentPassword.message}</p>
         )}
@@ -71,8 +69,10 @@ export default function FormChangeUserPassword({ logoutFn }) {
           type="password"
           {...register('newPassword')}
           placeholder="Nueva Contraseña"
-          className={`w-full px-3 py-2 border rounded-md ${errors.newPassword ? 'border-red-500' : (isDarkMode ? 'border-gray-600' : 'border-gray-300')}`}
-        />
+          className={`w-full px-3 py-2 rounded-md border ${
+            isDarkMode 
+              ? 'bg-gray-700 text-white border-gray-600 focus:ring-blue-500' 
+              : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-400'}`} />
         {errors.newPassword && (
           <p className="text-red-500 text-xs mt-1">{errors.newPassword.message}</p>
         )}
@@ -84,8 +84,10 @@ export default function FormChangeUserPassword({ logoutFn }) {
           type="password"
           {...register('confirmNewPassword')}
           placeholder="Confirmar Nueva Contraseña"
-          className={`w-full px-3 py-2 border rounded-md ${errors.confirmNewPassword ? 'border-red-500' : (isDarkMode ? 'border-gray-600' : 'border-gray-300')}`}
-          />
+          className={`w-full px-3 py-2 rounded-md border ${
+            isDarkMode 
+              ? 'bg-gray-700 text-white border-gray-600 focus:ring-blue-500' 
+              : 'bg-white text-gray-900 border-gray-300 focus:ring-blue-400'}`} />
         {errors.confirmNewPassword && (
           <p className="text-red-500 text-xs mt-1">{errors.confirmNewPassword.message}</p>
         )}
