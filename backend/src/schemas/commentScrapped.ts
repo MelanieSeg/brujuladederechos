@@ -8,6 +8,7 @@ export const commentScrappedSchema = z.object({
   news_url: z.string(),
   fecha: z.number(),
   autor: z.string().optional().nullable(),
+  gravedad: z.string()
 });
 
 export const scrappedDataSchema = z.object({

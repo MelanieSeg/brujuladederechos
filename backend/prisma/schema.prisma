@@ -29,6 +29,7 @@ model ComentarioScraped {
   empatiaExpresion       Float?
   estado                 EstadoComentario        @default(PENDIENTE_CLASIFICACION)
   sitioWebId             String
+  gravedad Gravedad?
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
   deletedAt              DateTime?
@@ -44,7 +45,6 @@ model ComentarioClasificado {
   id                  String            @id @default(cuid())
   clasificadorId      String
   fechaClasificacion  DateTime          @default(now())
-  gravedad Gravedad?
   notas               String?
   clasificacion       CLASIFICACION?
   comentarioScrapedId String

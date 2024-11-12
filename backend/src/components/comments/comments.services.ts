@@ -1,4 +1,4 @@
-import { CLASIFICACION, ComentarioScraped, EstadoComentario, PrismaClient } from "@prisma/client";
+import { CLASIFICACION, ComentarioScraped, EstadoComentario, Gravedad, PrismaClient } from "@prisma/client";
 import { cleanComment, parseFecha } from "../../utils";
 import { CommentScrapdClassification, CommentScrapped, commentScrappedClassificationSchema } from "../../schemas/commentScrapped";
 
@@ -80,9 +80,9 @@ class CommentsService {
         include: {
           comentario: {
             include: {
-              sitioWeb: true
-            }
-          }
+              sitioWeb: true,
+            },
+          },
         },
         orderBy: {
           fechaClasificacion: "desc"
@@ -192,6 +192,14 @@ class CommentsService {
 
       const dataToInsert = comments.map((comment) => {
         const commentDate = parseFecha(String(comment.fecha));
+
+
+        const gravedadMap: { [key: string]: Gravedad } = {
+          grave: Gravedad.GRAVE,
+          moderada: Gravedad.MODERADA,
+          leve: Gravedad.LEVE
+        }
+
         if (!commentDate) {
           return {
             scrapingId: comment.id,
@@ -211,6 +219,7 @@ class CommentsService {
           fechaComentario: commentDate,
           sitioWebId: findWebsite.data.id,
           fechaScraping: new Date(),
+          gravedad: gravedadMap[comment.gravedad.toLowerCase()] || null
         }
       });
 
@@ -218,10 +227,12 @@ class CommentsService {
         return { success: false, msg: "No hay comentarios para insertar." };
       }
 
+
       const result = await this.prisma.comentarioScraped.createMany({
         data: dataToInsert,
         skipDuplicates: true,
       })
+
 
       return { success: true };
 

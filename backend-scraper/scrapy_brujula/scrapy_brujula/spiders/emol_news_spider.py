@@ -4,6 +4,8 @@ from urllib.parse import quote
 import json
 from utils.utils import get_base_url
 import os
+from pysentimiento import create_analyzer
+import re
 
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
 RABBITMQ_PORT = int(os.getenv('RABBITMQ_PORT', 5672))
@@ -20,6 +22,147 @@ print("Usuario:", RABBITMQ_USER)
 print("Contraseña:", RABBITMQ_PASSWORD)
 print("Cola:", RABBITMQ_QUEUE)
 
+
+modismos = {
+    'achacarse': 'entristecerse',
+    'achuntar': 'acertar',
+    'al lote': 'desordenado',
+    'al tiro': 'inmediatamente',
+    'al toque': 'inmediatamente',
+    'andar pato': 'no tener dinero',
+    'apañar': 'acompañar',
+    'apestarse': 'enojarse',
+    'aperrar': 'ser valiente',
+    'apitutado': 'tener buenos contactos',
+    'apretado': 'tacaño',
+    'arrugar': 'arrepentirse',
+    'atao': 'problema',
+    'avispado': 'inteligente',
+    'bacán': 'excelente',
+    'barsa': 'sinvergüenza',
+    'buena leche': 'honesto',
+    'bronca': 'enojo',
+    'buche': 'estómago',
+    'cabra': 'niña',
+    'cabro': 'niño',
+    'cabritas': 'palomitas de maíz',
+    'cachar': 'entender',
+    'cachureos': 'cosas inútiles',
+    'cahuín': 'chisme',
+    'calato': 'desnudo',
+    'caleta': 'mucho',
+    'carrete': 'fiesta',
+    'colarse': 'entrar sin permiso',
+    'condoro': 'error',
+    'copete': 'bebida alcohólica',
+    'curao': 'borracho',
+    'chapa': 'alias',
+    'choro': 'valiente',
+    'chorearse': 'enojarse',
+    'dar pelota': 'prestar atención',
+    'dar jugo': 'decir incoherencias',
+    'denso': 'serio',
+    'doblado': 'muy borracho',
+    'echar la foca': 'retar',
+    'embarrarla': 'arruinar',
+    'engrupir': 'seducir',
+    'enrollado': 'complicado',
+    'estirar la pata': 'morir',
+    'fiambre': 'hediondo',
+    'filo': 'no importa',
+    'fome': 'aburrido',
+    'fonda': 'fiesta de Fiestas Patrias',
+    'fresco': 'atrevido',
+    'gallo': 'persona',
+    'gancho': 'amigo',
+    'ganso': 'tonto',
+    'gauchada': 'favor',
+    'gil': 'tonto',
+    'guacho': 'huérfano',
+    'guagua': 'bebé',
+    'guanaco': 'vehículo policial',
+    'guata': 'barriga',
+    'guater': 'inodoro',
+    'hachazo': 'resaca',
+    'hallulla': 'tipo de pan',
+    'huaso': 'campesino',
+    'huevón': 'tonto (o amigo, dependiendo del contexto)',
+    'inflar': 'prestar atención',
+    'inflado': 'sobrevalorado',
+    'irse al chancho': 'excederse',
+    'jarana': 'fiesta',
+    'jote': 'persona insistente en el coqueteo',
+    'julepe': 'miedo',
+    'kiltro': 'perro mestizo',
+    'la firme': 'la verdad',
+    'la dura': 'la verdad',
+    'lanza': 'ladrón',
+    'lata': 'aburrimiento',
+    'latero': 'aburrido',
+    'la raja': 'excelente',
+    'lesear': 'molestar',
+    'leseras': 'tonterías',
+    'liz taylor': 'listo',
+    'lolo': 'joven',
+    'longi': 'tonto',
+    'luca': 'mil pesos',
+    'machucado': 'golpeado',
+    'mano de guagua': 'tacaño',
+    'micro': 'autobús',
+    'mina': 'mujer',
+    'mino': 'hombre',
+    'ene': 'mucho',
+    'nanai': 'cariño',
+    'ni ahí': 'no me importa',
+    'ni un brillo': 'sin gracia',
+    'ojo': 'atención',
+    'onda': 'vibra',
+    'once': 'merienda vespertina',
+    'pal gato': 'enfermo',
+    'pagar el piso': 'invitar con el primer sueldo',
+    'paracaidista': 'invitado no deseado',
+    'pasarlo chancho': 'divertirse',
+    'patas negras': 'amante',
+    'patiperro': 'viajero',
+    'patudo': 'sinvergüenza',
+    'pavear': 'distraerse',
+    'pega': 'trabajo',
+    'peludo': 'difícil',
+    'picada': 'lugar económico',
+    'piola': 'tranquilo',
+    'pololeo': 'noviazgo',
+    'previa': 'reunión antes de una fiesta',
+    'queque': 'trasero',
+    'quina': 'quinientos pesos',
+    'quiubo': '¿qué pasó?',
+    'rajado': 'rápido',
+    'rasca': 'ordinario',
+    'rico': 'agradable',
+    'sacar la cresta': 'golpear',
+    'sacar pica': 'provocar envidia',
+    'sapo': 'soplón',
+    'seco': 'talentoso',
+    'socio': 'amigo',
+    'taco': 'embotellamiento',
+    'talla': 'broma',
+    'tata': 'abuelo',
+    'tirar a la chuña': 'dejar al azar',
+    'tocar el violín': 'ser el tercero',
+    'tollo': 'mentira',
+    'tuto': 'sueño',
+    'último': 'lo peor',
+    'vaca': 'colecta de dinero',
+    'viejo verde': 'hombre mayor que coquetea con jóvenes',
+    'virarse': 'irse',
+    'yapa': 'adicional',
+    'yunta': 'mejor amigo',
+    'zombi': 'cansado',
+}
+
+print("Inicializando analizadores...")
+sentiment_analyzer = create_analyzer(task="sentiment", lang="es")
+emotion_analyzer = create_analyzer(task="emotion", lang="es")
+print("Analizadores inicializados.")
 
 class EmolNewsSpider(scrapy.Spider):
     name = "emol_news_spider"
@@ -91,8 +234,47 @@ class EmolNewsSpider(scrapy.Spider):
                 'sourceUrl': response.meta.get('sourceUrl', 'https://www.emol.com'),
                 'news_url': response.meta.get('news_url')
             }
-            self.logger.info(f"Comentario procesado: {comment_adjusted}")
-            self.send_to_rabbitmq(comment_adjusted)
+            #self.logger.info(f"Comentario procesado: {comment_adjusted}")
+            comment_clasificado = self.procesar_y_clasificar_comentario(comment_adjusted)
+            self.logger.info(comment_clasificado)
+            self.send_to_rabbitmq(comment_clasificado)
+
+    def procesar_y_clasificar_comentario(self, comentario):
+        """Función para limpiar, analizar y clasificar el comentario"""
+        texto_limpio = self.limpiar_texto(comentario['texto'])
+        sentimiento = sentiment_analyzer.predict(texto_limpio).output
+        emocion = emotion_analyzer.predict(texto_limpio).output
+        gravedad = self.clasificar_gravedad(sentimiento, emocion)
+
+        comentario['texto_limpio'] = texto_limpio
+        comentario['sentimiento'] = sentimiento
+        comentario['emocion'] = emocion
+        comentario['gravedad'] = gravedad
+        return comentario
+
+    def limpiar_texto(self, texto):
+        texto = re.sub(r'&nbsp;|<.*?>', '', texto)
+        texto = texto.lower().strip()
+        for modismo, significado in modismos.items():
+            texto = re.sub(r'\b' + re.escape(modismo) + r'\b', significado, texto)
+        return texto
+
+    def clasificar_gravedad(self, sentimiento, emocion):
+        if sentimiento == 'NEG':
+            if emocion in ['anger', 'disgust', 'sadness']:
+                return 'grave'
+            else:
+                return 'moderada'
+        elif sentimiento == 'NEU':
+            return 'leve'
+        elif sentimiento == 'POS':
+            if emocion in ['joy', 'surprise']:
+                return 'leve'
+            else:
+                return 'moderada'
+        else:
+            return 'moderada'
+
 
     def send_to_rabbitmq(self, comment):
         try:
