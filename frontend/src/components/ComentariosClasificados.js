@@ -17,6 +17,7 @@ export default function ComentariosClasificados() {
   const { isDarkMode } = useContext(ThemeContext);
   const [comentarios, setComentarios] = useState([]);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const [resultadoEvaluacion, setResultadoEvaluacion] = useState("");
   const [selectedGravedad, setSelectedGravedad] = useState({
     Baja: true,
     Moderada: true,
@@ -65,15 +66,15 @@ export default function ComentariosClasificados() {
   // Estado temporal para almacenar el comentario eliminado (para Deshacer)
   const [comentarioEliminado, setComentarioEliminado] = useState(null);
 
+  // useEffect para cargar comentarios clasificados
   useEffect(() => {
     const fetchComentariosClasificados = async () => {
       try {
         const response = await api.get('/comments/get-all-classified-comments');
-        console.log(response.data.data);
         setComentarios(response.data.data);
       } catch (err) {
-        setComentarios([]);
         console.log('Error al obtener los comentarios', err);
+        setComentarios([]);
       } finally {
         setLoading(false);
       }
@@ -128,6 +129,31 @@ export default function ComentariosClasificados() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isCalendarOpen, isDropdownOpen, barraEdicionVisible]);
+
+  // Función para llamar al endpoint de evaluación de IBF
+  const evaluarComentario = async (comentario) => {
+    try {
+      const response = await fetch('/api/comments/ibf/evaluar-comentario', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(comentario)
+      });
+      const data = await response.json();
+      return data.mensaje; // Devuelve el mensaje con la evaluación
+    } catch (error) {
+      console.error("Error al evaluar el comentario:", error);
+      return "Error al evaluar el comentario";
+    }
+  };
+
+  // Función para manejar la evaluación de un comentario específico
+  const manejarEvaluacion = async (comentario) => {
+    const mensaje = await evaluarComentario(comentario);
+    setResultadoEvaluacion(mensaje); // Guarda el resultado en el estado para mostrarlo en la interfaz
+  };
+
 
   const toggleDropdown = () => {
     setDropdownOpen(!isDropdownOpen);

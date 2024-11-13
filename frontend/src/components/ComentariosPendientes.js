@@ -16,6 +16,7 @@ export default function ComentariosPendientes() {
   const { user } = useAuth();
   const [comentarios, setComentarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [resultadoEvaluacion, setResultadoEvaluacion] = useState("");
   const [paginaActual, setPaginaActual] = useState(1);
   const [comentariosPorPagina] = useState(10);
   const [fechaDesde, setFechaDesde] = useState("");
@@ -60,6 +61,30 @@ export default function ComentariosPendientes() {
   useEffect(() => {
     filtrarComentarios();
   }, [fechaDesde, fechaHasta, comentarios]);
+
+  // Función para evaluar el comentario a través del endpoint
+  const evaluarComentario = async (comentario) => {
+    try {
+      const response = await fetch('/api/comments/ibf/evaluar-comentario', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(comentario)
+      });
+      const data = await response.json();
+      return data.mensaje; // Esto devolverá si el comentario debe ser moderado o aprobado
+    } catch (error) {
+      console.error("Error al evaluar el comentario:", error);
+      return "Error al evaluar el comentario";
+    }
+  };
+
+  // Manejador para evaluar un comentario específico
+  const manejarEvaluacion = async (comentario) => {
+    const mensaje = await evaluarComentario(comentario);
+    setResultadoEvaluacion(mensaje); // Guarda el resultado en el estado para mostrarlo
+  };
 
   const filtrarComentarios = () => {
     if (!fechaDesde && !fechaHasta) {

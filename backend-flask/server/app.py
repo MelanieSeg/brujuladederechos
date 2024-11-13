@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 import multiprocessing
@@ -16,22 +16,22 @@ import logging
 from threading import Thread
 from scrapy import signals
 from scrapy.signalmanager import dispatcher
+import utils.utils as utils  # Importa utils para usar las funciones de limpieza y estandarización
+from utils.text_processing import clean_text, standardize_values
 
 
-#current_dir = os.path.dirname(os.path.abspath(__file__))
-#root_dir = os.path.abspath(os.path.join(current_dir, '..'))
-#sys.path.append(root_dir)  # Asegura que el directorio raíz está en sys.path
-#os.environ.setdefault('SCRAPY_SETTINGS_MODULE', 'server.comentarios_emol.settings')
 # Configuración de logging
 logging.basicConfig(
-    level=logging.DEBUG,  # Cambiar a DEBUG para mayor detalle durante la depuración
+    level=logging.DEBUG,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    handlers=[
-        logging.StreamHandler()
-    ]
+    handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
 
+# Cargar configuración de Scrapy y Flask
+os.environ.setdefault('SCRAPY_SETTINGS_MODULE', 'server.comentarios_emol.settings')
+
+app = Flask(__name__)
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
@@ -50,22 +50,17 @@ except ModuleNotFoundError as e:
     logger.error(f"Error al importar 'server.comentarios_emol.settings': {e}")
     sys.exit(1)
 
-
 load_dotenv()
-app=Flask(__name__)
+app = Flask(__name__)
+
 # Configuración de JWT
-JWT_SECRET = os.getenv('JWT_SECRET')  # Para HMAC
-# O para RSA:
-# with open('path_to_public_key.pem') as f:
-#     JWT_PUBLIC_KEY = f.read()
-# Configuración de RabbitMQ
+JWT_SECRET = os.getenv('JWT_SECRET')
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
 RABBITMQ_PORT = int(os.getenv('RABBITMQ_PORT', 5672))
 RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
 RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
 RABBITMQ_QUEUE = os.getenv('RABBITMQ_QUEUE', 'comentarios_scraping_queue')
 DEAD_LETTER_EXCHANGE = 'comentarios_scraping_queue_dead'
-
 
 def token_required(f):
     @wraps(f)
@@ -95,18 +90,16 @@ def publish_comments_to_rabbitmq(comments):
     try:
         credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASSWORD)
         connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host=RABBITMQ_HOST,port=RABBITMQ_PORT,credentials=credentials)
+            pika.ConnectionParameters(host=RABBITMQ_HOST, port=RABBITMQ_PORT, credentials=credentials)
         )
-        channel = connection.channel();
+        channel = connection.channel()
         for comment in comments:
-            message = json.dumps(comment)        
+            message = json.dumps(comment)
             channel.basic_publish(
                 exchange='',
                 routing_key=RABBITMQ_QUEUE,
                 body=message,
-                properties=pika.BasicProperties(
-                    delivery_mode=2
-                )
+                properties=pika.BasicProperties(delivery_mode=2)
             )
             print(f"Publicado comentarios en RabbitMQ: {message}")
         connection.close()
@@ -127,7 +120,6 @@ def send_comments_to_rabbitmq():
                     'sourceUrl': comment.get('sourceUrl') or 'https://www.emol.com',
                     'news_url': comment.get('news_url')
                 }
-                print("Comment adjusted:", comment_adjusted)
                 comments.append(comment_adjusted)
         comments_to_send = comments[2555:3000]
 
@@ -136,28 +128,21 @@ def send_comments_to_rabbitmq():
     except Exception as e:
         print(f"Error enviando comentarios a RabbitMQ: {e}")
 
-
 def run_spider(spider_name, **kwargs):
     try:
         settings = get_project_settings()
         process = CrawlerProcess(settings)
 
-        # Función que se ejecuta cuando el spider termina
         def spider_closed(spider):
             send_comments_to_rabbitmq()
 
-        # Conectar la señal
         dispatcher.connect(spider_closed, signal=signals.spider_closed)
-
         process.crawl(spider_name, **kwargs)
-        process.start()  # Bloquea hasta que el spider termine
+        process.start()
     except Exception as e:
         logger.exception(f"Error al ejecutar el spider {spider_name}: {e}")
 
-
-
-
-
+# Endpoint para ejecutar el spider de comentarios
 @app.route('/api/scrapping/emol/run-comentarios', methods=['POST'])
 @token_required
 def run_comentarios_spider():
@@ -171,16 +156,35 @@ def run_comentarios_spider():
     spider_process.start()
     return jsonify({"status": "Comentarios spider iniciado"}), 200
 
+# Endpoint para ejecutar el spider de noticias de EMOL
 @app.route('/api/scrapping/emol/run-news', methods=['POST'])
 @token_required
 def run_emol_news_spider():
-
     thread = Thread(target=run_spider, args=('emol_news_spider',))
     thread.start()
-
     return jsonify({"status": "Scraping en news de EMOL iniciado"}), 200
-    #send_comments_to_rabbitmq()
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+# Endpoint para preprocesar comentarios
+@app.route('/api/comments/preprocess', methods=['POST'])
+def preprocess_comment():
+    data = request.json
+    comentario = data.get('comentario', '')
+    valores_ibf = data.get('valores_ibf', {})
 
+    # Aplicar las funciones de limpieza y estandarización desde utils
+    comentario_limpio = utils.clean_text(comentario)
+    valores_ibf_estandarizados = utils.standardize_values(valores_ibf)
+
+    result = {
+        'comentario_limpio': comentario_limpio,
+        'valores_ibf_estandarizados': valores_ibf_estandarizados
+    }
+    return jsonify(result)
+
+# Endpoint de prueba
+@app.route('/ping', methods=['GET'])
+def ping():
+    return jsonify({"message": "Servidor Flask está recibiendo solicitudes correctamente"}), 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

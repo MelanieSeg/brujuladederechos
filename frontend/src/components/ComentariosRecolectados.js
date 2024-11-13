@@ -7,7 +7,7 @@ import Calendario from "./Objects/Calendario";
 import Paginacion from "./Objects/Paginacion";
 import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
-import { Toast, showSuccess} from "./Objects/Toast";
+import { Toast, showSuccess } from "./Objects/Toast";
 import { ThemeContext } from '../utils/ThemeContext';
 
 export default function ComentariosRecolectados() {
@@ -15,6 +15,7 @@ export default function ComentariosRecolectados() {
     
   ]);
 
+  const [resultadoEvaluacion, setResultadoEvaluacion] = useState("");
   const [comentarios, setComentarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const { isDarkMode } = useContext(ThemeContext);
@@ -49,15 +50,37 @@ export default function ComentariosRecolectados() {
         const response = await api.get("/comments/get-all-comments-scraped");
         setComentarios(response.data.data);
       } catch (err) {
-        setComentarios(defaultComentarios);
         console.log("Error al obtener los comentarios", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchComentarios();
-  }, [defaultComentarios]);
+  }, []);
+
+  // Función para evaluar el comentario a través del endpoint
+  const evaluarComentario = async (comentario) => {
+    try {
+      const response = await fetch('/api/comments/ibf/evaluar-comentario', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(comentario)
+      });
+      const data = await response.json();
+      return data.mensaje; // Devuelve el mensaje con la evaluación
+    } catch (error) {
+      console.error("Error al evaluar el comentario:", error);
+      return "Error al evaluar el comentario";
+    }
+  };
+
+  // Manejador para evaluar un comentario específico
+  const manejarEvaluacion = async (comentario) => {
+    const mensaje = await evaluarComentario(comentario);
+    setResultadoEvaluacion(mensaje); // Guarda el resultado en el estado para mostrarlo en la interfaz
+  };
 
   console.log(comentarios);
 
