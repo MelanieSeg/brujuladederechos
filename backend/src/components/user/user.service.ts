@@ -1,5 +1,5 @@
 import { PrismaClient, TipoToken, User } from "@prisma/client";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { generateRandomToken } from "../../utils";
 import EmailService from "../email/email.service";
 import { UpdateUserDto, UserChangePasswordDto, UserChangeStateDto, UserNewPasswordDto, UserUpdateData } from "../../schemas/user";
@@ -17,29 +17,41 @@ class UserService {
 
   addUser = async (user: User) => {
     const SALT_ROUNDS = 10;
-    const salt = bcrypt.genSaltSync(SALT_ROUNDS);
 
-    const hashedPassword = await bcrypt.hash(user.password, salt);
-    const newUser = await this.prisma.user.create({
-      data: {
-        name: user.name,
-        email: user.email,
-        password: hashedPassword,
-        rol: user.rol,
-      },
-    });
+    try {
 
-    const { password, ...userNoPassword } = newUser;
+      const salt = bcrypt.genSaltSync(SALT_ROUNDS);
+      const hashedPassword = await bcrypt.hash(user.password, salt);
 
-    //TODO: Arreglar esto , validar que el correo se envio exitosamente, manejo de errores en caso de que no
-    await this.EmailService.sendEmailVerification({
-      userEmail: userNoPassword.email,
-      userName: userNoPassword.name!!,
-      rol: userNoPassword.rol,
-      id: userNoPassword.id,
-    });
 
-    return userNoPassword;
+
+      const newUser = await this.prisma.user.create({
+        data: {
+          name: user.name,
+          email: user.email,
+          password: hashedPassword,
+          rol: user.rol,
+        },
+      });
+
+      console.log(newUser)
+
+
+      const { password, ...userNoPassword } = newUser;
+
+      //TODO: Arreglar esto , validar que el correo se envio exitosamente, manejo de errores en caso de que no
+      await this.EmailService.sendEmailVerification({
+        userEmail: userNoPassword.email,
+        userName: userNoPassword.name!!,
+        rol: userNoPassword.rol,
+        id: userNoPassword.id,
+      });
+
+      return userNoPassword;
+
+    } catch (err) {
+      return err
+    }
   };
 
   confirmEmail = async (token: string) => {

@@ -31,11 +31,10 @@ export default function FormCreateUser() {
 
       const { confirmPassword, ...payload } = data
 
-      console.log(payload)
-      const response = await userApi.post('/create-user', payload); // Asegúrate de que la ruta es correcta
-      console.log(response)
+      const response = await userApi.post('/create-user', payload);
 
-      //     onSuccess(response.data);
+      console.log(response.data)
+
 
       reset();
 
@@ -47,16 +46,15 @@ export default function FormCreateUser() {
 
 
   return (
-    <form 
-      onSubmit={handleSubmit(onSubmit)} 
+    <form
+      onSubmit={handleSubmit(onSubmit)}
       className={`space-y-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}
     >
       {/* Nombre Completo */}
       <div className="mb-4">
-        <label 
-          className={`block text-sm font-medium ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}
+        <label
+          className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}
         >
           Nombre completo
         </label>
@@ -64,17 +62,15 @@ export default function FormCreateUser() {
           type="text"
           {...register('name')}
           placeholder="Nombre del moderador"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
-            errors.name 
-              ? 'border-red-500' 
-              : isDarkMode 
-                ? 'border-gray-600 bg-gray-700 text-white' 
-                : 'border-gray-300 bg-white text-gray-900'
-          } ${
-            isDarkMode 
-              ? 'focus:ring-blue-600' 
+          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.name
+            ? 'border-red-500'
+            : isDarkMode
+              ? 'border-gray-600 bg-gray-700 text-white'
+              : 'border-gray-300 bg-white text-gray-900'
+            } ${isDarkMode
+              ? 'focus:ring-blue-600'
               : 'focus:ring-blue-500'
-          }`}
+            }`}
         />
         {errors.name && (
           <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
@@ -83,10 +79,9 @@ export default function FormCreateUser() {
 
       {/* Email */}
       <div className="mb-4">
-        <label 
-          className={`block text-sm font-medium ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}
+        <label
+          className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}
         >
           Email
         </label>
@@ -94,17 +89,15 @@ export default function FormCreateUser() {
           type="email"
           {...register('email')}
           placeholder="Email del moderador"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
-            errors.email 
-              ? 'border-red-500' 
-              : isDarkMode 
-                ? 'border-gray-600 bg-gray-700 text-white' 
-                : 'border-gray-300 bg-white text-gray-900'
-          } ${
-            isDarkMode 
-              ? 'focus:ring-blue-600' 
+          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.email
+            ? 'border-red-500'
+            : isDarkMode
+              ? 'border-gray-600 bg-gray-700 text-white'
+              : 'border-gray-300 bg-white text-gray-900'
+            } ${isDarkMode
+              ? 'focus:ring-blue-600'
               : 'focus:ring-blue-500'
-          }`}
+            }`}
         />
         {errors.email && (
           <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
@@ -113,10 +106,9 @@ export default function FormCreateUser() {
 
       {/* Contraseña */}
       <div className="mb-4">
-        <label 
-          className={`block text-sm font-medium ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}
+        <label
+          className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}
         >
           Contraseña
         </label>
@@ -124,17 +116,15 @@ export default function FormCreateUser() {
           type="password"
           {...register('password')}
           placeholder="**********"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
-            errors.password 
-              ? 'border-red-500' 
-              : isDarkMode 
-                ? 'border-gray-600 bg-gray-700 text-white' 
-                : 'border-gray-300 bg-white text-gray-900'
-          } ${
-            isDarkMode 
-              ? 'focus:ring-blue-600' 
+          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.password
+            ? 'border-red-500'
+            : isDarkMode
+              ? 'border-gray-600 bg-gray-700 text-white'
+              : 'border-gray-300 bg-white text-gray-900'
+            } ${isDarkMode
+              ? 'focus:ring-blue-600'
               : 'focus:ring-blue-500'
-          }`}
+            }`}
         />
         {errors.password && (
           <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
@@ -143,10 +133,9 @@ export default function FormCreateUser() {
 
       {/* Confirmar Contraseña */}
       <div className="mb-4">
-        <label 
-          className={`block text-sm font-medium ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}
+        <label
+          className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}
         >
           Confirmar contraseña
         </label>
@@ -154,17 +143,15 @@ export default function FormCreateUser() {
           type="password"
           {...register('confirmPassword')}
           placeholder="**********"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
-            errors.confirmPassword 
-              ? 'border-red-500' 
-              : isDarkMode 
-                ? 'border-gray-600 bg-gray-700 text-white' 
-                : 'border-gray-300 bg-white text-gray-900'
-          } ${
-            isDarkMode 
-              ? 'focus:ring-blue-600' 
+          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.confirmPassword
+            ? 'border-red-500'
+            : isDarkMode
+              ? 'border-gray-600 bg-gray-700 text-white'
+              : 'border-gray-300 bg-white text-gray-900'
+            } ${isDarkMode
+              ? 'focus:ring-blue-600'
               : 'focus:ring-blue-500'
-          }`}
+            }`}
         />
         {errors.confirmPassword && (
           <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
@@ -173,26 +160,23 @@ export default function FormCreateUser() {
 
       {/* Estado del Moderador */}
       <div className="mb-4">
-        <label 
-          className={`block text-sm font-medium ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-          }`}
+        <label
+          className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}
         >
           Estado del moderador
         </label>
         <select
           {...register('isActive')}
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
-            errors.rol 
-              ? 'border-red-500' 
-              : isDarkMode 
-                ? 'border-gray-600 bg-gray-700 text-white' 
-                : 'border-gray-300 bg-white text-gray-900'
-          } ${
-            isDarkMode 
-              ? 'focus:ring-blue-600' 
+          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.rol
+            ? 'border-red-500'
+            : isDarkMode
+              ? 'border-gray-600 bg-gray-700 text-white'
+              : 'border-gray-300 bg-white text-gray-900'
+            } ${isDarkMode
+              ? 'focus:ring-blue-600'
               : 'focus:ring-blue-500'
-          }`}
+            }`}
         >
           <option value={true}>Activo</option>
           <option value={false}>Inactivo</option>
@@ -204,12 +188,11 @@ export default function FormCreateUser() {
 
       {/* Error de API */}
       {apiError && (
-        <div 
-          className={`p-3 rounded-md ${
-            isDarkMode 
-              ? 'bg-red-900 text-red-200' 
-              : 'bg-red-100 text-red-800'
-          }`}
+        <div
+          className={`p-3 rounded-md ${isDarkMode
+            ? 'bg-red-900 text-red-200'
+            : 'bg-red-100 text-red-800'
+            }`}
         >
           {apiError}
         </div>
@@ -219,10 +202,9 @@ export default function FormCreateUser() {
       <div className="flex justify-between mt-6">
         <button
           type="button"
-          className={`px-4 py-2 rounded-md ${
-            isDarkMode
-              ? 'bg-gray-600 text-gray-200 hover:bg-gray-500'
-              : 'bg-red-500 text-white hover:bg-red-600' }`}
+          className={`px-4 py-2 rounded-md ${isDarkMode
+            ? 'bg-gray-600 text-gray-200 hover:bg-gray-500'
+            : 'bg-red-500 text-white hover:bg-red-600'}`}
           onClick={() => setMostrarFormulario(false)}
         >
           Cancelar
@@ -230,11 +212,10 @@ export default function FormCreateUser() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`px-4 py-2 rounded-md ${
-            isDarkMode
-              ? 'bg-blue-700 text-white hover:bg-blue-600'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-          } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`px-4 py-2 rounded-md ${isDarkMode
+            ? 'bg-blue-700 text-white hover:bg-blue-600'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+            } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {isSubmitting ? 'Enviando...' : 'Completar'}
         </button>

@@ -1,6 +1,6 @@
 import { CLASIFICACION, ComentarioScraped, EstadoComentario, Gravedad, PrismaClient } from "@prisma/client";
 import { cleanComment, parseFecha } from "../../utils";
-import { CommentScrapdClassification, CommentScrapped, commentScrappedClassificationSchema } from "../../schemas/commentScrapped";
+import { CommentScrapdClassification, CommentScrapped, commentScrappedClassificationSchema, EditCommnetScraperdDto } from "../../schemas/commentScrapped";
 
 class CommentsService {
   private prisma: PrismaClient;
@@ -74,9 +74,106 @@ class CommentsService {
     }
   }
 
+
+  editCommentClassified = async (updateCommentDto: EditCommnetScraperdDto) => {
+
+    try {
+
+      const { commentId, ...data } = updateCommentDto
+
+      const comment = await this.prisma.comentarioScraped.findFirst({
+        where: {
+          id: updateCommentDto.commentId
+        }
+      })
+
+      if (!comment) {
+        return {
+          msg: "Comentario no existe",
+          data: null,
+          success: false
+        }
+      }
+
+      const updatedComment = await this.prisma.comentarioScraped.update({
+        where: {
+          id: comment.id
+        },
+        data: {
+          ...data
+        }
+      })
+
+      return {
+        msg: "Comentario editado con exito",
+        data: updatedComment,
+        success: true
+      }
+
+    } catch (err) {
+      return {
+        msg: err,
+        data: null,
+        success: false
+      }
+    }
+
+  }
+
+  deleteComment = async (commentId: string) => {
+
+    try {
+
+      const comment = await this.prisma.comentarioScraped.findFirst({
+        where: {
+          id: commentId
+        }
+      })
+
+      if (!comment) {
+        return {
+          msg: "Comentario no existe",
+          data: null,
+          success: false
+        }
+      }
+
+      const deletedComment = await this.prisma.comentarioScraped.update({
+        where: {
+          id: commentId
+        },
+        data: {
+          deletedAt: new Date()
+        }
+      })
+
+      return {
+        msg: "Comentario eliminado con exito",
+        data: deletedComment,
+        success: true
+      }
+
+    } catch (err) {
+      return {
+        msg: err,
+        data: null,
+        success: false
+      }
+
+    }
+  }
+
+
+
+
   getAllClassifiedComments = async () => {
     try {
       const comments = await this.prisma.comentarioClasificado.findMany({
+        where: {
+          comentario: {
+            deletedAt: null
+          }
+        },
         include: {
           comentario: {
             include: {

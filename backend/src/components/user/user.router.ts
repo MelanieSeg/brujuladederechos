@@ -14,18 +14,18 @@ class UserRouter {
   get router() {
     const router = express.Router();
 
-    router.route("/create-user").post(this.UserController.createUser);
-    router.route("/update-user/id/:id").patch(this.UserController.updateUserData);
-    router.route("/deactivate-user").patch(this.UserController.changeUserState)
+    router.post("/create-user", this.AuthMiddleware.authorize, this.AuthMiddleware.authorizeRole(["ADMIN"]), this.UserController.createUser);
+    router.patch("/update-user/id/:id", this.AuthMiddleware.authorize, this.AuthMiddleware.authorizeRole(["ADMIN"]), this.UserController.updateUserData);
+    router.patch("/deactivate-user", this.AuthMiddleware.authorize, this.AuthMiddleware.authorizeRole(["ADMIN"]), this.UserController.changeUserState)
     router.patch(
       "/delete-user",
       this.AuthMiddleware.authorize,
       this.AuthMiddleware.authorizeRole(["ADMIN"]),
       this.UserController.deleteUser
     )
-
     router.post('/upload-image', upload.single('image'), this.AuthMiddleware.authorize, this.UserController.uploadImage)
     router.post('/get-user-notifications', this.AuthMiddleware.authorize, this.UserController.getUserNotifications)
+    router.post("/reset-password", this.AuthMiddleware.authorize, this.UserController.resetPasswordUser);
     router.route("/me").get(this.UserController.getUserById);
     router
       .route("/confirmar-usuario")
@@ -33,8 +33,6 @@ class UserRouter {
     router
       .route("/request-reset-password")
       .post(this.UserController.requestResetPassword);
-    router.route("/reset-password").post(this.UserController.resetPasswordUser);
-    // Rutas protegidas (requieren autenticación)
     router.get(
       "/",
       this.AuthMiddleware.authorize,

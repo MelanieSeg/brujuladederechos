@@ -57,3 +57,10 @@ export const commentScrappedClassificationSchema = z.object({
 
 export type CommentScrapdClassification = z.infer<typeof commentScrappedClassificationSchema>;
 
+export const editCommentScrapedSchema = commentScrappedClassificationSchema.extend({
+  commentId: z.string()
+})
+
+
+export type EditCommnetScraperdDto = z.infer<typeof editCommentScrapedSchema>
+

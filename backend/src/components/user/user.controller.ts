@@ -29,6 +29,8 @@ class UserController {
       const emailInUse = await this.userService.getUserbyEmail(
         validData.data.email,
       );
+
+      console.log("llego al controller, verifico email un use")
       if (emailInUse) {
         return res
           .status(409)
@@ -36,6 +38,7 @@ class UserController {
       }
 
       const user = await this.userService.addUser(req.body);
+
       return res.status(201).json({
         msg: "Usuario creado exitosamente. Ahora tienes que confirmar tu email porfavor.",
       });
@@ -229,8 +232,6 @@ class UserController {
   uploadImage = async (req: Request, res: Response) => {
     try {
 
-      console.log(req.body)
-      console.log(req.file)
       const file = req.file
 
       if (!file) {

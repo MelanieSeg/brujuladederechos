@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import CommentsService from "./comments.services";
-import { commentScrappedClassificationSchema } from "../../schemas/commentScrapped";
+import { commentScrappedClassificationSchema, editCommentScrapedSchema } from "../../schemas/commentScrapped";
+import { formatErrors } from "../../utils";
 
 
 
@@ -77,9 +78,63 @@ class CommentsController {
       }
     } catch (err) {
       console.error("Error en clasificateComment:", err);
-      return res.status(500).json({ msg: "Error interno del servidor" });
+      return res.status(500).json({ msg: "Error interno del servidor, ", err });
     }
   };
+
+  updateComment = async (req: Request, res: Response) => {
+    try {
+
+      const validateData = editCommentScrapedSchema.safeParse(req.body)
+
+      if (!validateData.success) {
+
+        const formattedErrors = formatErrors(validateData.error.errors);
+        return res.status(400).json({
+          msg: "Datos invalidos",
+          errors: formattedErrors
+        })
+      }
+
+      const data = await this.CommentsService.editCommentClassified(validateData.data)
+
+      if (data.success) {
+        return res.status(200).json({ data: data.data, msg: "Se a editado exitosamene" });
+      } else {
+        return res.status(400).json({ msg: data.msg });
+      }
+
+
+    } catch (err) {
+      return res.status(500).json({ msg: "Error interno del servidor, ", err })
+    }
+  }
+
+
+  deleteComment = async (req: Request, res: Response) => {
+    try {
+      const id = req.body
+
+      if (!id) {
+        return res.status(400).json({ msg: "No se encuentra el ID" });
+      }
+
+      const data = await this.CommentsService.deleteComment(id);
+
+      if (data.success) {
+        return res.status(200).json({ data: data.data, msg: "Se a eliminado exitosamene" });
+      } else {
+        return res.status(400).json({ msg: data.msg });
+      }
+
+
+
+
+    } catch (err) {
+
+      return res.status(500).json({ msg: "Error interno del servidor, ", err })
+    }
+  }
 }
 
 

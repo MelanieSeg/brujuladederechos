@@ -45,6 +45,7 @@ class AuthMiddleware {
 
         const userRole = user.rol;
 
+
         if (!rules.includes(userRole)) {
           return res
             .status(403)
