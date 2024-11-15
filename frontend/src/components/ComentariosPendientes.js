@@ -240,7 +240,7 @@ export default function ComentariosPendientes() {
   ];
 
   return (
-    <div className={`p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
+    <div className={`p-8 min-h-screen flex-1 flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
       {/* Contenedor de Toasts */}
       <Toast />
 

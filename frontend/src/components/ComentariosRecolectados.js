@@ -40,7 +40,6 @@ export default function ComentariosRecolectados() {
   // Estados para manejar la eliminación
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
   const [comentarioAEliminar, setComentarioAEliminar] = useState(null);
-  const [password, setPassword] = useState("");
   const [reason, setReason] = useState("");
 
   useEffect(() => {
@@ -263,7 +262,6 @@ export default function ComentariosRecolectados() {
   const confirmarEliminarComentario = (comentario) => {
     setComentarioAEliminar(comentario);
     setMostrarModalEliminar(true);
-    setPassword("");
     setReason("");
   };
 
@@ -275,7 +273,6 @@ export default function ComentariosRecolectados() {
 
     setMostrarModalEliminar(false);
     setComentarioAEliminar(null);
-    setPassword("");
     setReason("");
 
     // Mostrar toast de éxito utilizando la función importada
@@ -287,7 +284,6 @@ export default function ComentariosRecolectados() {
   const manejarCancelarEliminar = () => {
     setMostrarModalEliminar(false);
     setComentarioAEliminar(null);
-    setPassword("");
     setReason("");
   };
 
@@ -517,7 +513,7 @@ export default function ComentariosRecolectados() {
           <table className={`min-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg border-collapse`}>
           <thead>
             <tr className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              {['Comentario', 'Sitio web', 'Fecha', 'Acciones'].map((header) => (
+              {['Comentario', 'Estado', 'Sitio web', 'Fecha', 'Acciones'].map((header) => (
                 <th 
                   key={header} 
                   className={`px-6 py-4 text-left font-medium border-b
