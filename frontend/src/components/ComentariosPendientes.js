@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
-import { PlusIcon } from "@heroicons/react/20/solid"; // Asegúrate de tener el icono correcto
+import { PlusIcon } from "@heroicons/react/20/solid";
 import api from "../services/axios";
 import { truncateComentario } from "../utils/truncarComentario";
 import { format, parseISO, isValid } from "date-fns";
@@ -344,43 +344,43 @@ export default function ComentariosPendientes() {
 
           {/* Inputs de Fecha y Botón de Descarga */}
           {/* Inputs de Fecha y Botón de Descarga */}
-<div className="flex flex-row items-center space-x-4">
-  <div className="flex flex-row items-center space-x-2">
-    <input
-      type="date"
-      value={fechaDesde}
-      onChange={handleFechaDesdeChange}
-      className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-28 sm:w-auto
-        ${isDarkMode
-          ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-          : 'bg-white border-gray-300 focus:ring-blue-500'}`}
-    />
-    <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
-    <input
-      type="date"
-      value={fechaHasta}
-      onChange={handleFechaHastaChange}
-      className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-28 sm:w-auto
-        ${isDarkMode
-          ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-          : 'bg-white border-gray-300 focus:ring-blue-500'
-        }`}
-    />
-  </div>
-  <Formulario 
-    comentariosFiltrados={comentariosFiltrados} 
-    columns={columnasPendientes} 
-    formatData={formatData}
-    fileName="comentarios_pendientes.pdf"
-    className="w-auto" // Eliminar la clase w-full para evitar que el botón ocupe todo el ancho en pantallas pequeñas
-  />
-</div>
+          <div className="flex flex-row items-center space-x-4">
+            <div className="flex flex-row items-center space-x-2">
+              <input
+                type="date"
+                value={fechaDesde}
+                onChange={handleFechaDesdeChange}
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-28 sm:w-auto
+                  ${isDarkMode
+                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
+                    : 'bg-white border-gray-300 focus:ring-blue-500'}`}
+              />
+              <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
+              <input
+                type="date"
+                value={fechaHasta}
+                onChange={handleFechaHastaChange}
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-28 sm:w-auto
+                  ${isDarkMode
+                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
+                    : 'bg-white border-gray-300 focus:ring-blue-500'
+                  }`}
+              />
+            </div>
+            <Formulario 
+              comentariosFiltrados={comentariosFiltrados} 
+              columns={columnasPendientes} 
+              formatData={formatData}
+              fileName="comentarios_pendientes.pdf"
+              className="w-auto" // Eliminar la clase w-full para evitar que el botón ocupe todo el ancho en pantallas pequeñas
+            />
+          </div>
 
         </div>
 
         {/* Vista de tabla para pantallas grandes */}
         <div className="overflow-x-auto hidden sm:block">
-          <table className={`min-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg border-collapse`}>
+          <table className={`min-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg border-collapse table-fixed`}>
             <thead>
               <tr className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
                 {columnasPendientes.map((columna) => (
@@ -404,10 +404,10 @@ export default function ComentariosPendientes() {
               ) : comentariosAMostrar.length > 0 ? (
                 comentariosAMostrar.map((comentario, index) => (
                   <tr key={index} className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                    <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                       {truncateComentario(comentario.comentario, 100)}
                     </td>
-                    <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{comentario.sourceUrl}</td>
+                    <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{comentario.sourceUrl}</td>
                     <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                       {isValid(parseISO(comentario.fechaScraping)) 
                         ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
@@ -451,7 +451,7 @@ export default function ComentariosPendientes() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
                         <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                        <span className="ml-2 font-medium truncate">{comentario.sourceUrl}</span>
+                        <span className="ml-2 font-medium truncate break-all">{comentario.sourceUrl}</span>
                       </div>
                       <div className="text-sm">
                         {isValid(parseISO(comentario.fechaScraping))
@@ -460,7 +460,7 @@ export default function ComentariosPendientes() {
                         }
                       </div>
                     </div>
-                    <div className="text-sm">
+                    <div className="text-sm break-all">
                       {truncateComentario(comentario.comentario, 100)}
                     </div>
                     <div className="flex justify-end space-x-2">
