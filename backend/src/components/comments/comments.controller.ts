@@ -85,6 +85,9 @@ class CommentsController {
   updateComment = async (req: Request, res: Response) => {
     try {
 
+
+      //   const userId = req.user?.userId
+
       const validateData = editCommentScrapedSchema.safeParse(req.body)
 
       if (!validateData.success) {
@@ -95,6 +98,10 @@ class CommentsController {
           errors: formattedErrors
         })
       }
+
+      // if (!userId) {
+      // return res.status(401).json({ msg: "Usuario no autenticado" });
+      //}
 
       const data = await this.CommentsService.editCommentClassified(validateData.data)
 
@@ -114,12 +121,17 @@ class CommentsController {
   deleteComment = async (req: Request, res: Response) => {
     try {
       const id = req.body
+      const userId = req.user?.userId
 
       if (!id) {
         return res.status(400).json({ msg: "No se encuentra el ID" });
       }
 
-      const data = await this.CommentsService.deleteComment(id);
+      if (!userId) {
+        return res.status(401).json({ msg: "Usuario no autenticado" });
+      }
+
+      const data = await this.CommentsService.deleteComment(id, userId);
 
       if (data.success) {
         return res.status(200).json({ data: data.data, msg: "Se a eliminado exitosamene" });

@@ -1,0 +1,18 @@
+# Cosas que el usuario puede hacer
+
+- Descargar comentarios 
+- Clasificar manualmente
+- Editar un comentario ya clasificado
+- Eliminar un comentario clasificado
+- Eliminar comentario recolectado
+- Administrador creo usuario nuevo
+- Administrador desactivo usuario
+
+# Motivos de editar un comentario ya clasificado
+
+1. Revision 
+2. Se encontro un error
+3. Clasificacion previa incorrecta
+4. Reclasificacion
+
+

@@ -153,18 +153,37 @@ model LogAuditoria {
 }
 
 model Auditoria {
-  id                 String             @id @default(cuid())
-  fecha              DateTime           @default(now())
+  id                 String          @id @default(cuid())
+  fecha              DateTime        @default(now())
   usuarioId          String
   tipoAccion         TipoAccion
-  motivoModificacion MotivoModificacion
-  cambiosAnteriores  Json?
-  cambiosNuevos      Json?
+  motivoAccion       MotivoAccion?
+  entidad            String
+  entidadId          String
   detalles           String?
-  usuario            User               @relation(fields: [usuarioId], references: [id])
+  cambios            Cambio[]
+  usuario            User            @relation(fields: [usuarioId], references: [id])
+
+  createdAt      DateTime       @default(now())
 
   @@index([usuarioId])
   @@index([tipoAccion])
+  @@index([entidad, entidadId])
+}
+
+
+model Cambio {
+  id            String      @id @default(cuid())
+  auditoriaId   String
+  campo         String
+  valorAnterior String?
+  valorNuevo    String?
+  auditoria     Auditoria   @relation(fields: [auditoriaId], references: [id])
+
+  createdAt      DateTime       @default(now())
+
+  @@index([auditoriaId])
+  @@index([campo])
 }
 
 model UserToken {
@@ -219,9 +238,15 @@ model UserNotifications{
 }
 
 enum TipoAccion {
-  MODIFICACION
-  ELIMINACION
+  DESCARGAR_COMENTARIOS
+  CLASIFICAR_MANUALMENTE
+  EDITAR_COMENTARIO_CLASIFICADO
+  ELIMINAR_COMENTARIO_CLASIFICADO
+  ELIMINAR_COMENTARIO_RECOLECTADO
+  CREAR_USUARIO
+  DESACTIVAR_USUARIO
 }
+
 
 enum TipoNotificacion{
   GLOBAL
@@ -237,14 +262,11 @@ enum TipoNotificacionApp{
   RESUMEN
 }
 
-enum MotivoModificacion {
-  REVISION_MANUAL
-  ERROR_CORRECCION
-  ACTUALIZACION_RUTINARIA
-  RECLASIFICACION_IA
-  CAMBIO_POLITICA
-  REVISION_LEGAL
-  CORRECCION_DATOS
+enum MotivoAccion {
+  REVISION
+  SE_ENCONTRO_UN_ERROR
+  CLASIFICACION_PREVIA_INCORRECTA
+  RECLASIFICACION
   OTRO
 }
 
