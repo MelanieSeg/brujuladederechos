@@ -7,7 +7,7 @@ import Calendario from "./Objects/Calendario";
 import Paginacion from "./Objects/Paginacion";
 import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
-import { Toast, showSuccess } from "./Objects/Toast";
+import { Toast, showSuccess, showError } from "./Objects/Toast";
 import { ThemeContext } from '../utils/ThemeContext';
 
 export default function ComentariosRecolectados() {
@@ -54,6 +54,7 @@ export default function ComentariosRecolectados() {
 
     fetchComentarios();
   }, [defaultComentarios]);
+
   console.log(comentarios);
 
   useEffect(() => {
@@ -127,7 +128,7 @@ export default function ComentariosRecolectados() {
     }
   };
 
-  // Función para los círculos de estado en las tarjetas/////RESPONSIVIDAD
+  // Función para los círculos de estado en las tarjetas
   const getStatusColorClass = (estado) => {
     switch (estado) {
       case "PENDIENTE_CLASIFICACION":
@@ -167,7 +168,7 @@ export default function ComentariosRecolectados() {
   };
 
   const handleDateClick = (date) => {
-    const formattedDate = date.toISOString().split("T")[0];
+    const formattedDate = format(date, "yyyy-MM-dd");
     if (selectedDateType === "desde") {
       setFechaDesde(formattedDate);
     } else if (selectedDateType === "hasta") {
@@ -260,9 +261,10 @@ export default function ComentariosRecolectados() {
 
   const filteredComments = comentarios.filter((comentario) => {
     const estadoMatch = selectedEstado[comentario.estado];
+    const fechaComentario = parseISO(comentario.fechaScraping);
     const dateMatch =
-      (!fechaDesde || format(parseISO(comentario.fechaScraping), "yyyy-MM-dd") >= fechaDesde) &&
-      (!fechaHasta || format(parseISO(comentario.fechaScraping), "yyyy-MM-dd") <= fechaHasta);
+      (!fechaDesde || (isValid(fechaComentario) && format(fechaComentario, "yyyy-MM-dd") >= fechaDesde)) &&
+      (!fechaHasta || (isValid(fechaComentario) && format(fechaComentario, "yyyy-MM-dd") <= fechaHasta));
     return estadoMatch && dateMatch;
   });
 
@@ -281,20 +283,30 @@ export default function ComentariosRecolectados() {
     setReason("");
   };
 
-  const manejarEliminarComentario = () => {
-    // Aquí se implementará la lógica de eliminación más adelante
-    setComentarios((prevComentarios) =>
-      prevComentarios.filter((c) => c.id !== comentarioAEliminar.id)
-    );
+  const manejarEliminarComentario = async () => {
+    if (!comentarioAEliminar) return;
 
-    setMostrarModalEliminar(false);
-    setComentarioAEliminar(null);
-    setReason("");
+    try {
+      // Suponiendo que hay una API para eliminar comentarios
+      const response = await api.delete(`/comments/delete/${comentarioAEliminar.id}`, {
+        data: { motivo: reason },
+      });
+      if (response.status === 200) {
+        setComentarios((prevComentarios) =>
+          prevComentarios.filter((c) => c.id !== comentarioAEliminar.id)
+        );
 
-    // Mostrar toast de éxito utilizando la función importada
-    showSuccess("Comentario borrado exitosamente.", true, () => {
-      // Aquí se puede añadir lógica adicional después de mostrar el toast
-    });
+        setMostrarModalEliminar(false);
+        setComentarioAEliminar(null);
+        setReason("");
+
+        // Mostrar toast de éxito
+        showSuccess("Comentario borrado exitosamente.");
+      }
+    } catch (error) {
+      console.error("Error al eliminar el comentario", error);
+      showError("Error al eliminar el comentario: " + (error.response?.data?.msg || error.message));
+    }
   };
 
   const manejarCancelarEliminar = () => {
@@ -303,7 +315,7 @@ export default function ComentariosRecolectados() {
     setReason("");
   };
 
-  // Modal para confirmar la eliminación de un comentario con campos de contraseña y motivo
+  // Modal para confirmar la eliminación de un comentario con campos de motivo
   const modalEliminarComentario = (
     <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 
       ${isDarkMode ? 'bg-opacity-70' : 'bg-opacity-50'}`}>
@@ -318,7 +330,7 @@ export default function ComentariosRecolectados() {
         </h3>
         <p className={`text-sm mb-4 
           ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-          Esta acción no se puede deshacer. Por favor, ingresa una contraseña y un motivo para la eliminación.
+          Esta acción no se puede deshacer. Por favor, ingresa un motivo para la eliminación.
         </p>
         <form onSubmit={(e) => { e.preventDefault(); manejarEliminarComentario(); }}>
           {/* Campos de formulario */}
@@ -363,18 +375,17 @@ export default function ComentariosRecolectados() {
   );
 
   return (
-    <div className={`p-2 sm:p-4 lg:p-8 min-h-screen flex flex-col overflow-x-hidden ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>{/* Responsividad de Toasts */}
+    <div className={`p-2 sm:p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
       {/* Contenedor de Toasts */}
-      
       <Toast />
 
       <div className="flex-grow">
-        <h2 className={`text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{/*responisivdad/*/}
+        <h2 className={`text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
           Comentarios recolectados
         </h2>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 space-y-4 sm:space-y-0">{/*responsiivdad*/}
-          <div className="flex flex-wrap sm:flex-row items-center space-x-4">{/*responsividad*/}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 space-y-4 sm:space-y-0">
+          <div className="flex flex-row space-x-4">
             {/* Botón de Fecha con Dropdown */}
             <div className="relative">
               <button
@@ -469,7 +480,7 @@ export default function ComentariosRecolectados() {
               )}
             </div>
 
-            {/* Botón de Estado con Dropdown *EDITAR*/}
+            {/* Botón de Estado con Dropdown */}
             <div className="relative">
               <button
                 ref={gravedadButtonRef}
@@ -492,9 +503,9 @@ export default function ComentariosRecolectados() {
             </div>
           </div>
 
-          {/* Inputs de Fecha y Botón de Descarga RESPONSIVIDAD*/}
-          <div className="flex flex-wrap sm:flex-row items-center space-x-4">
-            <div className="flex items-center space-x-2">
+          {/* Inputs de Fecha y Botón de Descarga */}
+          <div className="flex flex-row items-center space-x-4">
+            <div className="flex flex-row items-center space-x-2">
               <input
                 type="date"
                 value={fechaDesde}
@@ -557,10 +568,8 @@ export default function ComentariosRecolectados() {
               ) : currentComments.length > 0 ? (
                 currentComments.map((comentario, index) => (
                   <tr key={index} className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <td className={`px-4 py-4 max-w-[300px] ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                      <div className="whitespace-nowrap overflow-hidden overflow-ellipsis">
-                        {truncateComentario(comentario.comentario, 100)}
-                      </div>
+                    <td className={`px-4 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                      {truncateComentario(comentario.comentario, 100)}
                     </td>
                     <td className={`px-4 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                       <span
@@ -569,10 +578,8 @@ export default function ComentariosRecolectados() {
                         {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
                       </span>
                     </td>
-                    <td className={`px-4 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                      <div className="whitespace-nowrap overflow-hidden overflow-ellipsis max-w-xs">
-                        {comentario.sourceUrl}
-                      </div>
+                    <td className={`px-4 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                      {comentario.sourceUrl}
                     </td>
                     <td className={`px-4 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                       {isValid(parseISO(comentario.fechaScraping))
@@ -598,7 +605,8 @@ export default function ComentariosRecolectados() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center">
+                  <td colSpan={5} className={`px-6 py-4 text-center 
+                      ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                     No hay comentarios para mostrar.
                   </td>
                 </tr>
@@ -606,7 +614,7 @@ export default function ComentariosRecolectados() {
             </tbody>
           </table>
         </div>
-                {/* TARJETA*/}
+
         {/* Vista de tarjetas para pantallas pequeñas */}
         <div className="block sm:hidden flex flex-col items-center">
           <div className="space-y-4">
@@ -628,7 +636,7 @@ export default function ComentariosRecolectados() {
                         }
                       </div>
                     </div>
-                    <div className="text-sm">
+                    <div className="text-sm break-all">
                       {truncateComentario(comentario.comentario, 100)}
                     </div>
                     <div className="flex justify-end">
