@@ -1,8 +1,11 @@
+// src/components/Objects/Formulario.jsx
+
 import React from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import PropTypes from 'prop-types';
-import { format } from 'date-fns'; // Importamos format de date-fns
+import { format } from 'date-fns';
+import { ArrowDownTrayIcon } from '@heroicons/react/20/solid'; // Importa el ícono de descarga correcto
 
 const Formulario = ({ comentariosFiltrados, columns, formatData, fileName }) => {
   // Función para generar el PDF
@@ -59,9 +62,17 @@ const Formulario = ({ comentariosFiltrados, columns, formatData, fileName }) => 
   return (
     <button
       onClick={handleDownloadPDF}
-      className="bg-black text-white px-4 py-2 rounded-md"
+      className="flex items-center justify-center bg-black text-white 
+                 px-4 py-2 sm:px-4 sm:py-2 rounded-md 
+                 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black 
+                 transition-colors duration-200"
+      aria-label="Descargar PDF"
     >
-      Descargar
+      {/* Texto del botón visible en pantallas medianas y grandes */}
+      <span className="hidden sm:inline text-sm">Descargar PDF</span>
+      
+      {/* Ícono de descarga visible en pantallas pequeñas */}
+      <ArrowDownTrayIcon className="w-5 h-5 sm:hidden" />
     </button>
   );
 };
