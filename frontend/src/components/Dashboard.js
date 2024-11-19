@@ -12,7 +12,7 @@ import {
   PointElement,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 } from 'chart.js';
 import { useSocket } from '../hooks/useSocket';
 import { toast } from 'sonner';
@@ -33,47 +33,46 @@ ChartJS.register(
 export default function Dashboard() {
   // Estado inicial con datos temporales
   const [notificaciones, setNotificaciones] = useState([]);
-  const socket = useSocket()
+  const socket = useSocket();
   const [periodo, setPeriodo] = useState('Diario');
   const [selectedMetric, setSelectedMetric] = useState('Total de comentarios analizados');
   const [totalComentarios, setTotalComentarios] = useState(0);
   const [tasaAprobacion, setTasaAprobacion] = useState(0);
   const [barThickness, setBarThickness] = useState(30);
   const { isDarkMode } = useContext(ThemeContext);
-  
-
-
 
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("nueva_notificacion", (notificacion) => {
-      if (notificacion.tipo === "TOTAL_COMMENTS_INSERTED") {
-        toast.success(`Se insertaron ${notificacion.totalComentarios} comentarios exitosamente.`, {
-          duration: 5000,
-        });
+    socket.on('nueva_notificacion', (notificacion) => {
+      if (notificacion.tipo === 'TOTAL_COMMENTS_INSERTED') {
+        toast.success(
+          `Se insertaron ${notificacion.totalComentarios} comentarios exitosamente.`,
+          {
+            duration: 5000,
+          }
+        );
 
-        setTotalComentarios(prev => prev + notificacion.totalComentarios);
+        setTotalComentarios((prev) => prev + notificacion.totalComentarios);
       } else {
         setNotificaciones((prev) => [notificacion, ...prev]);
       }
     });
 
-    socket.on("connect", () => {
-      console.log("Socket.IO conectado");
+    socket.on('connect', () => {
+      console.log('Socket.IO conectado');
     });
 
-    socket.on("disconnect", (reason) => {
-      console.log("Socket.IO desconectado:", reason);
+    socket.on('disconnect', (reason) => {
+      console.log('Socket.IO desconectado:', reason);
     });
 
     return () => {
-      socket.off("nueva_notificacion");
-      socket.off("connect");
-      socket.off("disconnect");
+      socket.off('nueva_notificacion');
+      socket.off('connect');
+      socket.off('disconnect');
     };
   }, [socket]);
-
 
   useEffect(() => {
     const handleResize = () => {
@@ -91,11 +90,6 @@ export default function Dashboard() {
       window.removeEventListener('orientationchange', handleResize);
     };
   }, []);
-
-
-  console.log({
-    notificaciones
-  })
 
   // Datos temporales para demostración (serán reemplazados por datos del backend)
   const datosTemporales = {
@@ -131,18 +125,39 @@ export default function Dashboard() {
     Anual: {
       totalComentarios: 36000,
       tasaAprobacion: 87,
-    }
+    },
   };
 
   // Datos para los gráficos
   const labelsHoras = [
-    '00:00', '02:00', '04:00', '06:00', '08:00', '10:00',
-    '12:00', '14:00', '16:00', '18:00', '20:00', '22:00', '24:00',
+    '00:00',
+    '02:00',
+    '04:00',
+    '06:00',
+    '08:00',
+    '10:00',
+    '12:00',
+    '14:00',
+    '16:00',
+    '18:00',
+    '20:00',
+    '22:00',
+    '24:00',
   ];
 
   const labelsMeses = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
   ];
 
   const labelsDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -173,12 +188,15 @@ export default function Dashboard() {
     datasets: [
       {
         label: 'Comentarios clasificados',
-      backgroundColor: isDarkMode ? '#818CF8' : '#4F46E5',
-      borderColor: isDarkMode ? '#818CF8' : '#4F46E5',
-      borderWidth: 1,
-      hoverBackgroundColor: isDarkMode ? '#A5B4FC' : '#6366F1',
-      hoverBorderColor: isDarkMode ? '#A5B4FC' : '#6366F1',
-      data: datosTemporales.datosBarra.slice(0, periodo === 'Mensual' ? labelsSemanasDelMes.length : 12),
+        backgroundColor: isDarkMode ? '#818CF8' : '#4F46E5',
+        borderColor: isDarkMode ? '#818CF8' : '#4F46E5',
+        borderWidth: 1,
+        hoverBackgroundColor: isDarkMode ? '#A5B4FC' : '#6366F1',
+        hoverBorderColor: isDarkMode ? '#A5B4FC' : '#6366F1',
+        data: datosTemporales.datosBarra.slice(
+          0,
+          periodo === 'Mensual' ? labelsSemanasDelMes.length : 12
+        ),
       },
     ],
   };
@@ -243,7 +261,7 @@ export default function Dashboard() {
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { stepSize: 25, color: isDarkMode ? '#E5E7EB' : '#4B5563'  },
+        ticks: { stepSize: 25, color: isDarkMode ? '#E5E7EB' : '#4B5563' },
       },
     },
     plugins: {
@@ -254,9 +272,9 @@ export default function Dashboard() {
           color: isDarkMode ? '#E5E7EB' : '#4B5563',
           font: {
             size: 12,
-            weight: 'bold'
-          }
-        }
+            weight: 'bold',
+          },
+        },
       },
       tooltip: {
         callbacks: {
@@ -268,10 +286,10 @@ export default function Dashboard() {
 
   const opcionesCircular = {
     maintainAspectRatio: false,
-    responsive: true,  // Asegurar que sea responsivo
+    responsive: true, // Asegurar que sea responsivo
     plugins: {
       legend: {
-        display: false,  // Desactiva la leyenda dentro del gráfico
+        display: false, // Desactiva la leyenda dentro del gráfico
       },
     },
   };
@@ -350,7 +368,9 @@ export default function Dashboard() {
                     data: datosTemporales.datosLineaTasaAprobacion,
                     fill: true,
                     borderColor: isDarkMode ? '#34D399' : '#10B981',
-                    backgroundColor: isDarkMode ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                    backgroundColor: isDarkMode
+                      ? 'rgba(52, 211, 153, 0.2)'
+                      : 'rgba(16, 185, 129, 0.2)',
                   },
                 ],
               },
@@ -377,7 +397,10 @@ export default function Dashboard() {
                 datasets: [
                   {
                     label: 'Tasa de aprobación (Mensual)',
-                    data: datosTemporales.datosLineaTasaAprobacion.slice(0, labelsSemanasDelMes.length),
+                    data: datosTemporales.datosLineaTasaAprobacion.slice(
+                      0,
+                      labelsSemanasDelMes.length
+                    ),
                     fill: true,
                     borderColor: '#10B981',
                     backgroundColor: 'rgba(16, 185, 129, 0.2)',
@@ -401,19 +424,24 @@ export default function Dashboard() {
   const currentYear = currentDate.getFullYear();
 
   return (
-    <div className="p-8 bg-gray-100 dark:bg-gray-700 flex-1 w-full">
+    <div
+      className={`p-2 sm:p-4 lg:p-8 min-h-screen flex flex-col overflow-x-hidden ${
+        isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'
+      } flex-1 w-full`}
+    >
       {/* Botones de selección de período */}
-      <div className="mb-6 flex space-x-2">
+      <div className="mb-6 flex flex-wrap space-x-2">
         {['Diario', 'Semanal', 'Mensual', 'Anual'].map((period) => (
           <button
             key={period}
             onClick={() => {
-              setPeriodo(period); }}
-            className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
-              ${periodo === period 
-                ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500' 
+              setPeriodo(period);
+            }}
+            className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border ${
+              periodo === period
+                ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                 : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
+            }`}
           >
             {period}
           </button>
@@ -422,65 +450,72 @@ export default function Dashboard() {
 
       {/* Selección de métrica (para Diario, Semanal y Mensual) */}
       {periodo !== 'Anual' && (
-        <div className="grid grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
           <div
             onClick={() => setSelectedMetric('Total de comentarios analizados')}
-            className={`bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg cursor-pointer
-              ${selectedMetric === 'Total de comentarios analizados' 
-                ? 'ring-2 ring-indigo-500' 
-                : ''
-              }`}
+            className={`bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg cursor-pointer ${
+              selectedMetric === 'Total de comentarios analizados' ? 'ring-2 ring-indigo-500' : ''
+            }`}
           >
-            <h2 className="text-gray-500 dark:text-gray-400 text-sm">Total de comentarios analizados</h2>
-            <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{totalComentarios}</p>
+            <h2 className="text-gray-500 dark:text-gray-400 text-sm">
+              Total de comentarios analizados
+            </h2>
+            <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">
+              {totalComentarios}
+            </p>
           </div>
           <div
             onClick={() => setSelectedMetric('Tasa de aprobación')}
-            className={`bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg cursor-pointer
-              ${selectedMetric === 'Tasa de aprobación' 
-                ? 'ring-2 ring-indigo-500' 
-                : ''
-              }`}
+            className={`bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg cursor-pointer ${
+              selectedMetric === 'Tasa de aprobación' ? 'ring-2 ring-indigo-500' : ''
+            }`}
           >
             <h2 className="text-gray-500 dark:text-gray-400 text-sm">Tasa de aprobación</h2>
-            <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{tasaAprobacion}%</p>
+            <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">
+              {tasaAprobacion}%
+            </p>
           </div>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {data && periodo !== 'Anual' && (
-          <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg col-span-2">
-            <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">{selectedMetric}</h2>
+          <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg lg:col-span-2">
+            <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+              {selectedMetric}
+            </h2>
             {periodo === 'Mensual' && (
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 Mes actual: {currentMonth} del {currentYear}
               </p>
             )}
             <div className="h-[300px] w-full">
-              <Line data={data} options={{
-                ...opcionesLinea,
-                scales: {
-                  ...opcionesLinea.scales,
-                  y: {
-                    ...opcionesLinea.scales.y,
-                    grid: {
-                      color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              <Line
+                data={data}
+                options={{
+                  ...opcionesLinea,
+                  scales: {
+                    ...opcionesLinea.scales,
+                    y: {
+                      ...opcionesLinea.scales.y,
+                      grid: {
+                        color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                      },
+                      ticks: {
+                        color: isDarkMode ? '#fff' : '#666',
+                      },
                     },
-                    ticks: {
-                      color: isDarkMode ? '#fff' : '#666',
-                    }
+                    x: {
+                      grid: {
+                        color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                      },
+                      ticks: {
+                        color: isDarkMode ? '#fff' : '#666',
+                      },
+                    },
                   },
-                  x: {
-                    grid: {
-                      color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                    },
-                    ticks: {
-                      color: isDarkMode ? '#fff' : '#666',
-                    }
-                  }
-                }
-              }} />
+                }}
+              />
             </div>
           </div>
         )}
@@ -491,21 +526,27 @@ export default function Dashboard() {
           <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg flex items-start justify-between">
             <div>
               <h2 className="text-gray-500 dark:text-gray-400 text-sm">Comentarios pendientes</h2>
-              <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{datosTemporales.comentariosPendientes}</p>
+              <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">
+                {datosTemporales.comentariosPendientes}
+              </p>
             </div>
             <InformationCircleIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 ml-4 mt-1" />
           </div>
           <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg flex items-start justify-between">
             <div>
               <h2 className="text-gray-500 dark:text-gray-400 text-sm">Comentarios clasificados</h2>
-              <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{datosTemporales.comentariosClasificados}</p>
+              <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">
+                {datosTemporales.comentariosClasificados}
+              </p>
             </div>
             <InformationCircleIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 ml-4 mt-1" />
           </div>
           <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg flex items-start justify-between">
             <div>
               <h2 className="text-gray-500 dark:text-gray-400 text-sm">Comentarios graves</h2>
-              <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{datosTemporales.comentariosGraves}</p>
+              <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">
+                {datosTemporales.comentariosGraves}
+              </p>
             </div>
             <InformationCircleIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 ml-4 mt-1" />
           </div>
@@ -519,46 +560,47 @@ export default function Dashboard() {
             <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
               Total de comentarios clasificados
             </h2>
-            <div className="h-64">
-              <Bar data={datosBarra} options={{
-                ...opcionesBarra,
-                scales: {
-                  ...opcionesBarra.scales,
-                  y: {
-                    ...opcionesBarra.scales.y,
-                    grid: {
-                      color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            <div className="h-64 w-full">
+              <Bar
+                data={datosBarra}
+                options={{
+                  ...opcionesBarra,
+                  scales: {
+                    ...opcionesBarra.scales,
+                    y: {
+                      ...opcionesBarra.scales.y,
+                      grid: {
+                        color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                      },
+                      ticks: {
+                        color: isDarkMode ? '#fff' : '#666',
+                      },
                     },
-                    ticks: {
-                      color: isDarkMode ? '#fff' : '#666',
-                    }
+                    x: {
+                      grid: {
+                        color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                      },
+                      ticks: {
+                        color: isDarkMode ? '#fff' : '#666',
+                      },
+                    },
                   },
-                  x: {
-                    grid: {
-                      color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                    },
-                    ticks: {
-                      color: isDarkMode ? '#fff' : '#666',
-                    }
-                  }
-                }
-              }} />
+                }}
+              />
             </div>
           </div>
 
           {/* Gráfico circular */}
-          <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg flex">
-            <div className="w-2/3">
-              <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
-                Comentarios por sitio web
-              </h2>
-              <div className="h-64">
-                <Pie data={datosCircular} options={opcionesCircular} />
-              </div>
+          <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg">
+            <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+              Comentarios por sitio web
+            </h2>
+            <div className="h-64 w-full">
+              <Pie data={datosCircular} options={opcionesCircular} />
             </div>
-            <div className="w-1/3 flex flex-col justify-center ml-8 flex-wrap overflow-hidden">
+            <div className="mt-4 flex flex-wrap">
               {leyendaCircular.map((item, index) => (
-                <div key={index} className="flex items-center mb-4">
+                <div key={index} className="flex items-center mr-4 mb-2">
                   <div className="w-4 h-4" style={{ backgroundColor: item.color }}></div>
                   <span className="ml-2 text-sm dark:text-gray-200">{item.label}</span>
                 </div>
@@ -575,12 +617,15 @@ export default function Dashboard() {
         </h2>
         <ul>
           {datosTemporales.ultimosComentarios.map((comentario, index) => (
-            <li key={index} className="border-b dark:border-gray-700 py-4 flex justify-between">
-              <span className="dark:text-gray-200">{comentario.texto}</span>
+            <li
+              key={index}
+              className="border-b dark:border-gray-700 py-4 flex flex-col sm:flex-row sm:justify-between"
+            >
+              <span className="dark:text-gray-200 mb-2 sm:mb-0">{comentario.texto}</span>
               <span
                 className={`font-semibold ${
-                  comentario.estado === 'Aceptado' 
-                    ? 'text-green-600 dark:text-green-400' 
+                  comentario.estado === 'Aceptado'
+                    ? 'text-green-600 dark:text-green-400'
                     : 'text-red-600 dark:text-red-400'
                 }`}
               >

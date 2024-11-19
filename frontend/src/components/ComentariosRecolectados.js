@@ -7,14 +7,11 @@ import Calendario from "./Objects/Calendario";
 import Paginacion from "./Objects/Paginacion";
 import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
-import { Toast, showSuccess} from "./Objects/Toast";
+import { Toast, showSuccess } from "./Objects/Toast";
 import { ThemeContext } from '../utils/ThemeContext';
 
 export default function ComentariosRecolectados() {
-  const [defaultComentarios] = useState([
-    
-  ]);
-
+  const [defaultComentarios] = useState([]);
   const [comentarios, setComentarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const { isDarkMode } = useContext(ThemeContext);
@@ -57,7 +54,6 @@ export default function ComentariosRecolectados() {
 
     fetchComentarios();
   }, [defaultComentarios]);
-
   console.log(comentarios);
 
   useEffect(() => {
@@ -113,20 +109,39 @@ export default function ComentariosRecolectados() {
     });
   };
 
-  const getBadgeColor = (estado) => {
+  // Función para los badges de texto en la tabla
+  const getBadgeColorClass = (estado) => {
     switch (estado) {
       case "PENDIENTE_CLASIFICACION":
-        return isDarkMode 
-          ? "bg-gray-600 text-gray-200" 
+        return isDarkMode
+          ? "bg-gray-600 text-gray-200"
           : "bg-gray-300 text-gray-800";
       case "CLASIFICADO":
-        return isDarkMode 
-          ? "bg-gray-700 text-gray-200" 
+        return isDarkMode
+          ? "bg-gray-700 text-gray-200"
           : "bg-gray-200 text-gray-800";
       default:
-        return isDarkMode 
-          ? "bg-gray-500 text-white" 
+        return isDarkMode
+          ? "bg-gray-500 text-white"
           : "bg-gray-500 text-white";
+    }
+  };
+
+  // Función para los círculos de estado en las tarjetas/////RESPONSIVIDAD
+  const getStatusColorClass = (estado) => {
+    switch (estado) {
+      case "PENDIENTE_CLASIFICACION":
+        return isDarkMode
+          ? "bg-gray-600"
+          : "bg-gray-300";
+      case "CLASIFICADO":
+        return isDarkMode
+          ? "bg-gray-700"
+          : "bg-gray-200";
+      default:
+        return isDarkMode
+          ? "bg-gray-500"
+          : "bg-gray-500";
     }
   };
 
@@ -163,11 +178,11 @@ export default function ComentariosRecolectados() {
 
   const renderDropdown = () => {
     return isDropdownOpen && (
-      <div 
-        ref={dropdownRef} 
+      <div
+        ref={dropdownRef}
         className={`absolute mt-2 w-56 rounded-md shadow-lg ring-1 z-10 
-          ${isDarkMode 
-            ? 'bg-gray-800 ring-gray-700 text-white' 
+          ${isDarkMode
+            ? 'bg-gray-800 ring-gray-700 text-white'
             : 'bg-white ring-black ring-opacity-5 text-gray-700'
           }`}
       >
@@ -179,8 +194,8 @@ export default function ComentariosRecolectados() {
                 checked={selectedEstado.PENDIENTE_CLASIFICACION}
                 onChange={() => handleEstadoChange("PENDIENTE_CLASIFICACION")}
                 className={`form-checkbox 
-                  ${isDarkMode 
-                    ? 'text-indigo-400 bg-gray-700 border-gray-600' 
+                  ${isDarkMode
+                    ? 'text-indigo-400 bg-gray-700 border-gray-600'
                     : 'text-gray-500'
                   }`}
               />
@@ -196,8 +211,8 @@ export default function ComentariosRecolectados() {
                 checked={selectedEstado.CLASIFICADO}
                 onChange={() => handleEstadoChange("CLASIFICADO")}
                 className={`form-checkbox 
-                  ${isDarkMode 
-                    ? 'text-indigo-400 bg-gray-700 border-gray-600' 
+                  ${isDarkMode
+                    ? 'text-indigo-400 bg-gray-700 border-gray-600'
                     : 'text-gray-500'
                   }`}
               />
@@ -207,8 +222,8 @@ export default function ComentariosRecolectados() {
             </label>
           </div>
           <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <button 
-              onClick={limpiarSeleccion} 
+            <button
+              onClick={limpiarSeleccion}
               className={`block w-full text-left px-4 py-2 text-sm 
                 ${isDarkMode 
                   ? 'text-gray-400 hover:bg-gray-700' 
@@ -224,10 +239,11 @@ export default function ComentariosRecolectados() {
   };
 
   const columns = [
-    { title: "Comentario", width: 200, halign: 'left' },
-    { title: "Estado", width: 60, halign: 'center' },
-    { title: "Sitio Web", width: 120, halign: 'left' },
-    { title: "Fecha", width: 140, halign: 'center' },
+    { title: "Comentario", width: "2/5", halign: 'left' },
+    { title: "Estado", width: "1/5", halign: 'center' },
+    { title: "Sitio Web", width: "1/5", halign: 'left' },
+    { title: "Fecha", width: "1/5", halign: 'center' },
+    { title: "Acciones", width: "1/5", halign: 'center' }, // Añadido Acciones
   ];
 
   const formatData = (comentario) => {
@@ -266,7 +282,7 @@ export default function ComentariosRecolectados() {
   };
 
   const manejarEliminarComentario = () => {
-    //mas adelante se implementara
+    // Aquí se implementará la lógica de eliminación más adelante
     setComentarios((prevComentarios) =>
       prevComentarios.filter((c) => c.id !== comentarioAEliminar.id)
     );
@@ -277,7 +293,7 @@ export default function ComentariosRecolectados() {
 
     // Mostrar toast de éxito utilizando la función importada
     showSuccess("Comentario borrado exitosamente.", true, () => {
-      // mas adelante se implementara
+      // Aquí se puede añadir lógica adicional después de mostrar el toast
     });
   };
 
@@ -292,8 +308,8 @@ export default function ComentariosRecolectados() {
     <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 
       ${isDarkMode ? 'bg-opacity-70' : 'bg-opacity-50'}`}>
       <div className={`
-        ${isDarkMode 
-          ? 'bg-gray-800 text-gray-200 border border-gray-700' 
+        ${isDarkMode
+          ? 'bg-gray-800 text-gray-200 border border-gray-700'
           : 'bg-white text-gray-900'}
         p-6 rounded-md shadow-lg max-w-md w-full`}>
         <h3 className={`text-lg font-semibold mb-2 
@@ -316,9 +332,7 @@ export default function ComentariosRecolectados() {
               onChange={(e) => setReason(e.target.value)}
               placeholder="Ingresa el motivo (opcional)"
               className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 
-                ${isDarkMode 
-                  ? 'bg-gray-700 text-white border-gray-600 focus:ring-indigo-500' 
-                  : 'border-gray-300 focus:ring-blue-500'}`}
+                ${isDarkMode ? 'bg-gray-700 text-white border-gray-600 focus:ring-indigo-500' : 'border-gray-300 focus:ring-blue-500'}`}
               rows={3}
             ></textarea>
           </div>
@@ -349,59 +363,60 @@ export default function ComentariosRecolectados() {
   );
 
   return (
-    <div className={`p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
+    <div className={`p-2 sm:p-4 lg:p-8 min-h-screen flex flex-col overflow-x-hidden ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>{/* Responsividad de Toasts */}
       {/* Contenedor de Toasts */}
+      
       <Toast />
 
       <div className="flex-grow">
-        <h2 className={`text-2xl font-semibold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+        <h2 className={`text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{/*responisivdad/*/}
           Comentarios recolectados
         </h2>
 
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex space-x-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 space-y-4 sm:space-y-0">{/*responsiivdad*/}
+          <div className="flex flex-wrap sm:flex-row items-center space-x-4">{/*responsividad*/}
             {/* Botón de Fecha con Dropdown */}
             <div className="relative">
               <button
                 ref={dateButtonRef}
                 onClick={toggleDateDropdown}
-                className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
-                  ${isDateDropdownOpen 
-                    ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500' 
+                className={`px-3 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
+                  ${isDateDropdownOpen
+                    ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
               >
                 <div className="flex items-center space-x-2">
-                <PlusIcon className={`w-5 h-5 ${
-                isDarkMode 
-                  ? 'text-white group-hover:text-gray-200' 
-                  : 'text-gray-500'
-              }`}  />
-                <span>Fecha</span>
+                  <PlusIcon className={`w-5 h-5 ${
+                    isDarkMode
+                      ? 'text-white group-hover:text-gray-200'
+                      : 'text-gray-500'
+                  }`} />
+                  <span>Fecha</span>
                 </div>
               </button>
               {isDateDropdownOpen && (
                 <div
                   ref={dateDropdownRef}
                   className={`absolute mt-2 w-48 rounded-md shadow-lg z-20 
-                    ${isDarkMode 
-                      ? 'bg-gray-800 border border-gray-700 text-white' 
+                    ${isDarkMode
+                      ? 'bg-gray-800 border border-gray-700 text-white'
                       : 'bg-white text-gray-700'
                     }`}
                 >
                   <button
                     className={`block w-full text-left px-4 py-2 text-base 
-                      ${isDarkMode 
-                        ? 'hover:bg-gray-700 text-gray-300' 
+                      ${isDarkMode
+                        ? 'hover:bg-gray-700 text-gray-300'
                         : 'hover:bg-gray-100 text-gray-700'
                       }`}
                     onClick={() => handleDateOptionClick("desde")}
                   >
-                    Desde 
+                    Desde
                     {fechaDesde && (
                       <span className={`ml-2 mx-2 text-sm px-2 py-1 rounded-full 
-                        ${isDarkMode 
-                          ? 'bg-gray-700 text-gray-300' 
+                        ${isDarkMode
+                          ? 'bg-gray-700 text-gray-300'
                           : 'bg-gray-100 text-gray-700'
                         }`}
                       >
@@ -411,16 +426,16 @@ export default function ComentariosRecolectados() {
                   </button>
                   <button
                     className={`block w-full text-left px-4 py-2 text-base 
-                      ${isDarkMode 
-                        ? 'hover:bg-gray-700 text-gray-300' 
+                      ${isDarkMode
+                        ? 'hover:bg-gray-700 text-gray-300'
                         : 'hover:bg-gray-100 text-gray-700'
                       }`}
                     onClick={() => handleDateOptionClick("hasta")}
                   >
                     Hasta {fechaHasta && (
                       <span className={`ml-2 text-sm px-2 py-1 rounded-full 
-                        ${isDarkMode 
-                          ? 'bg-gray-700 text-gray-300' 
+                        ${isDarkMode
+                          ? 'bg-gray-700 text-gray-300'
                           : 'bg-gray-100 text-gray-700'
                         }`}
                       >
@@ -429,14 +444,14 @@ export default function ComentariosRecolectados() {
                     )}
                   </button>
                   <div className={`border-t 
-                  ${isDarkMode 
-                    ? 'border-gray-700' 
-                    : 'border-gray-200'
-                  }`}>
+                    ${isDarkMode
+                      ? 'border-gray-700'
+                      : 'border-gray-200'
+                    }`}>
                     <button
                       className={`block w-full text-left px-4 py-2 text-sm 
-                        ${isDarkMode 
-                          ? 'text-gray-400 hover:bg-gray-700' 
+                        ${isDarkMode
+                          ? 'text-gray-400 hover:bg-gray-700'
                           : 'text-gray-500 hover:bg-gray-100'
                         }`}
                       onClick={() => handleDateOptionClick("eliminar")}
@@ -454,77 +469,83 @@ export default function ComentariosRecolectados() {
               )}
             </div>
 
-            {/* Botón de Estado con Dropdown */}
+            {/* Botón de Estado con Dropdown *EDITAR*/}
             <div className="relative">
               <button
                 ref={gravedadButtonRef}
                 onClick={handleGravedadClick}
-                className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
-                  ${isDropdownOpen 
-                    ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500' 
+                className={`px-3 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
+                  ${isDropdownOpen
+                    ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}>
                 <div className="flex items-center space-x-2">
-                <PlusIcon className={`w-5 h-5 ${
-                isDarkMode 
-                  ? 'text-white group-hover:text-gray-200' 
-                  : 'text-gray-500'
-              }`}  />
-                <span>Estado</span>
+                  <PlusIcon className={`w-5 h-5 ${
+                    isDarkMode
+                      ? 'text-white group-hover:text-gray-200'
+                      : 'text-gray-500'
+                  }`} />
+                  <span>Estado</span>
                 </div>
               </button>
               {isDropdownOpen && renderDropdown()}
             </div>
           </div>
 
-          {/* Inputs de Fecha y Botón de Descarga */}
-          <div className="flex items-center space-x-4">
-            <input
-              type="date"
-              value={fechaDesde}
-              onChange={(e) => setFechaDesde(e.target.value)}
-              className={`border rounded px-4 py-2 focus:outline-none focus:ring-2 
-                ${isDarkMode 
-                  ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500' 
-                  : 'bg-white border-gray-300 focus:ring-blue-500'}`}
-            />
-            <span className={isDarkMode ? 'text-white' : 'text-gray-800'}>-</span>
-            <input
-              type="date"
-              value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
-              className={`border rounded px-4 py-2 focus:outline-none focus:ring-2 
-                ${isDarkMode 
-                  ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500' 
-                  : 'bg-white border-gray-300 focus:ring-blue-500'}`}
-            />
-            {/* Componente Formulario para descargar el PDF */}
-            <Formulario 
-              comentariosFiltrados={filteredComments} 
+          {/* Inputs de Fecha y Botón de Descarga RESPONSIVIDAD*/}
+          <div className="flex flex-wrap sm:flex-row items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="date"
+                value={fechaDesde}
+                onChange={(e) => setFechaDesde(e.target.value)}
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-28 sm:w-auto
+                  ${isDarkMode
+                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
+                    : 'bg-white border-gray-300 focus:ring-blue-500'
+                  }`}
+              />
+              <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
+              <input
+                type="date"
+                value={fechaHasta}
+                onChange={(e) => setFechaHasta(e.target.value)}
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-28 sm:w-auto
+                  ${isDarkMode
+                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
+                    : 'bg-white border-gray-300 focus:ring-blue-500'
+                  }`}
+              />
+            </div>
+             {/* Componente Formulario para descargar el PDF */}
+            <Formulario
+              comentariosFiltrados={filteredComments}
               columns={columns}
               formatData={formatData}
               fileName="comentarios_recolectados.pdf"
+              className="w-auto" // Cambiado de 'ml-4' a 'w-auto'
             />
           </div>
         </div>
 
-        {/* Tabla de Comentarios */}
-        <div className="overflow-x-auto">
-          <table className={`min-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg border-collapse`}>
-          <thead>
-            <tr className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              {['Comentario', 'Estado', 'Sitio web', 'Fecha', 'Acciones'].map((header) => (
-                <th 
-                  key={header} 
-                  className={`px-6 py-4 text-left font-medium border-b
-                    ${isDarkMode 
-                      ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-300'
-                    }`}
-                >
-                  {header}
-                </th>
-              ))}
-            </tr>
+        {/* Vista de tabla para pantallas grandes */}
+        <div className="overflow-x-auto hidden sm:block">
+          <table className={`min-w-full table-fixed ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg border-collapse`}>
+            <thead>
+              <tr className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                {columns.map((columna) => (
+                  <th
+                    key={columna.title}
+                    className={`px-4 py-2 text-left font-medium border-b w-${columna.width} 
+                      ${isDarkMode
+                        ? 'text-gray-300 border-gray-700'
+                        : 'text-gray-500 border-gray-300'
+                      }`}
+                  >
+                    {columna.title}
+                  </th>
+                ))}
+              </tr>
             </thead>
             <tbody>
               {loading ? (
@@ -536,39 +557,41 @@ export default function ComentariosRecolectados() {
               ) : currentComments.length > 0 ? (
                 currentComments.map((comentario, index) => (
                   <tr key={index} className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                    <td className={`px-4 py-4 max-w-[300px] ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                       <div className="whitespace-nowrap overflow-hidden overflow-ellipsis">
                         {truncateComentario(comentario.comentario, 100)}
                       </div>
                     </td>
-                    <td className="px-12 py-4">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColor(
-                        comentario.estado
-                      )}`}
-                    >
-                      {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
-                    </span>
-                  </td>
-                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{comentario.sourceUrl}</td>
-                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                      {isValid(parseISO(comentario.fechaScraping)) 
-                        ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy") 
+                    <td className={`px-4 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColorClass(comentario.estado)}`}
+                      >
+                        {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
+                      </span>
+                    </td>
+                    <td className={`px-4 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                      <div className="whitespace-nowrap overflow-hidden overflow-ellipsis max-w-xs">
+                        {comentario.sourceUrl}
+                      </div>
+                    </td>
+                    <td className={`px-4 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                      {isValid(parseISO(comentario.fechaScraping))
+                        ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
                         : "Fecha Inválida"
                       }
                     </td>
-                    <td className="px-6 py-4 flex items-center space-x-2">
+                    <td className="px-4 py-4 flex items-center space-x-2">
                       <button
                         onClick={() => confirmarEliminarComentario(comentario)}
                         className="text-gray-500 hover:text-red-600"
                         aria-label="Eliminar comentario"
                       >
                         <TrashIcon className={`w-5 h-5 ${
-                      isDarkMode 
-                        ? 'text-gray-400 hover:text-red-400' 
-                        : 'text-gray-400 hover:text-red-500'
-                    } cursor-pointer`} 
-                  />
+                          isDarkMode
+                            ? 'text-gray-400 hover:text-red-400'
+                            : 'text-gray-400 hover:text-red-500'
+                        } cursor-pointer`}
+                        />
                       </button>
                     </td>
                   </tr>
@@ -583,13 +606,62 @@ export default function ComentariosRecolectados() {
             </tbody>
           </table>
         </div>
-        
-        {/* Paginación */}
-        <Paginacion
-          paginaActual={currentPage}
-          totalPaginas={totalPages}
-          onPageChange={handlePageClick}
-        />
+                {/* TARJETA*/}
+        {/* Vista de tarjetas para pantallas pequeñas */}
+        <div className="block sm:hidden flex flex-col items-center">
+          <div className="space-y-4">
+            {loading ? (
+              <Cargando />
+            ) : currentComments.length > 0 ? (
+              currentComments.map((comentario, index) => (
+                <div key={index} className={`w-full max-w-sm border p-4 rounded-md ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200'}`}>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <div className={`w-4 h-4 rounded-full ${getStatusColorClass(comentario.estado)}`}></div>
+                        <span className="ml-2 font-medium truncate">{comentario.sourceUrl}</span>
+                      </div>
+                      <div className="text-sm">
+                        {isValid(parseISO(comentario.fechaScraping))
+                          ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
+                          : "Fecha Inválida"
+                        }
+                      </div>
+                    </div>
+                    <div className="text-sm">
+                      {truncateComentario(comentario.comentario, 100)}
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => confirmarEliminarComentario(comentario)}
+                        className="text-gray-500 hover:text-red-600"
+                        aria-label="Eliminar comentario"
+                      >
+                        <TrashIcon className={`w-5 h-5 ${
+                          isDarkMode
+                            ? 'text-gray-400 hover:text-red-400'
+                            : 'text-gray-400 hover:text-red-500'
+                        } cursor-pointer`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center">No hay comentarios para mostrar.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Paginación centrada */}
+        <div className="flex justify-center mt-4">
+          <Paginacion
+            paginaActual={currentPage}
+            totalPaginas={totalPages}
+            onPageChange={handlePageClick}
+          />
+        </div>
 
         {/* Modal de Eliminación */}
         {mostrarModalEliminar && modalEliminarComentario}

@@ -1,3 +1,4 @@
+// BarraLateral.js
 import React, { useState, useRef, useContext } from 'react';
 import { BellIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
@@ -14,7 +15,7 @@ import {
   UserGroupIcon 
 } from '@heroicons/react/24/outline';
 
-export default function BarraLateral({ collapsed = false }) {
+export default function BarraLateral({ collapsed = false, isMobile = false }) { // Added isMobile prop
   const { user, logout } = useAuth();
   const location = useLocation();
   const [notificacionesVisibles, setNotificacionesVisibles] = useState(false);
@@ -73,7 +74,7 @@ export default function BarraLateral({ collapsed = false }) {
   ];
 
   const renderMenuItem = (item) => {
-    // Verificar si el usuario tiene el rol requerido
+    // Veriticar si el usuario tiene el rol requerido
     const hasRequiredRole = item.requiredRole.includes(user?.rol);
     
     if (!hasRequiredRole) return null;
@@ -82,7 +83,7 @@ export default function BarraLateral({ collapsed = false }) {
     const Icon = item.icon;
 
     if (collapsed) {
-      // Vista colapsada: solo iconos
+      // Vista colapsada solo iconos
       return (
         <Link 
           key={item.path}
@@ -104,7 +105,7 @@ export default function BarraLateral({ collapsed = false }) {
       );
     }
 
-    // Vista expandida: iconos y etiquetas
+    // Vista expandida solo iconos y etiquetas
     return (
       <Link 
         key={item.path}
@@ -135,6 +136,7 @@ export default function BarraLateral({ collapsed = false }) {
       `}
     >
       <div className="flex flex-col flex-grow">
+        {/* Header Section */}
         <div className="mb-4 flex items-center justify-between">
           {!collapsed ? (
             <h1 
@@ -193,81 +195,73 @@ export default function BarraLateral({ collapsed = false }) {
           )}
         </div>
 
+        {/* Navigation Menu */}
         <nav className="flex-grow space-y-2">
           {menuItems.map(renderMenuItem)}
         </nav>
 
-        {!collapsed && (
+        {/* Profile Section for Expanded Sidebar on Desktop Only */}
+        {!collapsed && !isMobile && (
           <div 
             className={`mt-auto p-4 border-t ${isDarkMode ? 'border-gray-600' : 'border-gray-200'} flex justify-between items-center`}
           >
             <div className="flex items-center space-x-4">
-            {user ? (
-              <>
-                <img
-                  src={user.image || 'https://via.placeholder.com/40'}
-                  alt="Perfil"
-                  className="w-10 h-10 rounded-full"
-                />
-                <div className="flex flex-col overflow-hidden"> {/* Ancho fijo y overflow hidden */}
-                  <span 
-                    className={`
-                      ${isDarkMode ? 'text-white' : 'text-gray-900'} 
-                      font-semibold 
-                      truncate  // Trunca el texto que se desborde
-                      w-full    // Asegura que ocupe todo el ancho disponible
-                    `}
-                  >
-                    {user.name.split(' ')[0]} {/* Muestra solo el primer nombre */}
-                  </span>
-                  {user.name.split(' ').length > 1 && (
+              {user ? (
+                <>
+                  <img
+                    src={user.image || 'https://via.placeholder.com/40'}
+                    alt="Perfil"
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div className="flex flex-col overflow-hidden"> {/* Fixed width and overflow hidden */}
                     <span 
                       className={`
-                        ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} 
-                        text-sm 
-                        truncate  // Trunca el texto que se desborde
-                        w-full    // Asegura que ocupe todo el ancho disponible
+                        ${isDarkMode ? 'text-white' : 'text-gray-900'} 
+                        font-semibold 
+                        truncate  
+                        w-full    
                       `}
                     >
-                      {user.name.split(' ').slice(1).join(' ')} {/* Muestra apellidos */}
+                      {user.name.split(' ')[0]} {/* Show only first name */}
                     </span>
-                  )}
-                </div>
-              </>
-            ) : (
-              <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Cargando usuario...</span>
-            )}
-          </div>
-          <button 
-            onClick={handleLogout} 
-            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600"
-          >
-            <ArrowRightOnRectangleIcon className="h-6 w-6" />
-          </button>
-        </div>
-      )}
-
-        {collapsed && (
-          <div className="mt-auto flex flex-col items-center space-y-4">
-            <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}
-            >
-              {isDarkMode ? (
-                <SunIcon className="h-6 w-6 text-white" />
+                    {user.name.split(' ').length > 1 && (
+                      <span 
+                        className={`
+                          ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} 
+                          text-sm 
+                          truncate  
+                          w-full    
+                        `}
+                      >
+                        {user.name.split(' ').slice(1).join(' ')} {/* Show last names */}
+                      </span>
+                    )}
+                  </div>
+                </>
               ) : (
-                <MoonIcon className="h-6 w-6 text-black" />
+                <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Cargando usuario...</span>
               )}
+            </div>
+            <button 
+              onClick={handleLogout} 
+              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600"
+              title="Logout"//*revisar/** */
+            >
+              <ArrowRightOnRectangleIcon className="h-6 w-6" />
             </button>
-            {user && (
-              <img
-                src={user.image || 'https://via.placeholder.com/40'}
-                alt="Perfil"
-                className="w-10 h-10 rounded-full"
-                title={user.name}
-              />
-            )}
-            <button onClick={handleLogout} className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600">
+          </div>
+        )}
+
+        {/* Logout Button for Collapsed Sidebar on Desktop Only */}
+        {collapsed && !isMobile && (
+          <div 
+            className={`mt-auto p-4 border-t ${isDarkMode ? 'border-gray-600' : 'border-gray-200'} flex justify-end`}
+          >
+            <button 
+              onClick={handleLogout} 
+              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600"
+              title="Logout"
+            >
               <ArrowRightOnRectangleIcon className="h-6 w-6" />
             </button>
           </div>
