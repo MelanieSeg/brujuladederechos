@@ -61,9 +61,9 @@ const Formulario = ({ comentariosFiltrados, columns, formatData, fileName }) => 
 
   return (
     <button
-      onClick={handleDownloadPDF}
+      onClick={handleDownloadPDF}//valor cambiado
       className="flex items-center justify-center bg-black text-white 
-                 px-4 py-2 sm:px-4 sm:py-2 rounded-md 
+                 px-1 py-2 sm:px-4 sm:py-2 rounded-md 
                  hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black 
                  transition-colors duration-200"
       aria-label="Descargar PDF"

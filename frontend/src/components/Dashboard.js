@@ -437,7 +437,8 @@ export default function Dashboard() {
             onClick={() => {
               setPeriodo(period);
             }}
-            className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border ${
+            
+            className={`px-4 py-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border ${
               periodo === period
                 ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                 : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'

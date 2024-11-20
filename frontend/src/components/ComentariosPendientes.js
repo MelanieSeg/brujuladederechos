@@ -343,14 +343,14 @@ export default function ComentariosPendientes() {
           </div>
 
           {/* Inputs de Fecha y Botón de Descarga */}
-          {/* Inputs de Fecha y Botón de Descarga */}
           <div className="flex flex-row items-center space-x-4">
             <div className="flex flex-row items-center space-x-2">
               <input
                 type="date"
-                value={fechaDesde}
+                value={fechaDesde}//AQUI 29 mejor valor
                 onChange={handleFechaDesdeChange}
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-28 sm:w-auto
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-29 sm:w-auto
+                   text-xs md:text-base md:px-3 md:py-2
                   ${isDarkMode
                     ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
                     : 'bg-white border-gray-300 focus:ring-blue-500'}`}
@@ -359,8 +359,9 @@ export default function ComentariosPendientes() {
               <input
                 type="date"
                 value={fechaHasta}
-                onChange={handleFechaHastaChange}
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-28 sm:w-auto
+                onChange={handleFechaHastaChange}//AQUI 29 mejor valor
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-29 sm:w-auto
+                  text-xs md:text-base md:px-3 md:py-2
                   ${isDarkMode
                     ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
                     : 'bg-white border-gray-300 focus:ring-blue-500'
@@ -375,7 +376,6 @@ export default function ComentariosPendientes() {
               className="w-auto" // Eliminar la clase w-full para evitar que el botón ocupe todo el ancho en pantallas pequeñas
             />
           </div>
-
         </div>
 
         {/* Vista de tabla para pantallas grandes */}
@@ -493,204 +493,210 @@ export default function ComentariosPendientes() {
           />
         </div>
 
-        {/* Barra de Clasificación */}
+        {/* Barra de Clasificación Responsiva */}
         {barraClasificacionVisible && (
-          <div className={`fixed right-0 top-0 h-screen w-[430px] shadow-lg p-6 opacity-100 border-l overflow-y-auto 
-            ${isDarkMode 
-              ? 'bg-gray-800 text-gray-200 border-l-gray-700' 
-              : 'bg-white text-gray-800 border-l-gray-300'
-            }`}>
-            <div className="flex justify-between items-start">
-              <h2 className="text-xl font-bold">
-                Clasificación manual de comentario
-              </h2>
-              <button
-                onClick={() => setBarraClasificacionVisible(false)}
-                className="text-gray-500 hover:text-gray-700 text-lg"
-                aria-label="Cerrar barra de clasificación"
-              >
-                &#10005;
-              </button>
-            </div>
-            <br />
-            <p>
-              <strong>Comentario:</strong>
-            </p>
-            <p>{comentarioSeleccionado?.comentario}</p>
-
-            <div className="mt-4">
-              <label className="block mt-2">
-                Privacidad intrusiva:
-                <input
-                  type="number"
-                  min="1"
-                  max="3"
-                  name="intensidadPrivacidad"
-                  value={clasificacion.intensidadPrivacidad}
-                  onChange={handleInputChange}
-                  placeholder="PR"
-                  className={`border rounded w-full mt-1 p-1 
-                    ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
-                />
-              </label>
-              <p className={`text-sm mt-1 ${
-                isDarkMode 
-                  ? 'text-gray-300' 
-                  : 'text-gray-500' 
-              }`}>
-                Grado de intrusión en la privacidad. Valor de 1 a 3.
+          <div className={`fixed inset-0 sm:inset-auto sm:top-0 sm:right-0 sm:w-[430px] sm:h-screen 
+            bg-opacity-50 sm:bg-opacity-100 
+            ${isDarkMode ? 'bg-gray-900 bg-opacity-75' : 'bg-black bg-opacity-50'}
+            flex justify-center sm:justify-end items-center sm:items-start z-50`}>
+            <div className={`relative bg-white dark:bg-gray-800 w-full sm:w-[430px] h-full sm:h-auto 
+              overflow-y-auto p-6 rounded-lg shadow-lg 
+              ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}
+              transition-transform transform 
+              ${barraClasificacionVisible ? 'translate-x-0' : 'translate-x-full'}
+              `}>
+              <div className="flex justify-between items-start">
+                <h2 className="text-xl font-bold">
+                  Clasificación manual de comentario
+                </h2>
+                <button
+                  onClick={() => setBarraClasificacionVisible(false)}
+                  className="text-gray-500 hover:text-gray-700 text-lg"
+                  aria-label="Cerrar barra de clasificación"
+                >
+                  &#10005;
+                </button>
+              </div>
+              <br />
+              <p>
+                <strong>Comentario:</strong>
               </p>
+              <p>{comentarioSeleccionado?.comentario}</p>
 
-              <label className="block mt-4">
-                Tiempo (0-1):
-                <input
-                  type="number"
-                  min="0"
-                  max="1"
-                  name="elementoTiempo"
-                  value={clasificacion.elementoTiempo}
-                  onChange={handleInputChange}
-                  placeholder="T"
-                  step="0.1"
-                  className={`border rounded w-full mt-1 p-1 
-                    ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
-                />
-              </label>
-              <p className={`text-sm mt-1 ${
-                isDarkMode 
-                  ? 'text-gray-300' 
-                  : 'text-gray-500' 
-              }`}>
-                Tiempo relacionado con la información (antigüedad). Valor de 0 a 1.
-              </p>
+              <div className="mt-4">
+                <label className="block mt-2">
+                  Privacidad intrusiva:
+                  <input
+                    type="number"
+                    min="1"
+                    max="3"
+                    name="intensidadPrivacidad"
+                    value={clasificacion.intensidadPrivacidad}
+                    onChange={handleInputChange}
+                    placeholder="PR"
+                    className={`border rounded w-full mt-1 p-1 
+                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+                  />
+                </label>
+                <p className={`text-sm mt-1 ${
+                  isDarkMode 
+                    ? 'text-gray-300' 
+                    : 'text-gray-500' 
+                }`}>
+                  Grado de intrusión en la privacidad. Valor de 1 a 3.
+                </p>
 
-              <label className="block mt-4">
-                Empatía hacia la privacidad (0-1):
-                <input
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  name="empatiaPrivacidad"
-                  value={clasificacion.empatiaPrivacidad}
-                  onChange={handleInputChange}
-                  placeholder="E.Privacidad"
-                  className={`border rounded w-full mt-1 p-1 
-                    ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
-                />
-              </label>
-              <p className={`text-sm mt-1 ${
-                isDarkMode 
-                  ? 'text-gray-300' 
-                  : 'text-gray-500' 
-              }`}>
-                Empatía hacia la privacidad de la persona. Valor de 0 a 1.
-              </p>
+                <label className="block mt-4">
+                  Tiempo (0-1):
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    name="elementoTiempo"
+                    value={clasificacion.elementoTiempo}
+                    onChange={handleInputChange}
+                    placeholder="T"
+                    step="0.1"
+                    className={`border rounded w-full mt-1 p-1 
+                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+                  />
+                </label>
+                <p className={`text-sm mt-1 ${
+                  isDarkMode 
+                    ? 'text-gray-300' 
+                    : 'text-gray-500' 
+                }`}>
+                  Tiempo relacionado con la información (antigüedad). Valor de 0 a 1.
+                </p>
 
-              <label className="block mt-4">
-                Interés público (1-3):
-                <input
-                  type="number"
-                  min="1"
-                  max="3"
-                  name="interesPublico"
-                  value={clasificacion.interesPublico}
-                  onChange={handleInputChange}
-                  placeholder="IP"
-                  className={`border rounded w-full mt-1 p-1 
-                    ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
-                />
-              </label>
-              <p className={`text-sm mt-1 ${
-                isDarkMode 
-                  ? 'text-gray-300' 
-                  : 'text-gray-500' 
-              }`}>
-                Nivel de interés público sobre el asunto. Valor de 1 a 3.
-              </p>
+                <label className="block mt-4">
+                  Empatía hacia la privacidad (0-1):
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    name="empatiaPrivacidad"
+                    value={clasificacion.empatiaPrivacidad}
+                    onChange={handleInputChange}
+                    placeholder="E.Privacidad"
+                    className={`border rounded w-full mt-1 p-1 
+                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+                  />
+                </label>
+                <p className={`text-sm mt-1 ${
+                  isDarkMode 
+                    ? 'text-gray-300' 
+                    : 'text-gray-500' 
+                }`}>
+                  Empatía hacia la privacidad de la persona. Valor de 0 a 1.
+                </p>
 
-              <label className="block mt-4">
-                Figura pública (0-2):
-                <input
-                  type="number"
-                  min="0"
-                  max="2"
-                  name="caracterPersonaPublico"
-                  value={clasificacion.caracterPersonaPublico}
-                  onChange={handleInputChange}
-                  placeholder="PF"
-                  className={`border rounded w-full mt-1 p-1 
-                    ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
-                />
-              </label>
-              <p className={`text-sm mt-1 ${
-                isDarkMode 
-                  ? 'text-gray-300' 
-                  : 'text-gray-500' 
-              }`}>
-                Indica si es una figura pública sobre el asunto. Valor de 0 a 2.
-              </p>
+                <label className="block mt-4">
+                  Interés público (1-3):
+                  <input
+                    type="number"
+                    min="1"
+                    max="3"
+                    name="interesPublico"
+                    value={clasificacion.interesPublico}
+                    onChange={handleInputChange}
+                    placeholder="IP"
+                    className={`border rounded w-full mt-1 p-1 
+                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+                  />
+                </label>
+                <p className={`text-sm mt-1 ${
+                  isDarkMode 
+                    ? 'text-gray-300' 
+                    : 'text-gray-500' 
+                }`}>
+                  Nivel de interés público sobre el asunto. Valor de 1 a 3.
+                </p>
 
-              <label className="block mt-4">
-                Origen de la información (-0.75 - 0):
-                <input
-                  type="number"
-                  min="-1"
-                  max="0"
-                  name="origenInformacion"
-                  placeholder="OI"
-                  step={0.05}
-                  value={clasificacion.origenInformacion}
-                  onChange={handleInputChange}
-                  className={`border rounded w-full mt-1 p-1 
-                    ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
-                />
-              </label>
-              <p className={`text-sm mt-1 ${
-                isDarkMode 
-                  ? 'text-gray-300' 
-                  : 'text-gray-500' 
-              }`}>
-                Origen de la información, si es legal o cuestionable. Valor de -0.75 a 0.
-              </p>
+                <label className="block mt-4">
+                  Figura pública (0-2):
+                  <input
+                    type="number"
+                    min="0"
+                    max="2"
+                    name="caracterPersonaPublico"
+                    value={clasificacion.caracterPersonaPublico}
+                    onChange={handleInputChange}
+                    placeholder="PF"
+                    className={`border rounded w-full mt-1 p-1 
+                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+                  />
+                </label>
+                <p className={`text-sm mt-1 ${
+                  isDarkMode 
+                    ? 'text-gray-300' 
+                    : 'text-gray-500' 
+                }`}>
+                  Indica si es una figura pública sobre el asunto. Valor de 0 a 2.
+                </p>
 
-              <label className="block mt-4">
-                Empatía hacia la libertad de expresión (0-1):
-                <input
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  name="empatiaExpresion"
-                  value={clasificacion.empatiaExpresion}
-                  onChange={handleInputChange}
-                  placeholder="E.Libertad"
-                  className={`border rounded w-full mt-1 p-1 
-                    ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
-                />
-              </label>
-              <p className={`text-sm mt-1 ${
-                isDarkMode 
-                  ? 'text-gray-300' 
-                  : 'text-gray-500' 
-              }`}>
-                Empatía hacia la libertad de expresión. Valor de 0 a 1.
-              </p>
-            </div>
+                <label className="block mt-4">
+                  Origen de la información (-0.75 - 0):
+                  <input
+                    type="number"
+                    min="-1"
+                    max="0"
+                    name="origenInformacion"
+                    placeholder="OI"
+                    step={0.05}
+                    value={clasificacion.origenInformacion}
+                    onChange={handleInputChange}
+                    className={`border rounded w-full mt-1 p-1 
+                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+                  />
+                </label>
+                <p className={`text-sm mt-1 ${
+                  isDarkMode 
+                    ? 'text-gray-300' 
+                    : 'text-gray-500' 
+                }`}>
+                  Origen de la información, si es legal o cuestionable. Valor de -0.75 a 0.
+                </p>
 
-            <div className="flex mt-6 justify-between">
-              <button
-                onClick={() => setBarraClasificacionVisible(false)}
-                className="bg-red-600 text-white py-2 px-4 rounded w-[48%]"
-              >
-                Cancelar
-              </button>
-              <button
-                className="bg-blue-600 text-white py-2 px-4 rounded w-[48%]"
-                onClick={enviarClasificacion}
-              >
-                Completar
-              </button>
+                <label className="block mt-4">
+                  Empatía hacia la libertad de expresión (0-1):
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    name="empatiaExpresion"
+                    value={clasificacion.empatiaExpresion}
+                    onChange={handleInputChange}
+                    placeholder="E.Libertad"
+                    className={`border rounded w-full mt-1 p-1 
+                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+                  />
+                </label>
+                <p className={`text-sm mt-1 ${
+                  isDarkMode 
+                    ? 'text-gray-300' 
+                    : 'text-gray-500' 
+                }`}>
+                  Empatía hacia la libertad de expresión. Valor de 0 a 1.
+                </p>
+              </div>
+
+              <div className="flex mt-6 justify-between">
+                <button
+                  onClick={() => setBarraClasificacionVisible(false)}
+                  className="bg-red-600 text-white py-2 px-4 rounded w-[48%]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="bg-blue-600 text-white py-2 px-4 rounded w-[48%]"
+                  onClick={enviarClasificacion}
+                >
+                  Completar
+                </button>
+              </div>
             </div>
           </div>
         )}

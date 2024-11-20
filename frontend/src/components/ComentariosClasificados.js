@@ -537,21 +537,21 @@ export default function ComentariosClasificados() {
       </h2>
 
       {/* Controles de Filtro y Descarga */}
-      <div className="flex flex-col md:flex-row items-center justify-between mb-6 space-y-4 md:space-y-0">
-        <div className="flex flex-wrap items-center space-x-4">
+      <div className="flex flex-wrap items-center justify-between mb-6 space-y-2 sm:space-y-0">
+        <div className="flex flex-row flex-wrap items-center space-x-2">
           {/* Botón para el calendario */}
           <div className="relative">
             <button
               ref={calendarButtonRef}
               onClick={toggleCalendar}
-              className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
+              className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-sm md:text-base text-gray-600 dark:text-gray-300 border 
                 ${isCalendarOpen
                   ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                   : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
             >
-              <div className="flex items-center space-x-2">
-                <PlusIcon className={`w-5 h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`} />
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <PlusIcon className={`w-4 h-4 sm:w-5 sm:h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`} />
                 <span>
                   {selectedDate ? (
                     <span>
@@ -571,24 +571,24 @@ export default function ComentariosClasificados() {
             <button
               ref={gravedadButtonRef}
               onClick={handleGravedadClick}
-              className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
+              className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-sm md:text-base text-gray-600 dark:text-gray-300 border 
                 ${isDropdownOpen
                   ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                   : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
             >
-              <div className="flex items-center space-x-2">
-                <PlusIcon className={`w-5 h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`} />
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <PlusIcon className={`w-4 h-4 sm:w-5 sm:h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`} />
                 <span>Gravedad</span>
               </div>
             </button>
             {isDropdownOpen && renderDropdown()}
           </div>
 
-          {/* Botón Quitar Filtros */}
+          {/* Botón Quitar Filtros AQUI */}
           <button
-            className={`px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
-              bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center space-x-2`}
+            className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-sm md:text-base text-gray-600 dark:text-gray-300 border 
+              bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center space-x-1 sm:space-x-2`}
             onClick={() => {
               setSelectedDate(null);
               setSelectedGravedad({
@@ -601,7 +601,7 @@ export default function ComentariosClasificados() {
               setPaginaActual(1);
             }}
           >
-            <XMarkIcon className={`w-5 h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`} />
+            <XMarkIcon className={`w-4 h-4 sm:w-5 sm:h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`} />
             <span>Quitar Filtros</span>
           </button>
         </div>
@@ -612,7 +612,8 @@ export default function ComentariosClasificados() {
           <div className="flex items-center space-x-2">
             <input
               type="date"
-              className={`border rounded px-2 py-1 focus:outline-none focus:ring-2 w-28 sm:w-32
+              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-29 md:w-auto
+                text-xs md:text-base md:px-3 md:py-2
                 ${isDarkMode 
                   ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500' 
                   : 'bg-white border-gray-300 focus:ring-blue-500'
@@ -627,7 +628,8 @@ export default function ComentariosClasificados() {
             <span className={isDarkMode ? 'text-gray-300' : 'text-gray-800'}>-</span>
             <input
               type="date"
-              className={`border rounded px-2 py-1 focus:outline-none focus:ring-2 w-28 sm:w-32
+              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-29 md:w-auto
+                text-xs md:text-base md:px-3 md:py-2
                 ${isDarkMode 
                   ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500' 
                   : 'bg-white border-gray-300 focus:ring-blue-500'
@@ -827,6 +829,19 @@ export default function ComentariosClasificados() {
                   </div>
                   <div className="text-sm">
                     {truncateComentario(comentario.comentario.comentario, 100)}
+                  </div>
+                  {/* Agregamos el estado del comentario rodeado por el mismo color que en la vista de escritorio */}
+                  <div className="mt-2">
+                    <span
+                      className={`
+                        inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold 
+                        ${getBadgeColor(comentario?.gravedad)}
+                        ${isDarkMode ? 'bg-opacity-20' : ''}
+                      `}>
+                      {mapGravedad(
+                        comentario?.gravedad ? comentario.gravedad : 'Desconocida'
+                      )}
+                    </span>
                   </div>
                   {showDetailedColumns && (
                     <div className="flex flex-col space-y-1">

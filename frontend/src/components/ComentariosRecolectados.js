@@ -506,27 +506,30 @@ export default function ComentariosRecolectados() {
           {/* Inputs de Fecha y Botón de Descarga */}
           <div className="flex flex-row items-center space-x-4">
             <div className="flex flex-row items-center space-x-2">
-              <input
+            <input
                 type="date"
-                value={fechaDesde}
-                onChange={(e) => setFechaDesde(e.target.value)}
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-28 sm:w-auto
-                  ${isDarkMode
-                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                    : 'bg-white border-gray-300 focus:ring-blue-500'
-                  }`}
-              />
-              <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
-              <input
-                type="date"
-                value={fechaHasta}
-                onChange={(e) => setFechaHasta(e.target.value)}
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-28 sm:w-auto
-                  ${isDarkMode
-                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                    : 'bg-white border-gray-300 focus:ring-blue-500'
-                  }`}
-              />
+                  value={fechaDesde}
+                    onChange={(e) => setFechaDesde(e.target.value)}
+                    className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-29 md:w-auto 
+    text-xs md:text-base md:px-3 md:py-2
+    ${isDarkMode
+      ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
+      : 'bg-white border-gray-300 focus:ring-blue-500'
+    }`}
+/>
+<span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
+<input
+  type="date"
+  value={fechaHasta}
+  onChange={(e) => setFechaHasta(e.target.value)}
+  className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-29 md:w-auto 
+    text-xs md:text-base md:px-3 md:py-2
+    ${isDarkMode
+      ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
+      : 'bg-white border-gray-300 focus:ring-blue-500'
+    }`}
+/>
+
             </div>
              {/* Componente Formulario para descargar el PDF */}
             <Formulario
