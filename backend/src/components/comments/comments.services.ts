@@ -98,29 +98,21 @@ class CommentsService {
         return { success: false, data: null, msg: "Usuario no válido" };
       }
 
-      const { commentId, comentarioScrapedId, clasificadorId, notas, ...data } = updateCommentDto
-
-
+      const { commentId, comentarioScrapedId, clasificadorId, notas, motivo, detalle, ...data } = updateCommentDto
 
       const result = await this.prisma.$transaction(async (prisma) => {
         const comment = await prisma.comentarioScraped.findFirst({
           where: {
             id: updateCommentDto.commentId
+          },
+          include: {
+            comentarios: true
           }
         })
 
         if (!comment) {
           throw new Error("Comentario no existe")
         }
-
-        const updatedComment = await prisma.comentarioScraped.update({
-          where: {
-            id: comment.id
-          },
-          data: {
-            ...data
-          }
-        })
 
         const cambios = []
         for (const field in data) {
@@ -137,18 +129,49 @@ class CommentsService {
             }
           }
         }
-
         console.log(cambios)
 
+        if (cambios.length === 0 && clasificadorId === comment.comentarios[0]?.clasificadorId) {
+          return comment
+        }
+
+        const updatedComment = await prisma.comentarioScraped.update({
+          where: {
+            id: comment.id
+          },
+          data: {
+            ...data
+          },
+          include: {
+            comentarios: true,
+          }
+        })
+
+
+
+        if (clasificadorId && clasificadorId !== updatedComment.comentarios[0].clasificadorId) {
+          if (updatedComment.comentarios && updatedComment.comentarios.length > 0) {
+            await prisma.comentarioClasificado.update({
+              where: {
+                id: updatedComment.comentarios[0].id
+              },
+              data: {
+                clasificadorId: clasificadorId
+              }
+            })
+          } else {
+            throw new Error("No hay comentarios relacionados para actualizar 'clasificadorId'")
+          }
+        }
         if (cambios.length > 0) {
           await prisma.auditoria.create({
             data: {
               usuarioId: user.id,
               tipoAccion: TipoAccion.EDITAR_COMENTARIO_CLASIFICADO,
-              motivoAccion: MotivoAccion.REVISION,
+              motivoAccion: motivo,
               entidad: 'ComentarioScraped',
               entidadId: comment.id,
-              detalles: `Edicion de variables de comentario clasificado por ${user.name}`,
+              detalles: `${updateCommentDto.detalle}. Operacion realizada por ${user.name}`,
               cambios: {
                 create: cambios
               }
@@ -179,9 +202,7 @@ class CommentsService {
   }
 
   deleteComment = async (commentId: string, userId: string) => {
-
     try {
-
       const user = await this.prisma.user.findUnique({
         where: { id: userId }
       });
@@ -218,23 +239,21 @@ class CommentsService {
           usuarioId: userId,
           tipoAccion: "ELIMINAR_COMENTARIO_RECOLECTADO",
           entidad: "comentarioScraped",
-          entidadId: deletedComment.id
+          entidadId: deletedComment.id,
+          detalles: null
         }
       })
-
       return {
         msg: "Comentario eliminado con exito",
         data: deletedComment,
         success: true
       }
-
     } catch (err) {
       return {
         msg: err,
         data: null,
         success: false
       }
-
     }
   }
 

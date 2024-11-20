@@ -1,4 +1,4 @@
-import { Gravedad } from "@prisma/client";
+import { Gravedad, MotivoAccion } from "@prisma/client";
 import * as z from "zod";
 
 export const commentScrappedSchema = z.object({
@@ -58,9 +58,18 @@ export const commentScrappedClassificationSchema = z.object({
 export type CommentScrapdClassification = z.infer<typeof commentScrappedClassificationSchema>;
 
 export const editCommentScrapedSchema = commentScrappedClassificationSchema.extend({
-  commentId: z.string()
+  commentId: z.string(),
+  motivo: z.nativeEnum(MotivoAccion),
+  detalle: z.string().min(1).max(255)
 })
 
 
 export type EditCommnetScraperdDto = z.infer<typeof editCommentScrapedSchema>
+
+
+export const deleteCommentScrapedSchema = z.object({
+  commentId: z.string().cuid(),
+  notas: z.string()
+})
+
 

@@ -181,8 +181,8 @@ class EmolNewsSpider(scrapy.Spider):
             queue=RABBITMQ_QUEUE,
             durable=True,
             arguments={
-                'x-dead-letter-exchange': 'comentarios_scraping_queue_dead',  # Cambia al nombre correcto si es necesario
-                'x-dead-letter-routing-key': 'dead_letter_routing_key'  # Cambia al nombre correcto si es necesario
+                'x-dead-letter-exchange': 'comentarios_scraping_queue_dead',
+                'x-dead-letter-routing-key': 'dead_letter_routing_key'  
             }
         )
 
@@ -219,38 +219,45 @@ class EmolNewsSpider(scrapy.Spider):
         try:
             data = response.json()
             self.logger.info("Datos decodificados correctamente.")
-        except json.JSONDecodeError:
-            self.logger.error(f"No se pudo decodificar JSON para la URL: {response.url}")
+        except json.JSONDecodeError as e:
+            self.logger.error(f"No se pudo decodificar JSON para la URL: {response.url}. Error: {e}")
             return
 
         comentarios = data.get('comments', [])
         self.logger.info("Comentarios obtenidos: %s", len(comentarios))
         for comentario in comentarios:
-            comment_adjusted = {
-                'id': str(comentario.get('id')),
-                'texto': comentario.get('text'),
-                'fecha': int(comentario.get('time')) if comentario.get('time') else None,
-                'autor': comentario.get('creator'),
-                'sourceUrl': response.meta.get('sourceUrl', 'https://www.emol.com'),
-                'news_url': response.meta.get('news_url')
-            }
-            #self.logger.info(f"Comentario procesado: {comment_adjusted}")
-            comment_clasificado = self.procesar_y_clasificar_comentario(comment_adjusted)
-            self.logger.info(comment_clasificado)
-            self.send_to_rabbitmq(comment_clasificado)
+            try:
+                comment_adjusted = {
+                    'id': str(comentario.get('id')),
+                    'texto': comentario.get('text'),
+                    'fecha': int(comentario.get('time')) if comentario.get('time') else None,
+                    'autor': comentario.get('creator'),
+                    'sourceUrl': response.meta.get('sourceUrl', 'https://www.emol.com'),
+                    'news_url': response.meta.get('news_url')
+                }
+                comment_clasificado = self.procesar_y_clasificar_comentario(comment_adjusted)
+                self.logger.info(comment_clasificado)
+                self.send_to_rabbitmq(comment_clasificado)
+            except Exception as e:
+                self.logger.error(f"Error procesando comentario {comentario.get('id')}: {e}")
 
     def procesar_y_clasificar_comentario(self, comentario):
-        """Función para limpiar, analizar y clasificar el comentario"""
-        texto_limpio = self.limpiar_texto(comentario['texto'])
-        sentimiento = sentiment_analyzer.predict(texto_limpio).output
-        emocion = emotion_analyzer.predict(texto_limpio).output
-        gravedad = self.clasificar_gravedad(sentimiento, emocion)
+        try:
+            texto_limpio = self.limpiar_texto(comentario['texto'])
+            sentimiento = sentiment_analyzer.predict(texto_limpio).output
+            emocion = emotion_analyzer.predict(texto_limpio).output
+            gravedad = self.clasificar_gravedad(sentimiento, emocion)
 
-        comentario['texto_limpio'] = texto_limpio
-        comentario['sentimiento'] = sentimiento
-        comentario['emocion'] = emocion
-        comentario['gravedad'] = gravedad
-        return comentario
+            comentario['texto_limpio'] = texto_limpio
+            comentario['sentimiento'] = sentimiento
+            comentario['emocion'] = emocion
+            comentario['gravedad'] = gravedad
+            return comentario
+        except Exception as e:
+            self.logger.error(f"Error al procesar y clasificar el comentario {comentario['id']}: {e}")
+            # Puedes decidir si devolver el comentario sin clasificar o manejarlo de otra forma
+            return comentario
+
 
     def limpiar_texto(self, texto):
         texto = re.sub(r'&nbsp;|<.*?>', '', texto)
@@ -286,10 +293,22 @@ class EmolNewsSpider(scrapy.Spider):
                 properties=pika.BasicProperties(delivery_mode=2)
             )
             self.logger.info(f"Comentario publicado en RabbitMQ: {message}")
-        except pika.exceptions.AMQPConnectionError:
-            self.logger.error("Error de conexión con RabbitMQ. Reintentando...")
+        except pika.exceptions.AMQPConnectionError as e:
+            self.logger.error(f"Error de conexión con RabbitMQ: {e}. Reintentando...")
             self.reconnect_rabbitmq()
-            self.send_to_rabbitmq(comment)  # Reintentar el envío
+            try:
+                self.channel.basic_publish(
+                    exchange='',
+                    routing_key=RABBITMQ_QUEUE,
+                    body=message,
+                    properties=pika.BasicProperties(delivery_mode=2)
+                )
+                self.logger.info(f"Comentario publicado en RabbitMQ después de reconectar: {message}")
+            except Exception as e:
+                self.logger.error(f"No se pudo publicar el mensaje después de reconectar: {e}")
+        except Exception as e:
+            self.logger.error(f"Error al enviar el comentario a RabbitMQ: {e}")
+
 
     def reconnect_rabbitmq(self):
         """Función para reestablecer la conexión a RabbitMQ en caso de fallo"""
@@ -303,8 +322,8 @@ class EmolNewsSpider(scrapy.Spider):
                 queue=RABBITMQ_QUEUE,
                 durable=True,
                 arguments={
-                    'x-dead-letter-exchange': 'comentarios_scraping_queue_dead',  # Cambia al nombre correcto si es necesario
-                    'x-dead-letter-routing-key': 'dead_letter_routing_key'  # Cambia al nombre correcto si es necesario
+                    'x-dead-letter-exchange': 'comentarios_scraping_queue_dead',
+                    'x-dead-letter-routing-key': 'dead_letter_routing_key'
                 }
             )
 

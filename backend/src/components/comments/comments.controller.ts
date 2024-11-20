@@ -117,7 +117,6 @@ class CommentsController {
     }
   }
 
-
   deleteComment = async (req: Request, res: Response) => {
     try {
       const id = req.body
@@ -138,9 +137,6 @@ class CommentsController {
       } else {
         return res.status(400).json({ msg: data.msg });
       }
-
-
-
 
     } catch (err) {
 

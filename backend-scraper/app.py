@@ -24,11 +24,10 @@ def run_spider_task():
     # Llama al comando `scrapy crawl emol_news_spider` como subproceso
     result = subprocess.run(
         ["scrapy", "crawl", "emol_news_spider"],
-        cwd="scrapy_brujula",  # Asegúrate de que apunta al directorio correcto del proyecto Scrapy
+        cwd="scrapy_brujula",  
         capture_output=True,
         text=True
     )
-    # Captura la salida y errores del comando
     if result.returncode == 0:
         return "Scraping completado con éxito"
     else:
@@ -37,7 +36,6 @@ def run_spider_task():
 # Endpoint para iniciar el scraping
 @app.route('/start_scraping', methods=['POST'])
 def start_scraping():
-    # Inicia la tarea de Celery
     task = run_spider_task.delay()
     return jsonify({"message": "Scraping iniciado", "task_id": task.id}), 200
 

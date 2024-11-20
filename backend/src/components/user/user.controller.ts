@@ -20,10 +20,17 @@ class UserController {
 
   createUser = async (req: Request, res: Response) => {
     try {
+
+      const admin = req.user
+
       const validData = userSchema.safeParse(req.body);
 
       if (!validData.success) {
         return res.status(400).json({ error: "Datos ingresados invalidos" });
+      }
+
+      if (!admin || !admin.userId || admin.rol !== "ADMIN") {
+        return res.status(401).json({ error: "No estas autorizado para realizar esta operacion" })
       }
 
       const emailInUse = await this.userService.getUserbyEmail(
@@ -37,7 +44,8 @@ class UserController {
           .json({ error: "Email ingresado ya esta registrado" });
       }
 
-      const user = await this.userService.addUser(req.body);
+      const user = await this.userService.addUser(req.body, admin.userId);
+
 
       return res.status(201).json({
         msg: "Usuario creado exitosamente. Ahora tienes que confirmar tu email porfavor.",
@@ -47,6 +55,7 @@ class UserController {
       return res.status(500).json({ error: "Error interno del servidor" });
     }
   };
+
 
   updateUserData = async (req: Request, res: Response) => {
     try {
@@ -73,12 +82,18 @@ class UserController {
   changeUserState = async (req: Request, res: Response) => {
     try {
 
+      const user = req.user
+
       const validData = userChangeStateSchema.safeParse(req.body);
       if (!validData.success) {
         return res.status(400).json({ error: "Datos ingresados invalidos" });
       }
 
-      const data = await this.userService.changeUserState(validData.data)
+      if (!user || !user.userId || user.rol !== "ADMIN") {
+        return res.status(401).json({ error: "No estas autorizado para realizar esta operacion" })
+      }
+
+      const data = await this.userService.changeUserState(validData.data, user.userId)
 
 
       return res.status(200).json({
@@ -102,7 +117,7 @@ class UserController {
       }
 
       if (!user || user.rol !== "ADMIN" || user.userId === validData.data.userId) {
-        return res.status(401).json({ error: "No estas autorizado para realizar userIdParamsSchemaesta operacion" })
+        return res.status(401).json({ error: "No estas autorizado para realizar esta operacion" })
       }
 
       const data = await this.userService.deleteUser(validData.data.userId);

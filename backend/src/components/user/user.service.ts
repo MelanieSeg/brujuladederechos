@@ -15,7 +15,7 @@ class UserService {
     this.cloudService = CloudinaryService
   }
 
-  addUser = async (user: User) => {
+  addUser = async (user: User, adminId: string) => {
     const SALT_ROUNDS = 10;
 
     try {
@@ -34,8 +34,16 @@ class UserService {
         },
       });
 
-      console.log(newUser)
 
+      const auditoriaLog = await this.prisma.auditoria.create({
+        data: {
+          usuarioId: adminId,
+          tipoAccion: "CREAR_USUARIO",
+          entidad: "User",
+          entidadId: newUser.id,
+          detalles: null
+        }
+      })
 
       const { password, ...userNoPassword } = newUser;
 
@@ -259,7 +267,6 @@ class UserService {
           password: hashedNewPassword
         }
       })
-
       /*
                         await Promise.all([
               this.prisma.user.update({
@@ -323,7 +330,7 @@ class UserService {
       },
     });
 
-  changeUserState = async (userChangeStateDto: UserChangeStateDto) => {
+  changeUserState = async (userChangeStateDto: UserChangeStateDto, adminId: string) => {
     try {
       const user = await this.getUserById(userChangeStateDto.id);
 
@@ -345,6 +352,15 @@ class UserService {
       })
 
       //TODO: Aca hay que crear un registro de auditoria que al usuario "x" se le quito el acceso
+      const auditoria = await this.prisma.auditoria.create({
+        data: {
+          usuarioId: adminId,
+          tipoAccion: "DESACTIVAR_USUARIO",
+          entidad: "User",
+          entidadId: deactivatedUser.id,
+          detalles: null
+        }
+      })
 
       return {
         success: true,
