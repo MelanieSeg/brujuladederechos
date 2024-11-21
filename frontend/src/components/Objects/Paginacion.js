@@ -210,7 +210,7 @@ export default function Paginacion({ paginaActual, totalPaginas, onPageChange })
             <button
               key={index}
               onClick={() => typeof num === 'number' && handlePageClick(num)}
-              className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold transition-colors duration-200
+              className={`relative inline-flex items-center px-6 py-3 text-lg font-semibold transition-colors duration-200
                 ${
                   num === '...'
                     ? 'cursor-default text-gray-500'
