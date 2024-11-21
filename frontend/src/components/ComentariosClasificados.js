@@ -544,7 +544,7 @@ export default function ComentariosClasificados() {
             <button
               ref={calendarButtonRef}
               onClick={toggleCalendar}
-              className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-sm md:text-base text-gray-600 dark:text-gray-300 border 
+              className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-[14px] sm:text-sm md:text-base text-gray-600 dark:text-gray-300 border 
                 ${isCalendarOpen
                   ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                   : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -558,7 +558,7 @@ export default function ComentariosClasificados() {
                       Fecha: <span className={`font-semibold`}>{format(new Date(selectedDate), 'dd/MM/yyyy')}</span>
                     </span>
                   ) : (
-                    'Seleccionar Fecha'
+                    ' Fecha'
                   )}
                 </span>
               </div>
@@ -571,7 +571,7 @@ export default function ComentariosClasificados() {
             <button
               ref={gravedadButtonRef}
               onClick={handleGravedadClick}
-              className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-sm md:text-base text-gray-600 dark:text-gray-300 border 
+              className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-[14px] sm:text-sm md:text-base text-gray-600 dark:text-gray-300 border 
                 ${isDropdownOpen
                   ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                   : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -587,7 +587,7 @@ export default function ComentariosClasificados() {
 
           {/* Botón Quitar Filtros */}
           <button
-            className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-sm md:text-base text-gray-600 dark:text-gray-300 border 
+            className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-[14px] sm:text-sm md:text-base text-gray-600 dark:text-gray-300 border 
               bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center space-x-1 sm:space-x-2`}
             onClick={() => {
               setSelectedDate(null);
