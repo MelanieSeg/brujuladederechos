@@ -334,8 +334,17 @@ class UserService {
     try {
       const user = await this.getUserById(userChangeStateDto.id);
 
+
       if (!user) {
         return { success: false, data: null, message: `Error, el usuario con el id ${userChangeStateDto.id} no fue encontrado` };
+      }
+
+      if (user?.id === adminId) {
+        return {
+          success: false,
+          data: null,
+          message: `Error, esta operacion no es permitida`
+        }
       }
 
       //NOTA: El usuario no lo podemos eliminiar por que existen existe la posibilidad
