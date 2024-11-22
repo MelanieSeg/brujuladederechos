@@ -17,6 +17,8 @@ model ComentarioScraped {
   fechaClasificacion     DateTime?
   clasificado            Boolean                 @default(false)
   ibfScore               Float?
+  resultadoIbf ResultadoIBF?
+  aprobadoPorModelo Boolean? @default(false)
   privacyScore           Float?
   expressionScore        Float?
   vulnerabilidad         Float                   @default(1)
@@ -319,4 +321,10 @@ enum TipoToken {
 enum CLASIFICACION {
   AUTOMATICA
   MANUAL
+}
+
+enum ResultadoIBF {
+  PRIVACIDAD_PREDOMINA
+  LIBERTAD_EXPRESION_PREDOMINA
+  EQUILIBRIO_ENTRE_DERECHOS
 }
