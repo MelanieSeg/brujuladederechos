@@ -1,57 +1,9 @@
 import React, { useState, useContext } from 'react';
 import { EllipsisHorizontalIcon } from '@heroicons/react/20/solid';
-import Paginacion from './Objects/Paginacion'; // Importa el componente de paginación
+import Paginacion from './Objects/Paginacion';
 import { ThemeContext } from '../utils/ThemeContext';
 
-const changes = [
-  {
-    id: 1,
-    comment: 'No me gustó mucho',
-    website: 'latercera.com',
-    date: '04-10-2024',
-    reason: ['Revisión manual', 'Actualización'],
-    column: 'Text',
-    user: 'John Doe'
-  },
-  {
-    id: 2,
-    comment: 'Podría ser mejor.',
-    website: 'latercera.com',
-    date: '04-10-2024',
-    reason: ['Revisión manual', 'Error'],
-    column: 'Text',
-    user: 'John Doe'
-  },
-  {
-    id: 3,
-    comment: 'No estoy satisfecho',
-    website: 'latercera.com',
-    date: '04-10-2024',
-    reason: ['Revisión manual'],
-    column: 'Text',
-    user: 'John Doe'
-  },
-  {
-    id: 4,
-    comment: 'Hay muchos errores aquí',
-    website: 'quora.com',
-    date: '05-10-2024',
-    reason: ['Error'],
-    column: 'Text',
-    user: 'John Doe'
-  },
-  {
-    id: 5,
-    comment: 'No es lo que esperaba',
-    website: 'quora.com',
-    date: '04-09-2024',
-    reason: ['Revisión manual', 'Error', 'Actualización'],
-    column: 'Text',
-    user: 'John Doe'
-  },
-];
-
-// Función para determinar el color de las etiquetas
+// ReasonBadge component remains the same
 const ReasonBadge = ({ reason }) => {
   const getColor = (reason) => {
     switch (reason) {
@@ -67,7 +19,8 @@ const ReasonBadge = ({ reason }) => {
   };
 
   return (
-    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getColor(reason)}`}>
+    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getColor(reason)} mr-1 mb-1 text-center`}
+    style={{ display: 'inline-block', textAlign: 'center', minWidth: '60px' }}>
       {reason}
     </span>
   );
@@ -75,17 +28,39 @@ const ReasonBadge = ({ reason }) => {
 
 export default function HistorialDeCambios() {
   const [paginaActual, setPaginaActual] = useState(1);
-  const [changesPerPage] = useState(10); // Para paginación
-  const [selectedChange, setSelectedChange] = useState(null); // Para mostrar detalles en barra lateral
+  const [changesPerPage] = useState(10);
+  const [selectedChange, setSelectedChange] = useState(null);
   const { isDarkMode } = useContext(ThemeContext);
+
+  // Sample data
+  const changes = [
+    {
+      id: 1,
+      comment: 'No me gustó mucho',
+      website: 'latercera.com',
+      date: '04-10-2024',
+      reason: ['Revisión manual', 'Actualización'],
+      column: 'Text',
+      user: 'John Doe'
+    },
+    {
+      id: 4,
+      comment: 'Hay muchos errores aquí',
+      website: 'quora.com',
+      date: '05-10-2024',
+      reason: ['Error'],
+      column: 'Text',
+      user: 'John Doe'
+    },
+  ];
+
   const indiceUltimoCambio = paginaActual * changesPerPage;
   const indicePrimerCambio = indiceUltimoCambio - changesPerPage;
   const cambiosAMostrar = changes.slice(indicePrimerCambio, indiceUltimoCambio);
-
   const totalPaginas = Math.ceil(changes.length / changesPerPage);
 
   const handleVerDetalles = (cambio) => {
-    setSelectedChange(cambio); // Mostrar el detalle en la barra lateral
+    setSelectedChange(cambio);
   };
 
   const handleCerrarDetalles = () => {
@@ -93,23 +68,24 @@ export default function HistorialDeCambios() {
   };
 
   return (
-    <div className={`p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
-      <div className="flex-grow">
-        <h2 className={`text-2xl font-semibold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Historial de cambios</h2>
+    <div className={`p-4 sm:p-8 min-h-screen ${isDarkMode ? "bg-gray-700 text-white" : "bg-gray-100 text-gray-800"}`}>
+      <h2 className={`text-2xl font-semibold mb-6 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+        Historial de cambios
+      </h2>
 
-        {/* Contenedor de tabla */}
-        <div className={`mt-8 ${isDarkMode ? 'bg-gray-800 shadow-lg' : 'bg-white shadow-md'} rounded-lg`}>
+      {/* Vista de Tabla para Pantallas Grandes */}
+      <div className="hidden sm:block">
+        <div className={`mt-8 ${isDarkMode ? 'bg-gray-800 shadow-lg' : 'bg-white shadow-md'} rounded-lg overflow-x-auto`}>
           <table className="min-w-full">
-          <thead>
+            <thead>
               <tr>
                 {['Comentario', 'Sitio web', 'Fecha de modificación', 'Motivo de modificación', 'Usuario', 'Detalles'].map((header) => (
                   <th 
                     key={header} 
-                    className={`px-6 py-4 text-left font-medium border-b 
+                    className={`px-6 py-4 text-left font-medium border-b max-w-xs
                       ${isDarkMode 
                         ? 'text-gray-300 border-gray-700' 
-                        : 'text-gray-500 border-gray-200'
-                      }`}
+                        : 'text-gray-500 border-gray-200'}`}
                   >
                     {header}
                   </th>
@@ -119,10 +95,10 @@ export default function HistorialDeCambios() {
             <tbody className="space-y-4">
               {cambiosAMostrar.map((change) => (
                 <tr key={change.id} className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                  <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{change.comment}</td>
-                  <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{change.website}</td>
-                  <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{change.date}</td>
-                  <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                  <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{change.comment}</td>
+                  <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{change.website}</td>
+                  <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{change.date}</td>
+                  <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                     {change.reason.map((r) => (
                       <ReasonBadge key={r} reason={r} />
                     ))}
@@ -131,9 +107,8 @@ export default function HistorialDeCambios() {
                   <td className="p-3 text-center">
                     <button
                       onClick={() => handleVerDetalles(change)}
-                      className={`${isDarkMode 
-                        ? 'text-gray-300 hover:text-white' 
-                        : 'text-gray-500 hover:text-gray-700'}`}>
+                      className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
                       <EllipsisHorizontalIcon className="h-5 w-5" />
                     </button>
                   </td>
@@ -142,68 +117,122 @@ export default function HistorialDeCambios() {
             </tbody>
           </table>
         </div>
-        {/* Paginación utilizando el componente */}
+      </div>
+
+      {/* Vista de Tarjetas para Pantallas Pequeñas */}
+      <div className="block sm:hidden space-y-4">
+        {cambiosAMostrar.map((change) => (
+          <div 
+            key={change.id} 
+            className={`rounded-lg p-4 ${
+              isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white text-gray-800'
+            } shadow-md`}
+          >
+            <div className="flex justify-between items-start mb-2">
+              <div className="space-y-1">
+                <p className="font-medium">{change.comment}</p>
+                <p className="text-sm">{change.website}</p>
+              </div>
+              <button
+                onClick={() => handleVerDetalles(change)}
+                className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <EllipsisHorizontalIcon className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-2">
+              <div>
+                <p className="text-sm font-medium mb-1">Fecha de modificación:</p>
+                <p className="text-sm">{change.date}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium mb-1">Motivo de modificación:</p>
+                <div className="flex flex-wrap">
+                  {change.reason.map((r) => (
+                    <ReasonBadge key={r} reason={r} />
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium mb-1">Usuario:</p>
+                <p className="text-sm">{change.user}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Paginación */}
+      <div className="mt-4">
         <Paginacion
           paginaActual={paginaActual}
           totalPaginas={totalPaginas}
-          onPageChange={setPaginaActual} // Actualiza la página actual
+          onPageChange={setPaginaActual}
         />
       </div>
 
-      {/* Barra lateral para mostrar detalles */}
+      {/* Panel lateral de detalles */}
       {selectedChange && (
-        <div className={`fixed inset-0 ${isDarkMode ? 'bg-black' : 'bg-gray-600'} bg-opacity-50 h-full w-full`}>
-          <div className={`absolute right-0 top-0 h-full w-1/3 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} shadow-lg p-6`}>
+        <div 
+          className={`fixed inset-0 ${isDarkMode ? 'bg-black' : 'bg-gray-600'} bg-opacity-50 z-50`}
+          onClick={handleCerrarDetalles}
+        >
+          <div 
+            className={`absolute right-0 top-0 h-full w-full sm:w-1/3 
+              ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} 
+              shadow-lg p-6`}
+            onClick={e => e.stopPropagation()}
+          >
             <div className="flex justify-between items-start">
               <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 Detalle de modificación
               </h3>
               <button 
                 onClick={handleCerrarDetalles} 
-                className={`${isDarkMode 
-                  ? 'text-gray-300 hover:text-white' 
-                  : 'text-gray-500 hover:text-gray-700'
-                } text-lg`}
+                className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700'} text-lg`}
               >
                 &#10005;
               </button>
             </div>
 
-            <div className="mt-6">
-              <p className={`text-sm font-semibold ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-                Comentario:
-              </p>
-              <p className={`text-base mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {selectedChange.comment}
-              </p>
+            <div className="mt-6 space-y-6">
+              <div>
+                <p className={`text-sm font-semibold ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                  Comentario:
+                </p>
+                <p className={`text-base mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {selectedChange.comment}
+                </p>
+              </div>
 
-              <p className={`text-sm font-semibold mt-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-                Detalles:
-              </p>
-              <textarea
-                className={`w-full mt-1 p-2 border rounded-md 
-                  ${isDarkMode 
-                    ? 'bg-gray-700 text-white border-gray-600' 
-                    : 'bg-gray-100 text-gray-500 border-gray-300'
-                  }`}
-                rows="3"
-                disabled
-                value="El valor fue modificado debido a la detección de un error en el registro clasificación automática."
-              />
+              <div>
+                <p className={`text-sm font-semibold ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                  Detalles:
+                </p>
+                <textarea
+                  className={`w-full mt-1 p-2 border rounded-md 
+                    ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-500 border-gray-300'}`}
+                  rows="3"
+                  disabled
+                  value="El valor fue modificado debido a la detección de un error en el registro clasificación automática."
+                />
+              </div>
 
-              <p className={`text-sm font-semibold mt-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-                 Modificación realizada por:
-              </p>
-              <input
-                type="text"
-                className={`w-full mt-1 p-2 border rounded-md 
-                  ${isDarkMode 
-                    ? 'bg-gray-700 text-white border-gray-600' 
-                    : 'bg-gray-100 text-gray-500 border-gray-300'
-                  }`}
-                disabled
-                value={selectedChange.user}
-              />
+              <div>
+                <p className={`text-sm font-semibold ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+                  Modificación realizada por:
+                </p>
+                <input
+                  type="text"
+                  className={`w-full mt-1 p-2 border rounded-md 
+                    ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-500 border-gray-300'}`}
+                  disabled
+                  value={selectedChange.user}
+                />
+              </div>
             </div>
           </div>
         </div>

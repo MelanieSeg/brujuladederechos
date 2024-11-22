@@ -67,7 +67,7 @@ export default function Paginacion({ paginaActual, totalPaginas, onPageChange })
 
   return (
     <div
-      className={`flex items-center justify-between px-4 py-3 sm:px-6 
+      className={`flex items-center justify-between w-full px-4 py-3 sm:px-6 
         ${isDarkMode ? 'bg-gray-800' : 'bg-white'} 
         flex-wrap
       `}
@@ -77,7 +77,7 @@ export default function Paginacion({ paginaActual, totalPaginas, onPageChange })
         <button
           onClick={() => handlePageClick(paginaActual - 1)}
           disabled={paginaActual === 1}
-          className={`px-4 py-2 rounded-md flex items-center space-x-2 transition-colors duration-200
+          className={`px-4 py-2 rounded-md flex items-center space-x-4 transition-colors duration-200
             ${isDarkMode 
               ? 'bg-gray-700 text-gray-200 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed' 
               : 'bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'

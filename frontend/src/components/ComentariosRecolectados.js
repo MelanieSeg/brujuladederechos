@@ -119,8 +119,8 @@ export default function ComentariosRecolectados() {
           : "bg-gray-300 text-gray-800";
       case "CLASIFICADO":
         return isDarkMode
-          ? "bg-gray-700 text-gray-200"
-          : "bg-gray-200 text-gray-800";
+          ? "bg-green-300 text-green-800"
+          : "bg-green-200 text-green-600";
       default:
         return isDarkMode
           ? "bg-gray-500 text-white"
@@ -137,8 +137,8 @@ export default function ComentariosRecolectados() {
           : "bg-gray-300";
       case "CLASIFICADO":
         return isDarkMode
-          ? "bg-gray-700"
-          : "bg-gray-200";
+          ? "bg-green-300"
+          : "bg-green-200";
       default:
         return isDarkMode
           ? "bg-gray-500"
@@ -375,7 +375,7 @@ export default function ComentariosRecolectados() {
   );
 
   return (
-    <div className={`p-2 sm:p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
+    <div className={`p-2 sm:p-4 min-h-screen lg:p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
       {/* Contenedor de Toasts */}
       <Toast />
 
@@ -384,14 +384,14 @@ export default function ComentariosRecolectados() {
           Comentarios recolectados
         </h2>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 space-y-4 sm:space-y-0">
-          <div className="flex flex-row space-x-4">
+        <div className="flex flex-wrap items-center justify-between space-y-2 md:space-y-0 md:space-x-0">
+          <div className="flex flex-row flex-wrap items-center space-x-2">
             {/* Botón de Fecha con Dropdown */}
             <div className="relative">
               <button
                 ref={dateButtonRef}
                 onClick={toggleDateDropdown}
-                className={`px-3 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
+                className={`px-4 py-2 mb-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
                   ${isDateDropdownOpen
                     ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -485,7 +485,7 @@ export default function ComentariosRecolectados() {
               <button
                 ref={gravedadButtonRef}
                 onClick={handleGravedadClick}
-                className={`px-3 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
+                className={`px-4 py-2 mb-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
                   ${isDropdownOpen
                     ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -505,52 +505,54 @@ export default function ComentariosRecolectados() {
 
           {/* Inputs de Fecha y Botón de Descarga */}
           <div className="flex flex-row items-center space-x-4">
-            <div className="flex flex-row items-center space-x-2">
+            <div className="flex flex-row space-x-2 mb-2">
             <input
                 type="date"
                   value={fechaDesde}
                     onChange={(e) => setFechaDesde(e.target.value)}
-                    className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-29 md:w-auto 
-    text-xs md:text-base md:px-3 md:py-2
-    ${isDarkMode
-      ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-      : 'bg-white border-gray-300 focus:ring-blue-500'
-    }`}
-/>
-<span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
-<input
-  type="date"
-  value={fechaHasta}
-  onChange={(e) => setFechaHasta(e.target.value)}
-  className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-29 md:w-auto 
-    text-xs md:text-base md:px-3 md:py-2
-    ${isDarkMode
-      ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-      : 'bg-white border-gray-300 focus:ring-blue-500'
-    }`}
-/>
+                    className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
+                      w-24 sm:w-auto md:w-auto lg:w-auto
+                      text-xs md:text-base 
+                      ${isDarkMode
+                        ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
+                        : 'bg-white border-gray-300 focus:ring-blue-500'
+                      }`}
+                      />
+                      <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
+                      <input
+                        type="date"
+                        value={fechaHasta}
+                        onChange={(e) => setFechaHasta(e.target.value)}
+                        className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
+                          w-24 sm:w-auto md:w-auto lg:w-auto
+                          text-xs md:text-base 
+                          ${isDarkMode
+                            ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
+                            : 'bg-white border-gray-300 focus:ring-blue-500'
+                          }`}
+                      />
 
-            </div>
-             {/* Componente Formulario para descargar el PDF */}
-            <Formulario
-              comentariosFiltrados={filteredComments}
-              columns={columns}
-              formatData={formatData}
-              fileName="comentarios_recolectados.pdf"
-              className="w-auto" // Cambiado de 'ml-4' a 'w-auto'
-            />
-          </div>
-        </div>
+                  </div>
+                  {/* Componente Formulario para descargar el PDF */}
+                  <Formulario
+                    comentariosFiltrados={filteredComments}
+                    columns={columns}
+                    formatData={formatData}
+                    fileName="comentarios_recolectados.pdf"
+                    className="w-auto"
+                  />
+                </div>
+              </div>
 
         {/* Vista de tabla para pantallas grandes */}
         <div className="overflow-x-auto hidden sm:block">
-          <table className={`min-w-full table-fixed ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg border-collapse`}>
+          <table className={`min-w-full table-fixed border-collapse rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md overflow-hidden`}>
             <thead>
               <tr className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
                 {columns.map((columna) => (
                   <th
                     key={columna.title}
-                    className={`px-4 py-2 text-left font-medium border-b w-${columna.width} 
+                    className={`px-6 py-4 text-left font-medium border-b w-${columna.width} 
                       ${isDarkMode
                         ? 'text-gray-300 border-gray-700'
                         : 'text-gray-500 border-gray-300'
@@ -564,14 +566,14 @@ export default function ComentariosRecolectados() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center">
+                  <td colSpan={5} className="text-center">
                     <Cargando />
                   </td>
                 </tr>
               ) : currentComments.length > 0 ? (
                 currentComments.map((comentario, index) => (
                   <tr key={index} className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <td className={`px-4 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                    <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                       {truncateComentario(comentario.comentario, 100)}
                     </td>
                     <td className={`px-4 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
@@ -581,7 +583,7 @@ export default function ComentariosRecolectados() {
                         {comentario.estado === "PENDIENTE_CLASIFICACION" ? 'Pendiente' : 'Clasificado'}
                       </span>
                     </td>
-                    <td className={`px-4 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                    <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
                       {comentario.sourceUrl}
                     </td>
                     <td className={`px-4 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
@@ -620,12 +622,12 @@ export default function ComentariosRecolectados() {
 
         {/* Vista de tarjetas para pantallas pequeñas */}
         <div className="block sm:hidden flex flex-col items-center">
-          <div className="space-y-4">
+          <div className="space-y-4 w-full">
             {loading ? (
               <Cargando />
             ) : currentComments.length > 0 ? (
               currentComments.map((comentario, index) => (
-                <div key={index} className={`w-full max-w-sm border p-4 rounded-md ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200'}`}>
+                <div key={index} className={`w-full border p-4 rounded-md ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200'}`}>
                   <div className="flex flex-col space-y-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">

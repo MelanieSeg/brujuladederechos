@@ -170,6 +170,23 @@ export default function ComentariosPendientes() {
     setClasificacion({ ...clasificacion, [name]: parsedValue });
   };
 
+  const getStatusColorClass = (estado) => {
+    switch (estado) {
+      case "PENDIENTE_CLASIFICACION":
+        return isDarkMode
+          ? "bg-gray-600"
+          : "bg-gray-300";
+      case "CLASIFICADO":
+        return isDarkMode
+          ? "bg-green-300"
+          : "bg-green-200";
+      default:
+        return isDarkMode
+          ? "bg-green-300"
+          : "bg-green-200";
+    }
+  };
+
   const enviarClasificacion = async () => {
     try {
       const response = await api.post("/comments/clasificar", {
@@ -247,7 +264,7 @@ export default function ComentariosPendientes() {
   ];
 
   return (
-    <div className={`p-2 sm:p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
+    <div className={`p-2 sm:p-4 min-h-screen lg:p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
       {/* Contenedor de Toasts */}
       <Toast />
 
@@ -256,14 +273,14 @@ export default function ComentariosPendientes() {
           Comentarios pendientes
         </h2>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 space-y-4 sm:space-y-0">
-          <div className="flex flex-row space-x-4">
+        <div className="flex flex-wrap items-center justify-between space-y-2 md:space-y-0 md:space-x-0">
+          <div className="flex flex-row flex-wrap items-center space-x-2">
             {/* Botón de Fecha con Dropdown */}
             <div className="relative">
               <button
                 ref={fechaButtonRef}
                 onClick={() => setMostrarSelectorFecha(!mostrarSelectorFecha)}
-                className={`px-3 py-2 rounded-full text-gray-600 dark:text-gray-300 border 
+                className={`px-4 py-2 mb-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border
                   ${mostrarSelectorFecha
                     ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -344,29 +361,32 @@ export default function ComentariosPendientes() {
 
           {/* Inputs de Fecha y Botón de Descarga */}
           <div className="flex flex-row items-center space-x-4">
-            <div className="flex flex-row items-center space-x-2">
+            <div className="flex flex-row space-x-2 mb-2">
               <input
                 type="date"
                 value={fechaDesde}//AQUI 29 mejor valor
                 onChange={handleFechaDesdeChange}
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-29 sm:w-auto
-                   text-xs md:text-base md:px-3 md:py-2
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
+                  w-24 sm:w-auto md:w-auto lg:w-auto
+                  text-xs md:text-base 
                   ${isDarkMode
                     ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                    : 'bg-white border-gray-300 focus:ring-blue-500'}`}
-              />
+                    : 'bg-white border-gray-300 focus:ring-blue-500'
+                  }`}
+                  />
               <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
               <input
                 type="date"
                 value={fechaHasta}
                 onChange={handleFechaHastaChange}//AQUI 29 mejor valor
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 w-29 sm:w-auto
-                  text-xs md:text-base md:px-3 md:py-2
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
+                  w-24 sm:w-auto md:w-auto lg:w-auto
+                  text-xs md:text-base 
                   ${isDarkMode
                     ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
                     : 'bg-white border-gray-300 focus:ring-blue-500'
                   }`}
-              />
+                  />
             </div>
             <Formulario 
               comentariosFiltrados={comentariosFiltrados} 
@@ -379,12 +399,12 @@ export default function ComentariosPendientes() {
         </div>
 
         {/* Vista de tabla para pantallas grandes */}
-        <div className="overflow-x-auto hidden sm:block">
-          <table className={`min-w-full ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg border-collapse table-fixed`}>
+        <div className="overflow-x-auto w-full hidden sm:block">
+          <table className={`min-w-full table-fixed border-collapse rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md overflow-hidden`}>
             <thead>
               <tr className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
                 {columnasPendientes.map((columna) => (
-                  <th key={columna.title} className={`px-6 py-4 text-left font-medium border-b
+                  <th key={columna.title} className={`px-6 py-4 text-left font-medium border-b w-${columna.width}
                     ${isDarkMode
                       ? 'text-gray-300 border-gray-700'
                       : 'text-gray-500 border-gray-300'
@@ -441,16 +461,16 @@ export default function ComentariosPendientes() {
 
         {/* Vista de tarjetas para pantallas pequeñas */}
         <div className="block sm:hidden flex flex-col items-center">
-          <div className="space-y-4">
+          <div className="space-y-4 w-full">
             {loading ? (
               <Cargando />
             ) : comentariosAMostrar.length > 0 ? (
               comentariosAMostrar.map((comentario, index) => (
-                <div key={index} className={`w-full max-w-sm border p-4 rounded-md ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200'}`}>
+                <div key={index} className={`w-full border p-4 rounded-md ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200'}`}>
                   <div className="flex flex-col space-y-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
-                        <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+                        <div className={`w-4 h-4 rounded-full ${getStatusColorClass(comentario.estado)}`}></div>
                         <span className="ml-2 font-medium truncate break-all">{comentario.sourceUrl}</span>
                       </div>
                       <div className="text-sm">
@@ -495,15 +515,18 @@ export default function ComentariosPendientes() {
 
         {/* Barra de Clasificación Responsiva */}
         {barraClasificacionVisible && (
-          <div className={`fixed inset-0 sm:inset-auto sm:top-0 sm:right-0 sm:w-[430px] sm:h-screen 
-            bg-opacity-50 sm:bg-opacity-100 
-            ${isDarkMode ? 'bg-gray-900 bg-opacity-75' : 'bg-black bg-opacity-50'}
-            flex justify-center sm:justify-end items-center sm:items-start z-50`}>
+          <div className={`fixed inset-0 z-30 ${isDarkMode 
+              ? 'bg-gray-900 bg-opacity-70' 
+              : 'bg-gray-800 bg-opacity-50'
+            } 
+            flex justify-center sm:justify-end items-center sm:items-start
+            overflow-hidden`}>
             <div className={`relative bg-white dark:bg-gray-800 w-full sm:w-[430px] h-full sm:h-auto 
               overflow-y-auto p-6 rounded-lg shadow-lg 
               ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}
               transition-transform transform 
               ${barraClasificacionVisible ? 'translate-x-0' : 'translate-x-full'}
+              max-h-screen sm:max-h-full sm:my-auto
               `}>
               <div className="flex justify-between items-start">
                 <h2 className="text-xl font-bold">

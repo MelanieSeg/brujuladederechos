@@ -1,4 +1,3 @@
-// BarraLateral.js
 import React, { useState, useRef, useContext } from 'react';
 import { BellIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
@@ -11,17 +10,17 @@ import {
   DocumentTextIcon, 
   DocumentCheckIcon, 
   ClockIcon, 
+  ArchiveBoxIcon,
   CogIcon, 
   UserGroupIcon 
 } from '@heroicons/react/24/outline';
-
 export default function BarraLateral({ collapsed = false, isMobile = false }) { // Added isMobile prop
   const { user, logout } = useAuth();
   const location = useLocation();
   const [notificacionesVisibles, setNotificacionesVisibles] = useState(false);
   const notificacionesRef = useRef(null);
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);
-
+  const [isLogoutModalVisible, setLogoutModalVisible] = useState(false);
   const toggleNotificaciones = () => {
     setNotificacionesVisibles(!notificacionesVisibles);
   };
@@ -59,6 +58,12 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
       path: '/comentarios-clasificados',
       requiredRole: ['ADMIN', 'MODERADOR']
     },
+    { 
+      icon: ArchiveBoxIcon, 
+       label: 'Historial de cambios', 
+       path: '/historial-de-cambios',
+       requiredRole: ['ADMIN', 'MODERADOR'] 
+     },
     { 
       icon: UserGroupIcon, 
       label: 'Panel administrador', 
@@ -128,13 +133,48 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
     );
   };
 
+  const LogoutModal = () => (
+    <div
+      className={`fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50`}
+    >
+      <div
+        className={`relative bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 p-8 rounded-lg shadow-xl max-w-sm w-full`}
+      >
+        {/* Título */}
+        <h3 className="text-2xl font-bold mb-4 text-center">
+          ¿Estás seguro de que deseas cerrar sesión?
+        </h3>
+  
+        {/* Descripción */}
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 text-center">
+          Tu sesión actual se cerrará y perderás acceso temporalmente.
+        </p>
+  
+        {/* Botones */}
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setLogoutModalVisible(false)}
+            className={`flex-1 px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors duration-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600`}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleLogout}
+            className={`flex-1 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors duration-200`}
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div 
-      className={`h-full p-4 ${
+      className={`h-full min-h-screen p-4 ${
         isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
       } flex flex-col justify-between overflow-y-auto transition-all duration-300 ease-in-out ${collapsed ? 'w-20' : 'w-64'}
-      `}
-    >
+      `}>
       <div className="flex flex-col flex-grow">
         {/* Header Section */}
         <div className="mb-4 flex items-center justify-between">
@@ -243,9 +283,9 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
               )}
             </div>
             <button 
-              onClick={handleLogout} 
+              onClick={() => setLogoutModalVisible(true)} 
               className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600"
-              title="Logout"//*revisar/** */
+              title="Salir"
             >
               <ArrowRightOnRectangleIcon className="h-6 w-6" />
             </button>
@@ -258,15 +298,17 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
             className={`mt-auto p-4 border-t ${isDarkMode ? 'border-gray-600' : 'border-gray-200'} flex justify-end`}
           >
             <button 
-              onClick={handleLogout} 
+              onClick={() => setLogoutModalVisible(true)} 
               className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600"
-              title="Logout"
+              title="Salir"
             >
               <ArrowRightOnRectangleIcon className="h-6 w-6" />
             </button>
           </div>
+          
         )}
       </div>
+      {isLogoutModalVisible && <LogoutModal />}
     </div>
   );
 }
