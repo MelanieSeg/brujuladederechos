@@ -245,12 +245,30 @@ export default function ComentariosPendientes() {
     },
     {
       title: "Fecha",
-      width: 100,
+      width: 150,
       halign: 'center',
     },
     {
       title: "Acciones",
       width: 150,
+      halign: 'center',
+    },
+  ];
+
+  const columnasPendientesPDF = [
+    {
+      title: "Comentario",
+      width: 250,
+      halign: 'left',
+    },
+    {
+      title: "Sitio Web",
+      width: 150,
+      halign: 'left',
+    },
+    {
+      title: "Fecha",
+      width: 100,
       halign: 'center',
     },
   ];
@@ -390,7 +408,7 @@ export default function ComentariosPendientes() {
             </div>
             <Formulario 
               comentariosFiltrados={comentariosFiltrados} 
-              columns={columnasPendientes} 
+              columns={columnasPendientesPDF} 
               formatData={formatData}
               fileName="comentarios_pendientes.pdf"
               className="w-auto" // Eliminar la clase w-full para evitar que el botón ocupe todo el ancho en pantallas pequeñas

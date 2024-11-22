@@ -240,11 +240,18 @@ export default function ComentariosRecolectados() {
   };
 
   const columns = [
+    { title: "Comentario", width: "2/6", halign: 'left' },
+    { title: "Estado", width: "1/6", halign: 'center' },
+    { title: "Sitio Web", width: "1/6", halign: 'left' },
+    { title: "Fecha", width: "1/6", halign: 'center' },
+    { title: "Acciones", width: "1/6", halign: 'center' }, // Añadido Acciones
+  ];
+
+  const columnsPDF = [
     { title: "Comentario", width: "2/5", halign: 'left' },
     { title: "Estado", width: "1/5", halign: 'center' },
     { title: "Sitio Web", width: "1/5", halign: 'left' },
     { title: "Fecha", width: "1/5", halign: 'center' },
-    { title: "Acciones", width: "1/5", halign: 'center' }, // Añadido Acciones
   ];
 
   const formatData = (comentario) => {
@@ -536,7 +543,7 @@ export default function ComentariosRecolectados() {
                   {/* Componente Formulario para descargar el PDF */}
                   <Formulario
                     comentariosFiltrados={filteredComments}
-                    columns={columns}
+                    columns={columnsPDF}
                     formatData={formatData}
                     fileName="comentarios_recolectados.pdf"
                     className="w-auto"
