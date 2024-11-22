@@ -143,92 +143,96 @@ export default function PanelAdministrador() {
   };
 
   // Formulario para agregar un nuevo moderador
-  const formularioAgregarModerador = (
+
+const formularioAgregarModerador = (
+  <div 
+    className={`fixed inset-0 ${isDarkMode 
+        ? 'bg-gray-900 bg-opacity-70' 
+        : 'bg-gray-800 bg-opacity-50'
+    } flex justify-center sm:justify-end items-center sm:items-start h-screen`}>
     <div 
-      className={`fixed inset-0 ${isDarkMode 
-          ? 'bg-gray-900 bg-opacity-70' 
-          : 'bg-gray-800 bg-opacity-50'
-      } flex justify-center sm:justify-end items-center sm:items-start`}>
-      <div 
-        className={`w-full sm:max-w-md h-auto p-6 shadow-md overflow-y-auto ${
-          isDarkMode 
-            ? 'bg-gray-800 text-white' 
-            : 'bg-white text-gray-900'
-        }`}>
-        <div className="flex justify-between items-center mb-6">
-          <h3 
-            className={`text-xl font-bold ${
-              isDarkMode ? 'text-gray-200' : 'text-gray-900'
-            }`}>
-            Agregar nuevo moderador
-          </h3>
-          <button
-            onClick={() => {
-              setMostrarFormulario(false);
-              resetFormFields();
-            }}
-            className={`hover:bg-opacity-10 rounded-full p-1 ${
-              isDarkMode 
-                ? 'text-gray-300 hover:bg-gray-700' 
-                : 'text-gray-700 hover:bg-gray-200'
-            }`}>
-            <XMarkIcon 
-              className={`h-6 w-6 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`} 
-            />
-          </button>
-        </div>
-        <FormCreateUser />
+      className={`w-full sm:max-w-md h-full p-6 shadow-md overflow-y-auto ${
+        isDarkMode 
+          ? 'bg-gray-800 text-white' 
+          : 'bg-white text-gray-900'
+      }`}>
+      <div className="flex justify-between items-center mb-6">
+        <h3 
+          className={`text-xl font-bold ${
+            isDarkMode ? 'text-gray-200' : 'text-gray-900'
+          }`}>
+          Agregar nuevo moderador
+        </h3>
+        <button
+          onClick={() => {
+            setMostrarFormulario(false);
+            resetFormFields();
+          }}
+          className={`hover:bg-opacity-10 rounded-full p-1 ${
+            isDarkMode 
+              ? 'text-gray-300 hover:bg-gray-700' 
+              : 'text-gray-700 hover:bg-gray-200'
+          }`}>
+          <XMarkIcon 
+            className={`h-6 w-6 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`} 
+          />
+        </button>
       </div>
+      <FormCreateUser />
     </div>
-  );
+  </div>
+);
 
   // Formulario para editar un moderador existente
-  const formularioEditarModerador = (
-    <div 
-      className={`fixed inset-0 ${isDarkMode 
-          ? 'bg-gray-900 bg-opacity-70' 
-          : 'bg-gray-800 bg-opacity-50'
-      } flex justify-center sm:justify-end items-center sm:items-start`}>
-      <div 
-        className={`w-full sm:max-w-md h-auto p-6 shadow-md overflow-y-auto ${
-          isDarkMode 
-            ? 'bg-gray-800 text-white' 
-            : 'bg-white text-gray-900'
-        }`}>
-        <div className="flex justify-between items-center mb-6">
-          <h3 
-            className={`text-xl font-bold ${
-              isDarkMode ? 'text-gray-200' : 'text-gray-900'
-            }`}>
-            Editar moderador
-          </h3>
-          <button
-            onClick={() => {
-              setMostrarFormularioEditar(false);
-              setModeradorAEditar(null);
-              resetFormFields();
-            }}
-            className={`hover:bg-opacity-10 rounded-full p-1 ${
-              isDarkMode 
-                ? 'text-gray-300 hover:bg-gray-700' 
-                : 'text-gray-700 hover:bg-gray-200'
-            }`}>
-            <XMarkIcon 
-              className={`h-6 w-6 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-700'
-              }`} />
-          </button>
-        </div>
-        <FormUpdateUser userData={moderadorAEditar} />
+ 
+const formularioEditarModerador = (
+  <div
+    className={`fixed inset-0 h-screen ${
+      isDarkMode ? 'bg-gray-900 bg-opacity-70' : 'bg-gray-800 bg-opacity-50'
+    } flex justify-center sm:justify-end items-center sm:items-start`}
+  >
+    <div
+      className={`w-full sm:max-w-md h-full p-6 shadow-md overflow-y-auto ${
+        isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+      }`}
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h3
+          className={`text-xl font-bold ${
+            isDarkMode ? 'text-gray-200' : 'text-gray-900'
+          }`}
+        >
+          Editar moderador
+        </h3>
+        <button
+          onClick={() => {
+            setMostrarFormularioEditar(false);
+            setModeradorAEditar(null);
+            resetFormFields();
+          }}
+          className={`hover:bg-opacity-10 rounded-full p-1 ${
+            isDarkMode
+              ? 'text-gray-300 hover:bg-gray-700'
+              : 'text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <XMarkIcon
+            className={`h-6 w-6 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}
+          />
+        </button>
       </div>
+      <FormUpdateUser userData={moderadorAEditar} />
     </div>
-  );
+  </div>
+);
+
 
   return (
-    <div className={`p-4 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
-
+    <div className={`p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
       <h2 className={`text-2xl font-semibold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
         Panel de administración
       </h2>
