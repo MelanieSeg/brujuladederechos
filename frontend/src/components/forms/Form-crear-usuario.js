@@ -199,10 +199,10 @@ export default function FormCreateUser() {
       )}
 
       {/* Botones */}
-      <div className="flex justify-between mt-6">
+      <div className="flex mt-6 justify-between">
         <button
           type="button"
-          className={`px-4 py-2 rounded-md ${isDarkMode
+          className={`bg-red-600 text-white py-2 px-4 rounded w-[48%] ${isDarkMode
             ? 'bg-gray-600 text-gray-200 hover:bg-gray-500'
             : 'bg-red-500 text-white hover:bg-red-600'}`}
           onClick={() => setMostrarFormulario(false)}
@@ -212,7 +212,7 @@ export default function FormCreateUser() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`px-4 py-2 rounded-md ${isDarkMode
+          className={`bg-blue-600 text-white py-2 px-4 rounded w-[48%] ${isDarkMode
             ? 'bg-blue-700 text-white hover:bg-blue-600'
             : 'bg-blue-600 text-white hover:bg-blue-700'
             } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
