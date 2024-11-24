@@ -19,6 +19,43 @@ const api = axios.create({
   withCredentials: true, // Para enviar cookies 
 });
 
+// Método para enviar correo de recuperación de contraseña
+export const resetPasswordRequest = async (email) => {
+  try {
+    const response = await api.post('/reset-password-request', { email });
+    return response.data;
+  } catch (error) {
+    console.error('Error al solicitar restablecimiento de contraseña:', error);
+    throw error;
+  }
+};
+
+export const verifyResetToken = async (email, verificationCode) => {
+  try {
+    const response = await api.post('/verify-reset-token', { 
+      email, 
+      verificationCode 
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al verificar código:', error);
+    throw error;
+  }
+};
+
+export const resetPassword = async (token, newPassword) => {
+  try {
+    const response = await api.post('/reset-password', { 
+      token, 
+      newPassword 
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al restablecer contraseña:', error);
+    throw error;
+  }
+};
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");

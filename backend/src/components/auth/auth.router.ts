@@ -14,6 +14,10 @@ class AuthRouter {
     router
       .route("/refresh-token")
       .post(this.AuthController.getRefreshTokenFromCookie);
+    router.route("/send-reset-password-email")
+      .post(this.AuthController.sendResetPasswordEmail);
+    router.route("/reset-password")
+      .post(this.AuthController.resetPassword);
     return router;
   }
 }

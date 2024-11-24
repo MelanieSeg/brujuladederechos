@@ -119,6 +119,65 @@ class AuthController {
       return res.status(500).json({ msg: "Error interno del servidor" });
     }
   };
-}
+
+  sendResetPasswordEmail = async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+
+      //validar que el email existe
+      if (!email) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Correo electrónico es requerido' 
+        });
+      }
+      const user = await this.UserSerive.getUserbyEmail(email);
+      if (!user) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Usuario no encontrado' 
+        });
+      }
+
+      //genera token de restablecimiento
+      const token = await this.AuhtService.generateResetPasswordToken(email);
+
+      //enviar correo electrónico
+      await this.AuhtService.sendResetPasswordEmail(email, token);
+
+      res.status(200).json({ 
+        success: true, 
+        message: 'Correo de recuperación enviado' 
+      });
+    } catch (error) {
+      console.error('Error al enviar correo de recuperación:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || 'Error al enviar correo de recuperación' 
+      });
+    }
+  };
+
+  resetPassword = async (req: Request, res: Response) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      // Validar token y cambiar contraseña
+      const result = await this.AuhtService.validateResetPasswordToken(token, newPassword);
+
+      if (result.success) {
+        res.status(200).json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error('Error al restablecer contraseña:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || 'Error al restablecer contraseña' 
+      });
+    }
+  };
+  }
 
 export default AuthController;

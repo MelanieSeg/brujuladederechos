@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import { LockClosedIcon } from '@heroicons/react/24/solid';
 import { loginSchema } from '../lib/validations/login';
 import { useAuth } from '../hooks/useAuth'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup'
 import { ThemeContext } from '../utils/ThemeContext'; //
@@ -109,12 +109,15 @@ export default function Login() {
         </form>
         <div className="flex items-center justify-center mt-6">
           <div className="text-sm">
-            <a href="#" className={`font-medium 
+          <Link 
+              to="/forgot-password" 
+              className={`font-medium 
                 ${isDarkMode 
                   ? 'text-blue-400 hover:text-blue-300' 
-                  : 'text-blue-600 hover:text-blue-500'}`}>
+                  : 'text-blue-600 hover:text-blue-500'}`}
+            >
               ¿Olvidaste tu contraseña?
-            </a>
+            </Link>
           </div>
         </div>
       </div>

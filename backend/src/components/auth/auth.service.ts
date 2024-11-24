@@ -5,11 +5,10 @@ import * as jose from "jose";
 import dotenv from "dotenv";
 import { isValid } from "zod";
 import { IUser } from "../../models/user";
-
+import * as nodemailer from 'nodemailer';
+import { randomBytes } from 'crypto';
 
 //TODO: manejar mejor la crear de un new Prisma Client
-
-
 
 dotenv.config();
 
@@ -41,9 +40,6 @@ export interface IUserTokenPayload extends jose.JWTPayload {
 type VerifyTokenResult =
   | { isValid: true; payload: IUserTokenPayload }
   | { isValid: false; payload: null };
-
-
-
 
 class AuthService {
   private prisma: PrismaClient;
@@ -80,6 +76,93 @@ class AuthService {
       isValid: matchPassword,
       accessToken: jwt,
       refreshToken: refreshToken,
+    };
+  };
+
+  generateResetPasswordToken = async (email: string) => {
+    const user = await this.prisma.user.findUnique({ 
+      where: { email } 
+    });
+
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    //generar token único
+    const token = randomBytes(32).toString('hex');
+    //guardar token con fecha de expiración (1 hora)
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordToken: token,
+        resetPasswordExpires: new Date(Date.now() + 3600000) // 1 hora desde ahora
+      }
+    });
+
+    return token;
+  };
+
+  sendResetPasswordEmail = async (email: string, token: string) => {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', // O tu servicio de correo
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    // URL de restablecimiento
+    const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
+
+    // Opciones de correo
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Restablecimiento de contraseña',
+      html: `
+        <h1>Restablecimiento de contraseña</h1>
+        <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+        <a href="${resetUrl}">${resetUrl}</a>
+        <p>Este enlace expirará en 1 hora.</p>
+      `
+    };
+
+    // Enviar correo
+    await transporter.sendMail(mailOptions);
+  };
+
+  validateResetPasswordToken = async (token: string, newPassword: string) => {
+    // Buscar usuario con token válido
+    const user = await this.prisma.user.findFirst({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: { gt: new Date() }
+      }
+    });
+
+    if (!user) {
+      return { 
+        success: false, 
+        message: 'Token inválido o expirado' 
+      };
+    }
+
+    // Hashear nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar contraseña y limpiar token
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null
+      }
+    });
+
+    return { 
+      success: true, 
+      message: 'Contraseña restablecida exitosamente' 
     };
   };
 
