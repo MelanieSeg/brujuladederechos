@@ -19,6 +19,8 @@ import RequiredRole from './components/RequiredRole';
 import NoAutorizado from './components/NoAutorizado';
 import { SocketProvider } from './contexts/SocketContext';
 import { Toaster } from 'sonner';
+import RecuperarContraseña from './components/RecuperarContraseña';
+import RestablecerContraseña from './components/RestablecerContraseña';
 
 function App() {
   const [mostrarNotificaciones, setMostrarNotificaciones] = React.useState(false);
@@ -37,6 +39,16 @@ function App() {
               <Route path='/login' element={
                 <RutasPublicas>
                   <Login />
+                </RutasPublicas>
+              } />
+              <Route path="/forgot-password" element={
+                <RutasPublicas>
+                  <RecuperarContraseña />
+                </RutasPublicas>
+              } />
+              <Route path="/reset-password" element={
+                <RutasPublicas>
+                  <RestablecerContraseña />
                 </RutasPublicas>
               } />
               <Route path='/confirmar-cuenta' element={
