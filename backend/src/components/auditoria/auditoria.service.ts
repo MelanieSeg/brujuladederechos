@@ -11,8 +11,16 @@ class AuditoriaService {
 
 
   getAll = async () => {
-    return await this.prisma.auditoria.findMany()
-
+    return await this.prisma.auditoria.findMany({
+      include: {
+        usuario: {
+          select: {
+            name: true,
+            rol: true
+          }
+        }
+      }
+    })
   }
 }
 
