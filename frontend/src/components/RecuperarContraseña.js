@@ -9,6 +9,7 @@ import { ThemeContext } from '../utils/ThemeContext'; //
 
 const RecuperarContraseña = () => {
     const navigate = useNavigate();
+    const [emailError, setEmailError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { isDarkMode } = useContext(ThemeContext);
 
@@ -18,25 +19,31 @@ const RecuperarContraseña = () => {
       formState: { errors } 
     } = useForm({
       resolver: yupResolver(
-        userSchema.pick(['email']) // Usa solo la validación de email
+        userSchema.pick(['email'])
       )
     });
   
     const onSubmit = async (data) => {
       setIsLoading(true);
+      setEmailError('');
       try {
         const response = await api.post('/forgot-password', data);
         
         toast.success(response.data.message || 'Solicitud de restablecimiento enviada');
         navigate('/login');
       } catch (error) {
-        toast.error(error.response?.data?.message || 'Error al solicitar restablecimiento de contraseña');
+        // Manejo específico para correo no encontrado
+        if (error.response?.status === 404) {
+          setEmailError('El correo electrónico no está registrado en el sistema');
+        } else {
+          toast.error(error.response?.data?.message || 'Error al solicitar restablecimiento de contraseña');
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
-  return (
+    return (
         <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 
           ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
           <div className={`max-w-md w-full shadow-lg rounded-lg p-8 
@@ -60,12 +67,21 @@ const RecuperarContraseña = () => {
                     isDarkMode 
                       ? 'bg-gray-700 text-white border-gray-600' 
                       : 'bg-white text-gray-900 border-gray-300'
+                  } ${
+                    (errors.email || emailError) 
+                      ? 'border-red-500' 
+                      : (isDarkMode ? 'border-gray-600' : 'border-gray-300')
                   }`}
                   placeholder="tu-correo@ejemplo.com"
                 />
                 {errors.email && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors.email.message}
+                  </p>
+                )}
+                {emailError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {emailError}
                   </p>
                 )}
               </div>
@@ -92,6 +108,6 @@ const RecuperarContraseña = () => {
           </div>
         </div>
       );
-};
+    };
 
 export default RecuperarContraseña;
