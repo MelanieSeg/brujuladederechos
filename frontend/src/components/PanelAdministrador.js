@@ -26,6 +26,7 @@ export default function PanelAdministrador() {
   const [moderadorAEliminar, setModeradorAEliminar] = useState(null);
   const [moderadorAEditar, setModeradorAEditar] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingState, setLoadingState] = useState({});
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [contraseña, setContraseña] = useState('');
@@ -70,26 +71,43 @@ export default function PanelAdministrador() {
     }
   }, [moderadorAEditar]);
 
-  const cambiarStateUsuario = async function (userId, currentState) {
+  const cambiarStateUsuario = async (userId, currentState) => {
     try {
-      const response = await userApi.patch("/deactivate-user", { id: userId, isActive: !currentState })
-      console.log(response)
+      console.log('Intentando cambiar estado de usuario:', {
+        userId,
+        currentState,
+        newState: !currentState
+      });
+  
+      // Usar la misma ruta de actualización de usuario
+      const response = await userApi.patch(`update-user/id/${userId}`, { 
+        isActive: !currentState 
+      });
+  
+      console.log('Respuesta del servidor:', response);
+  
+      // Actualizar la lista de moderadores después de cambiar el estado
+      setModeradores(prevModeradores => 
+        prevModeradores.map((mod) =>
+          mod.id === userId ? { ...mod, isActive: !currentState } : mod
+        )
+      );
+  
     } catch (err) {
-      console.log(err)
+      console.error('Error al cambiar el estado del usuario:', err);
+      console.error('Detalles del error:', err.response?.data || err.message);
     }
-  }
-
+  };
+  
   // Función para activar o desactivar un moderador
   const manejarActivarDesactivarModerador = (id, currentState) => {
-    setModeradores(
-      moderadores.map((mod) =>
-        mod.id === id ? { ...mod, isActive: !mod.isActive } : mod
-      )
-    );
-
-    cambiarStateUsuario(id, currentState)
+    console.log('Método manejarActivarDesactivarModerador llamado');
+    console.log('ID del usuario:', id);
+    console.log('Estado actual:', currentState);
+    
+    cambiarStateUsuario(id, currentState);
   };
-
+  
   // Función para confirmar la eliminación de un moderador
   const confirmarEliminarModerador = (moderador) => {
     setModeradorAEliminar(moderador);
@@ -126,21 +144,6 @@ export default function PanelAdministrador() {
   const totalPaginas = Math.ceil(
     moderadoresFiltrados?.length / moderadoresPorPagina
   );
-
-  // Función para agregar un nuevo moderador
-  const handleAgregarModerador = (e) => {
-    e.preventDefault();
-    setMostrarFormulario(false);
-    resetFormFields();
-  };
-
-  // Función para manejar la edición del moderador
-  const handleEditarModerador = (e) => {
-    e.preventDefault();
-    setMostrarFormularioEditar(false);
-    setModeradorAEditar(null);
-    resetFormFields();
-  };
 
   // Formulario para agregar un nuevo moderador
 
@@ -180,7 +183,12 @@ const formularioAgregarModerador = (
           />
         </button>
       </div>
-      <FormCreateUser />
+      <FormCreateUser 
+        onClose={() => {
+          setMostrarFormulario(false);
+          resetFormFields();
+        }} 
+      />
     </div>
   </div>
 );
@@ -225,7 +233,11 @@ const formularioEditarModerador = (
           />
         </button>
       </div>
-      <FormUpdateUser userData={moderadorAEditar} />
+      <FormUpdateUser  userData={moderadorAEditar} onClose={() => {
+        setMostrarFormularioEditar(false);
+        setModeradorAEditar(null);
+        resetFormFields(); //reinicia los campos si es necesario
+      }} />
     </div>
   </div>
 );
@@ -430,11 +442,14 @@ const formularioEditarModerador = (
                 </span>
               </p>
               <button
-                onClick={() => manejarActivarDesactivarModerador(moderador.id, moderador.isActive)}
-                className={`mt-2 w-full px-4 py-2 text-sm font-semibold 
-                ${isDarkMode ? 'text-gray-300 bg-gray-700 border border-gray-500 hover:bg-gray-600' : 'text-gray-700 bg-gray-100 border border-gray-300 hover:bg-gray-200'} rounded-md`}
+                onClick={() => cambiarStateUsuario(moderador.id, moderador.isActive)}
+                disabled={loadingState[moderador.id]}
+                className={`px-4 py-1 text-sm font-semibold 
+                ${isDarkMode ? 'text-gray-300 bg-gray-700 border border-gray-500 hover:bg-gray-600' : 'text-gray-700 bg-gray-100 border border-gray-300 hover:bg-gray-200'} 
+                rounded-md ${loadingState[moderador.id] ? 'opacity-50 cursor-not-allowed' : ''}`}
+                style={{ minWidth: '100px' }}
               >
-                {moderador.isActive ? 'Desactivar' : 'Activar'}
+                {loadingState[moderador.id] ? 'Cambiando...' : (moderador.isActive ? 'Desactivar' : 'Activar')}
               </button>
             </div>
           ))

@@ -7,7 +7,7 @@ import { ThemeContext } from '../../utils/ThemeContext';
 
 
 
-export default function FormUpdateUser({ userData }) {
+export default function FormUpdateUser({ userData, onClose }) {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [apiError, setApiError] = useState(null);
   const { isDarkMode } = useContext(ThemeContext);
@@ -132,7 +132,7 @@ export default function FormUpdateUser({ userData }) {
         <button
           type="button"
           onClick={() => {
-            setMostrarFormulario(false);
+            onClose();
             reset();
           }}
           className={`bg-red-600 text-white py-2 px-4 rounded w-[48%] ${isDarkMode ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' : 'bg-red-500 text-white hover:bg-red-600'}`}
