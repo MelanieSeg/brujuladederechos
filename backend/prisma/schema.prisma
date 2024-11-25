@@ -45,12 +45,12 @@ model ComentarioScraped {
 
 model ComentarioClasificado {
   id                  String            @id @default(cuid())
-  clasificadorId      String
+  clasificadorId      String?
   fechaClasificacion  DateTime          @default(now())
   notas               String?
   clasificacion       CLASIFICACION?
   comentarioScrapedId String
-  clasificador        User              @relation(fields: [clasificadorId], references: [id])
+  clasificador       User?              @relation(fields: [clasificadorId], references: [id])
   comentario          ComentarioScraped @relation(fields: [comentarioScrapedId], references: [id])
 
   @@index([comentarioScrapedId])

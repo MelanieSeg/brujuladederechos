@@ -37,7 +37,7 @@ const Configuracion = () => {
   };
 
   return (
-    <div className={`p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
+    <div className={`p-2 sm:p-4 min-h-screen lg:p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
       <h2 className="text-2xl font-semibold mb-6">Configuración</h2>
 
       {/* Frecuencia de Web Scraping */}

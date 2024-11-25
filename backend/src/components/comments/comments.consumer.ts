@@ -172,10 +172,7 @@ class CommentsConsumer {
             typeNotificationApp: TipoNotificacionApp.INSERT_COMENTARIOS,
             type: TipoNotificacion.GLOBAL
           })
-
-
         }
-
 
       } else {
         console.error(`Error al insertar comentarios: ${result.msg}`);
@@ -195,7 +192,6 @@ class CommentsConsumer {
       console.error('Error al publicar notificación total:', err);
     }
   };
-
 
   close = async () => {
     await this.channel.close();

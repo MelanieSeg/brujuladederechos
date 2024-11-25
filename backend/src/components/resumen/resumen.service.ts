@@ -1,6 +1,4 @@
-import { PrismaClient, ResultadoIBF } from "@prisma/client";
-
-
+import { EstadoComentario, Gravedad, PrismaClient, ResultadoIBF } from "@prisma/client";
 
 
 class ResumenService {
@@ -19,7 +17,6 @@ class ResumenService {
     })
 
     return count
-
   }
 
   getCountClasifiedComments = async () => {
@@ -28,10 +25,9 @@ class ResumenService {
         estado: "CLASIFICADO"
       }
     })
-
     return count
-
   }
+
   getCountGraves = async () => {
     const count = await this.prisma.comentarioScraped.count({
       where: {
@@ -41,39 +37,136 @@ class ResumenService {
     return count
   }
 
-
   getDataResumenAnual = async () => {
     try {
+      const currentYear = new Date().getFullYear();
 
-      const comentariosClasificados = await this.prisma.comentarioScraped.findMany({
-        where: {
-          estado: "CLASIFICADO"
-        },
-        select: {
+      const months = Array.from({ length: 12 }, (_, i) => i);
+
+      const monthlyCounts = await Promise.all(
+        months.map(async (month) => {
+          const startOfMonth = new Date(currentYear, month, 1, 0, 0, 0, 0);
+
+          const endOfMonth = new Date(currentYear, month + 1, 0, 23, 59, 59, 999);
+
+          const [totalComments, acceptedComments, totalGraves, totalPendingComments] = await Promise.all([
+            this.prisma.comentarioScraped.count({
+              where: {
+                fechaClasificacion: {
+                  gte: startOfMonth,
+                  lte: endOfMonth,
+                },
+              },
+            }),
+            this.prisma.comentarioScraped.count({
+              where: {
+                resultadoIbf: "LIBERTAD_EXPRESION_PREDOMINA",
+                fechaClasificacion: {
+                  gte: startOfMonth,
+                  lte: endOfMonth,
+                },
+              },
+            }),
+            this.prisma.comentarioScraped.count({
+              where: {
+                gravedad: Gravedad.GRAVE,
+                fechaClasificacion: {
+                  gte: startOfMonth,
+                  lte: endOfMonth,
+                }
+              }
+            }),
+            this.prisma.comentarioScraped.count({
+              where: {
+                estado: EstadoComentario.PENDIENTE_CLASIFICACION,
+                fechaScraping: {
+                  gte: startOfMonth,
+                  lte: endOfMonth,
+                }
+              }
+            })
+          ]);
+
+          const approvalRate =
+            totalComments > 0 ? (acceptedComments / totalComments) * 100 : 0;
+
+          return {
+            month: startOfMonth.toLocaleString("es-ES", { month: "long" }),
+            totalComments,
+            acceptedComments,
+            totalGraves,
+            totalPendingComments
+          };
+        })
+      );
+
+      const totalYearComments = monthlyCounts.reduce(
+        (acc, month) => acc + month.totalComments,
+        0
+      );
+
+      const totalYearAcceptedComments = monthlyCounts.reduce(
+        (acc, month) => acc + month.acceptedComments,
+        0
+      );
+
+      const yearlyApprovalRate =
+        totalYearComments > 0
+          ? (totalYearAcceptedComments / totalYearComments) * 100
+          : 0;
+
+      const totalYearPendingComments = monthlyCounts.reduce((acc, month) => acc + month.totalGraves, 0);
+      const totalYearGraveComments = monthlyCounts.reduce((acc, month) => acc + month.totalPendingComments, 0);
+
+
+      const commentsByWebsite = await this.prisma.comentarioScraped.groupBy({
+        by: ['sitioWebId'],
+        _count: {
           id: true,
-          fechaClasificacion: true
         }
       })
+
+      const commentsByWebsiteWithNames = await Promise.all(
+        commentsByWebsite.map(async (entry) => {
+          const site = await this.prisma.sitioWeb.findUnique({
+            where: {
+              id: entry.sitioWebId,
+            },
+            select: {
+              nombre: true,
+              id: true
+            }
+          })
+
+          return {
+            sitioWeb: site?.nombre,
+            totalComentariosWebsite: entry._count.id,
+          }
+        })
+      )
 
       return {
         success: true,
         data: {
-          cantidad_comentarios_pendientes: this.getCountPendingComments(),
-          cantidad_comentarios_clasificados: this.getCountClasifiedComments(),
-          cantidad_comentarios_graves: this.getCountGraves(),
-          comentarios_clasificados: comentariosClasificados
+          total_comentarios_clasificados: totalYearComments,
+          total_comentarios_aceptados: totalYearAcceptedComments,
+          tasa_de_aprobacion_anual: yearlyApprovalRate.toFixed(2),
+          comentarios_por_mes: monthlyCounts,
+          total_comentarios_graves: totalYearGraveComments,
+          total_comentarios_pendientes: totalYearPendingComments,
+          total_comentarios_por_sitio_web: commentsByWebsiteWithNames
         },
-        msg: "Operacion exitosa"
-      }
-
+        msg: "Operación exitosa",
+      };
     } catch (err) {
+      console.error("Error en getDataResumenAnual:", err);
       return {
         success: false,
         data: null,
-        msg: err
-      }
+        msg: "Error al obtener el resumen anual",
+      };
     }
-  }
+  };
 
   getDataResumenDiario = async () => {
     try {
@@ -133,7 +226,7 @@ class ResumenService {
         success: true,
         data: {
           total_comentarios_analisados: totalCommentsToday,
-          total_comentarios_aceptados_hoy: countAceptedComments,
+          total_comentarios_aceptados_hoy: aceptedCommentsToday,
           tasa_de_aprobacion_hoy: ratioAprobacion.toFixed(2),
           comentarios_por_intervalo: intervalCounts
         },
@@ -179,12 +272,17 @@ class ResumenService {
             },
           });
 
+          const approvalRate = await this.getApprovalRateForInterval(start, end)
+
           return {
             day: start.toLocaleDateString('es-ES', { weekday: 'long' }),
             count,
+            approvalRate
           };
         })
       );
+
+
 
       const [countAcceptedComments, acceptedCommentsThisWeek, totalCommentsThisWeek, totalComments] =
         await Promise.all([
@@ -275,9 +373,12 @@ class ResumenService {
             },
           });
 
+          const approvalRate = await this.getApprovalRateForInterval(start, end)
+
           return {
             day: start.getDate(),
             count,
+            approvalRate
           };
         })
       );
@@ -333,186 +434,93 @@ class ResumenService {
     }
   };
 
-
-  /* 
-   //funcion generica para no repetir codigo
-getDataResumen = async (periodo: 'diario' | 'semanal' | 'mensual') => {
-  try {
-    let startDate: Date;
-    let endDate: Date;
-    let intervalUnit: 'hour' | 'day';
-
-    const now = new Date();
-
-    if (periodo === 'diario') {
-      startDate = new Date();
-      startDate.setHours(0, 0, 0, 0);
-      endDate = new Date();
-      intervalUnit = 'hour';
-    } else if (periodo === 'semanal') {
-      startDate = new Date();
-      startDate.setHours(0, 0, 0, 0);
-      startDate.setDate(startDate.getDate() - startDate.getDay() + 1); // Lunes
-      endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + 6);
-      endDate.setHours(23, 59, 59, 999);
-      intervalUnit = 'day';
-    } else if (periodo === 'mensual') {
-      startDate = new Date();
-      startDate.setDate(1);
-      startDate.setHours(0, 0, 0, 0);
-      endDate = new Date(startDate);
-      endDate.setMonth(endDate.getMonth() + 1);
-      endDate.setDate(0); // Último día del mes
-      endDate.setHours(23, 59, 59, 999);
-      intervalUnit = 'day';
-    } else {
-      throw new Error('Período inválido');
-    }
-
-    // Generar los intervalos
-    const intervals = [];
-    let current = new Date(startDate);
-
-    while (current <= endDate) {
-      const start = new Date(current);
-
-      let end: Date;
-      if (intervalUnit === 'hour') {
-        start.setMinutes(0, 0, 0);
-        end = new Date(start);
-        end.setHours(end.getHours() + 2);
-      } else {
-        start.setHours(0, 0, 0, 0);
-        end = new Date(start);
-        end.setDate(end.getDate() + 1);
-      }
-
-      intervals.push({ start, end });
-
-      if (intervalUnit === 'hour') {
-        current.setHours(current.getHours() + 2);
-      } else {
-        current.setDate(current.getDate() + 1);
-      }
-    }
-
-    // Obtener los conteos por intervalo
-    const intervalCounts = await Promise.all(
-      intervals.map(async ({ start, end }) => {
-        const count = await this.prisma.comentarioScraped.count({
+  getCommentsCountInInterval = async (start: Date, end: Date) => {
+    try {
+      const [totalCount, acceptedCount] = await Promise.all([
+        this.prisma.comentarioScraped.count({
           where: {
             fechaClasificacion: {
               gte: start,
               lt: end,
             },
           },
-        });
-
-        let label: string;
-        if (intervalUnit === 'hour') {
-          label = `${start.getHours().toString().padStart(2, '0')}:00 - ${end
-            .getHours()
-            .toString()
-            .padStart(2, '0')}:00`;
-        } else {
-          label = start.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' });
-        }
-
-        return {
-          interval: label,
-          count,
-        };
-      })
-    );
-
-    // Obtener los totales y tasas
-    const [countAcceptedComments, acceptedCommentsInPeriod, totalCommentsInPeriod, totalComments] =
-      await Promise.all([
-        // Total de comentarios aceptados
-        this.prisma.comentarioScraped.count({
-          where: {
-            resultadoIbf: ResultadoIBF.LIBERTAD_EXPRESION_PREDOMINA,
-          },
         }),
-        // Comentarios aceptados en el período
         this.prisma.comentarioScraped.count({
           where: {
             resultadoIbf: ResultadoIBF.LIBERTAD_EXPRESION_PREDOMINA,
             fechaClasificacion: {
-              gte: startDate,
-              lte: endDate,
+              gte: start,
+              lt: end,
             },
           },
         }),
-        // Total de comentarios en el período
-        this.prisma.comentarioScraped.count({
-          where: {
-            fechaClasificacion: {
-              gte: startDate,
-              lte: endDate,
-            },
-          },
-        }),
-        // Total de comentarios analizados
-        this.prisma.comentarioScraped.count(),
       ]);
 
-    const approvalRateInPeriod =
-      totalCommentsInPeriod > 0 ? (acceptedCommentsInPeriod / totalCommentsInPeriod) * 100 : 0;
+      const approvalRate = totalCount > 0 ? (acceptedCount / totalCount) * 100 : 0;
 
-    return {
-      success: true,
-      data: {
-        periodo,
-        total_comentarios_analisados: totalComments,
-        total_comentarios_aceptados: countAcceptedComments,
-        total_comentarios_analisados_periodo: totalCommentsInPeriod,
-        total_comentarios_aceptados_periodo: acceptedCommentsInPeriod,
-        tasa_de_aprobacion_periodo: approvalRateInPeriod.toFixed(2),
-        comentarios_por_intervalo: intervalCounts,
-      },
-      msg: 'Operación exitosa',
-    };
-  } catch (err) {
-    console.error('Error en getDataResumen:', err);
-    return {
-      success: false,
-      data: null,
-      msg: 'Error al obtener el resumen',
-    };
-  }
-};
-
-  */
-
-
-  getCommentsCountInInterval = async (start: Date, end: Date) => {
-    try {
-      const count = await this.prisma.comentarioScraped.count({
-        where: {
-          fechaClasificacion: {
-            gte: start,
-            lt: end,
-          },
-        },
-      });
       return {
         interval: `${start.getHours().toString().padStart(2, '0')}:00 - ${end
           .getHours()
           .toString()
           .padStart(2, '0')}:00`,
-        count,
+        totalCount,
+        acceptedCount,
+        approvalRate: approvalRate.toFixed(2),
       };
-
     } catch (err) {
+      console.error(`Error en getCommentsCountInInterval para el intervalo ${start} - ${end}:`, err);
       return {
-        interval: null,
-        count: 0,
-        msg: err
-      }
+        interval: `${start.getHours().toString().padStart(2, '0')}:00 - ${end
+          .getHours()
+          .toString()
+          .padStart(2, '0')}:00`,
+        totalCount: 0,
+        acceptedCount: 0,
+        approvalRate: "0.00",
+        msg: err instanceof Error ? err.message : String(err),
+      };
     }
-  }
+  };
+
+  private getApprovalRateForInterval = async (start: Date, end: Date) => {
+    try {
+      const [totalCount, acceptedCount] = await Promise.all([
+        this.prisma.comentarioScraped.count({
+          where: {
+            fechaClasificacion: {
+              gte: start,
+              lt: end,
+            },
+          },
+        }),
+        this.prisma.comentarioScraped.count({
+          where: {
+            resultadoIbf: ResultadoIBF.LIBERTAD_EXPRESION_PREDOMINA,
+            fechaClasificacion: {
+              gte: start,
+              lt: end,
+            },
+          },
+        }),
+      ]);
+
+      const approvalRate = totalCount > 0 ? (acceptedCount / totalCount) * 100 : 0;
+
+      return {
+        totalCount,
+        acceptedCount,
+        approvalRate: approvalRate.toFixed(2),
+      };
+    } catch (err) {
+      console.error(`Error en getApprovalRateForInterval para el intervalo ${start} - ${end}:`, err);
+      return {
+        totalCount: 0,
+        acceptedCount: 0,
+        approvalRate: "0.00",
+      };
+    }
+  };
+
 
 }
 

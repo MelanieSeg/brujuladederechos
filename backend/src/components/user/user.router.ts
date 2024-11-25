@@ -25,6 +25,7 @@ class UserRouter {
     )
     router.post('/upload-image', upload.single('image'), this.AuthMiddleware.authorize, this.UserController.uploadImage)
     router.post('/get-user-notifications', this.AuthMiddleware.authorize, this.UserController.getUserNotifications)
+    router.post('/read-notification', this.AuthMiddleware.authorize, this.UserController.markNotificationAsRead)
     router.post("/reset-password", this.AuthMiddleware.authorize, this.UserController.resetPasswordUser);
     router.route("/me").get(this.UserController.getUserById);
     router

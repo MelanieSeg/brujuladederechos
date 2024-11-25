@@ -1,4 +1,4 @@
-import { PrismaClient, TipoToken, User } from "@prisma/client";
+import { PrismaClient, TipoNotificacion, TipoToken, User } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { generateRandomToken } from "../../utils";
 import EmailService from "../email/email.service";
@@ -479,7 +479,6 @@ class UserService {
             userNotifications: {
               none: {
                 userId: userId,
-                isRead: false
               }
             }
           }
@@ -506,13 +505,68 @@ class UserService {
         data: comentariosNoLeidos
       }
 
-
-
     } catch (err) {
       return {
         message: err,
         success: false,
         data: null
+      }
+    }
+  }
+
+  markNotificationAsRead = async (notificationId: string, userId: string) => {
+    try {
+
+      const notification = await this.prisma.notification.findUnique({
+        where: {
+          id: notificationId,
+        }
+      })
+
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userId
+        }
+      })
+
+
+      if (!user) {
+        return {
+          success: false,
+          msg: "Error, no se pudo realizar la accion"
+        }
+      }
+
+      if (notification?.type === TipoNotificacion.GLOBAL) {
+        await this.prisma.userNotifications.create({
+          data: {
+            notificationId: notificationId,
+            userId: user.id,
+            isRead: true,
+          }
+        })
+      } else {
+        await this.prisma.userNotifications.update({
+          where: {
+            id: notificationId,
+            isRead: false
+          },
+          data: {
+            isRead: true
+          }
+        })
+      }
+
+
+      return {
+        success: true,
+        msg: "Se completo la accion de leer la notificacion con exito"
+      }
+
+    } catch (err) {
+      return {
+        success: false,
+        msg: err
       }
     }
   }

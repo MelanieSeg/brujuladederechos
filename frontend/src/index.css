@@ -1,3 +1,16 @@
+/* index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: theme('colors.light-bg');
+}
+
+body.dark {
+  background-color: theme('colors.dark-bg');
+}
