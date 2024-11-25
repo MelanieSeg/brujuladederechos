@@ -57,13 +57,23 @@ const ReasonBadge = ({ reason }) => {
 export default function HistorialDeCambios() {
   const [changes, setChanges] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [selectedChange, setSelectedChange] = useState(null);
   const [error, setError] = useState(null);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [comentariosPorPagina] = useState(10);
+  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [totalCambios, setTotalCambios] = useState(0);
 
   const { isDarkMode } = useContext(ThemeContext);
   const socket = useSocket();
+
+  const indiceUltimoComentario = paginaActual * comentariosPorPagina;
+  const indicePrimerComentario = indiceUltimoComentario - comentariosPorPagina;
+
+  const changesAMostrar = changes.slice(
+    indicePrimerComentario, 
+    indiceUltimoComentario
+  );
 
   const transformCambio = (nuevoCambio) => ({
     id: nuevoCambio.id,
@@ -86,24 +96,49 @@ export default function HistorialDeCambios() {
       try {
         setLoading(true);
         const response = await api.get('/auditoria/get-data', {
-          params: { page, limit: 10 }
+          params: { 
+            page: paginaActual, 
+            limit: comentariosPorPagina
+          }
         });
-
-        setChanges(response.data.data.map(transformCambio));
-        setTotalPages(response.data.totalPages);
+  
+        // Depuración para ver la estructura exacta de la respuesta
+        console.log('Respuesta completa:', response);
+        console.log('response.data:', response.data);
+  
+        // Determinar los datos de cambios
+        const changesData = response.data.data || 
+                             response.data.changes || 
+                             response.data || 
+                             [];
+  
+        // Determinar el total de cambios
+        const total = response.data.total || 
+                      response.data.count || 
+                      changesData.length || 
+                      0;
+  
+        // Transformar los cambios
+        const transformedChanges = Array.isArray(changesData) 
+          ? changesData.map(transformCambio) 
+          : [];
+  
+        setChanges(transformedChanges);
+        setTotalCambios(total);
+        setTotalPaginas(Math.ceil(total / comentariosPorPagina));
         setError(null);
       } catch (error) {
-        console.error('Error fetching changes:', error);
+        console.error('Error completo:', error);
+        console.error('Respuesta del error:', error.response);
         setError('No se pudieron cargar los registros de cambios');
         toast.error('No se pudieron cargar los cambios');
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchInitialData();
-  }, [page]);
-
+  }, [paginaActual, comentariosPorPagina]);
   useEffect(() => {
     if (!socket) return;
 
@@ -124,9 +159,11 @@ export default function HistorialDeCambios() {
       socket.off('connect_error');
     };
   }, [socket]);
-  
+
   const handlePageChange = (newPage) => {
-    setPage(newPage);
+    if (newPage > 0 && newPage <= totalPaginas) {
+      setPaginaActual(newPage);
+    }
   };
 
   const handleVerDetalles = (cambio) => {
@@ -137,22 +174,10 @@ export default function HistorialDeCambios() {
     setSelectedChange(null);
   };
 
-
-
-  if (loading) return <Cargando />;
-
   if (error) {
     return (
       <div className={`p-4 text-center ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
         {error}
-      </div>
-    );
-  }
-
-  if (changes.length === 0) {
-    return (
-      <div className={`p-4 text-center ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-        No hay registros de cambios disponibles
       </div>
     );
   }
@@ -170,7 +195,7 @@ export default function HistorialDeCambios() {
           <table className="min-w-full">
             <thead>
               <tr>
-                {['Acción ealizada', 'Fecha de modificación', 'Motivo de modificación', 'Usuario', 'Detalles'].map(
+                {['Acción realizada', 'Fecha de modificación', 'Motivo de modificación', 'Usuario', 'Detalles'].map(
                   (header) => (
                     <th
                       key={header}
@@ -184,38 +209,61 @@ export default function HistorialDeCambios() {
               </tr>
             </thead>
             <tbody className="space-y-4">
-              {changes.map((change) => (
-                <tr key={change.id} className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                  <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                    {change.comment}
-                  </td>
-                  <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                    {change.date}
-                  </td>
-                  <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                    {change.reason.map((r) => (
-                      <ReasonBadge key={r} reason={r} />
-                    ))}
-                  </td>
-                  <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{change.user}</td>
-                  <td className="p-3 text-center">
-                    <button
-                      onClick={() => handleVerDetalles(change)}
-                      className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
-                    >
-                      <EllipsisHorizontalIcon className="h-5 w-5" />
-                    </button>
+              {loading ? (
+                <tr>
+                  <td 
+                    colSpan={5} 
+                    className={`px-6 py-4 text-center 
+                      ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}
+                  >
+                    <div className="flex justify-center">
+                      <Cargando />
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : changesAMostrar.length === 0 ? (
+                <tr>
+                  <td 
+                    colSpan={5} 
+                    className={`px-6 py-4 text-center 
+                      ${isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white text-gray-600'}`}
+                  >
+                    No hay cambios disponibles
+                  </td>
+                </tr>
+              ) : (
+                changesAMostrar.map((change) => (
+                  <tr key={change.id} className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                      {change.comment}
+                    </td>
+                    <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                      {change.date}
+                    </td>
+                    <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                      {change.reason.map((r) => (
+                        <ReasonBadge key={r} reason={r} />
+                      ))}
+                    </td>
+                    <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{change.user}</td>
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => handleVerDetalles(change)}
+                        className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                      >
+                        <EllipsisHorizontalIcon className="h-5 w-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
-
       {/* Vista de Tarjetas para Pantallas Pequeñas */}
       <div className="block sm:hidden space-y-4">
-        {changes.map((change) => (
+        {changesAMostrar.map((change) => (
           <div
             key={change.id}
             className={`rounded-lg p-4 ${isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-white text-gray-800'
@@ -260,10 +308,10 @@ export default function HistorialDeCambios() {
 
       {/* Paginación */}
       <div className="mt-4">
-        <Paginacion
-          paginaActual={page}
-          totalPaginas={totalPages}
-          onPageChange={setPage}
+      <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onPageChange={setPaginaActual}
         />
       </div>
 

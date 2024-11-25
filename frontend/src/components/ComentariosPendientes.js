@@ -127,6 +127,7 @@ export default function ComentariosPendientes() {
     setCalendarioTipo(null);
     setMostrarSelectorFecha(true);
   };
+  
 
   const handleFechaDesdeChange = (e) => {
     setFechaDesde(e.target.value);
