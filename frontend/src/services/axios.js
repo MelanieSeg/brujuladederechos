@@ -50,4 +50,20 @@ export const saveSettings = async (data) => {
   }
 };
 
+export const getAuditChanges = async (page = 1, limit = 10, filters = {}) => {
+  try {
+    const response = await api.get('/audit/changes', {
+      params: {
+        page,
+        limit,
+        ...filters
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching audit changes:', error);
+    throw error;
+  }
+};
+
 export default api;
