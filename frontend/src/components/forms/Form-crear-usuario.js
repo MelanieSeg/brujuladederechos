@@ -62,16 +62,13 @@ export default function FormCreateUser() {
           type="text"
           {...register('name')}
           placeholder="Nombre del moderador"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.name
-            ? 'border-red-500'
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.name
+            ? 'border-red-500 text-gray-900' // Borde rojo en caso de error
             : isDarkMode
               ? 'border-gray-600 bg-gray-700 text-white'
               : 'border-gray-300 bg-white text-gray-900'
-            } ${isDarkMode
-              ? 'focus:ring-blue-600'
-              : 'focus:ring-blue-500'
-            }`}
-        />
+        } ${isDarkMode ? 'focus:ring-blue-600' : 'focus:ring-blue-500'}`}
+      />
         {errors.name && (
           <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
         )}
@@ -89,8 +86,8 @@ export default function FormCreateUser() {
           type="email"
           {...register('email')}
           placeholder="Email del moderador"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.email
-            ? 'border-red-500'
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.email
+            ? 'border-red-500 text-gray-900'
             : isDarkMode
               ? 'border-gray-600 bg-gray-700 text-white'
               : 'border-gray-300 bg-white text-gray-900'
@@ -116,16 +113,13 @@ export default function FormCreateUser() {
           type="password"
           {...register('password')}
           placeholder="**********"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.password
-            ? 'border-red-500'
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.password
+            ? 'border-red-500 text-gray-900' // Borde rojo en caso de error
             : isDarkMode
               ? 'border-gray-600 bg-gray-700 text-white'
               : 'border-gray-300 bg-white text-gray-900'
-            } ${isDarkMode
-              ? 'focus:ring-blue-600'
-              : 'focus:ring-blue-500'
-            }`}
-        />
+        } ${isDarkMode ? 'focus:ring-blue-600' : 'focus:ring-blue-500'}`}
+      />
         {errors.password && (
           <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
         )}
@@ -143,8 +137,8 @@ export default function FormCreateUser() {
           type="password"
           {...register('confirmPassword')}
           placeholder="**********"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.confirmPassword
-            ? 'border-red-500'
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.confirmPassword
+            ? 'border-red-500 text-gray-900'
             : isDarkMode
               ? 'border-gray-600 bg-gray-700 text-white'
               : 'border-gray-300 bg-white text-gray-900'
@@ -168,8 +162,8 @@ export default function FormCreateUser() {
         </label>
         <select
           {...register('isActive')}
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.rol
-            ? 'border-red-500'
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.rol
+            ? 'border-red-500 text-gray-900'
             : isDarkMode
               ? 'border-gray-600 bg-gray-700 text-white'
               : 'border-gray-300 bg-white text-gray-900'

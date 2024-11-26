@@ -53,7 +53,7 @@ export default function FormUpdateUser({ userData }) {
           type="text"
           {...register('name')}
           placeholder="Nombre del moderador"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
             errors.name 
               ? 'border-red-500' 
               : isDarkMode 
@@ -76,7 +76,7 @@ export default function FormUpdateUser({ userData }) {
         </label>
         <select
           {...register('rol')}
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
             errors.rol 
               ? 'border-red-500' 
               : isDarkMode 
@@ -102,7 +102,7 @@ export default function FormUpdateUser({ userData }) {
         </label>
         <select
           {...register('isActive')}
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${
             errors.isActive 
               ? 'border-red-500' 
               : isDarkMode 
