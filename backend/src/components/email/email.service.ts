@@ -27,7 +27,7 @@ class EmailService {
     const confirmationLink = `http://localhost:3000/confirmar-cuenta?token=${token}`;
 
 
-    await this.resend.emails.send({
+    await this.transport.sendMail({
       from: "Brujula_de_derechos <onboarding@resend.dev>",
       to: userData.userEmail,
       subject: "Brujula de derechos digitales - Confirma tu cuenta",
@@ -46,7 +46,7 @@ class EmailService {
     const token = await this.createRestartPasswordToken(userData.id);
     const validationTokenLink = `http://localhost:3000/reset-password?token=${token}`;
 
-    await this.resend.emails.send({
+    await this.transport.sendMail({
       from: "Brujula_de_derechos <onboarding@resend.dev>",
       to: userData.userEmail,
       subject: "Brujula de derechos digitales - Recuperar contraseña",
