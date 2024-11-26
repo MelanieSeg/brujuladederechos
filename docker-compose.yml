@@ -46,7 +46,7 @@ services:
     restart: on-failure
     environment:
     - RABBITMQ_URL=amqp://scraping_service:your_secure_password@rabbitmq:5672
-    - RABBITMQ_QUEUE=comentarios_scraping_queue
+    - RABBITMQ_QUEUE=comentarios_crudos_queue
     - RABBITMQ_USER=scraping_service
     - RABBITMQ_PASSWORD=your_secure_password
     - RABBITMQ_HOST=rabbitmq
@@ -70,7 +70,7 @@ services:
       - rabbitmq
     environment:
       - RABBITMQ_URL=amqp://scraping_service:your_secure_password@rabbitmq:5672
-      - RABBITMQ_QUEUE=comentarios_scraping_queue
+      - RABBITMQ_QUEUE=comentarios_crudos_queue
       - RABBITMQ_USER=scraping_service
       - RABBITMQ_PASSWORD=your_secure_password
       - RABBITMQ_HOST=rabbitmq
@@ -96,6 +96,21 @@ services:
     command: npm start
     environment:
       - REACT_APP_BACKEND_URL=http://backend:4000
+    networks:
+      - app-network
+
+  ibf-service:
+    build: ./backend-ibf
+    container_name: ibf-service 
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=scraping_service
+      - RABBITMQ_PASSWORD=your_secure_password
+      - RAW_COMMENTS_QUEUE=comentarios_crudos_queue
+      - ANALYZED_COMMENTS_QUEUE=comentarios_scraping_queue
     networks:
       - app-network
 

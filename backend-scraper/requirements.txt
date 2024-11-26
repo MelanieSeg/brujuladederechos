@@ -6,7 +6,6 @@ six
 pyjwt
 celery
 crochet
-pysentimiento
 pyOpenSSL==23.2.0
 cryptography==41.0.3
 

@@ -7,9 +7,9 @@ import NotificationsService from "../notifications/notifications.services";
 
 
 dotenv.config()
-const DEAD_LETTER_EXCHANGE = 'comentarios_scraping_queue_dead';
+const DEAD_LETTER_EXCHANGE = 'comentarios_dead_letter_exchange';
 const DEAD_LETTER_ROUTING_KEY = 'dead_letter_routing_key';
-const DEAD_LETTER_QUEUE = 'comentarios_scraping_queue_dead';
+const DEAD_LETTER_QUEUE = 'comentarios_dead_letter_queue';
 const NOTIFICATION_QUEUE = process.env.NOTIFICATION_QUEUE || "notificaciones_insert";
 
 //TODO: MEJORAR COMENTARIOS PARA QUE SEA MAS FACIL DE ENTENDER PARA MIS COMPANEROS
@@ -172,10 +172,7 @@ class CommentsConsumer {
             typeNotificationApp: TipoNotificacionApp.INSERT_COMENTARIOS,
             type: TipoNotificacion.GLOBAL
           })
-
-
         }
-
 
       } else {
         console.error(`Error al insertar comentarios: ${result.msg}`);
@@ -195,7 +192,6 @@ class CommentsConsumer {
       console.error('Error al publicar notificación total:', err);
     }
   };
-
 
   close = async () => {
     await this.channel.close();

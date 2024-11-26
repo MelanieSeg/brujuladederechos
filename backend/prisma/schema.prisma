@@ -17,6 +17,8 @@ model ComentarioScraped {
   fechaClasificacion     DateTime?
   clasificado            Boolean                 @default(false)
   ibfScore               Float?
+  resultadoIbf ResultadoIBF?
+  aprobadoPorModelo Boolean? @default(false)
   privacyScore           Float?
   expressionScore        Float?
   vulnerabilidad         Float                   @default(1)
@@ -43,12 +45,12 @@ model ComentarioScraped {
 
 model ComentarioClasificado {
   id                  String            @id @default(cuid())
-  clasificadorId      String
+  clasificadorId      String?
   fechaClasificacion  DateTime          @default(now())
   notas               String?
   clasificacion       CLASIFICACION?
   comentarioScrapedId String
-  clasificador        User              @relation(fields: [clasificadorId], references: [id])
+  clasificador       User?              @relation(fields: [clasificadorId], references: [id])
   comentario          ComentarioScraped @relation(fields: [comentarioScrapedId], references: [id])
 
   @@index([comentarioScrapedId])
@@ -319,4 +321,10 @@ enum TipoToken {
 enum CLASIFICACION {
   AUTOMATICA
   MANUAL
+}
+
+enum ResultadoIBF {
+  PRIVACIDAD_PREDOMINA
+  LIBERTAD_EXPRESION_PREDOMINA
+  EQUILIBRIO_ENTRE_DERECHOS
 }

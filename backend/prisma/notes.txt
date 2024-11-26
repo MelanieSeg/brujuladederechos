@@ -18,6 +18,11 @@
 
 # Tareas para query's de vista resumen
 
-
+- [ ] total de comentarios analizados
+- [ ] tasa de aprobacion modelo ia
+- [x] asegurarse que la respuesa tenga la hora para poder mostrar el grafico
+- [x] cantidad comentarios pendientes
+- [x] cantidad comentarios clasificados
+- [x] cantidad de comentarios graves
 
 

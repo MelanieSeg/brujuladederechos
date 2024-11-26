@@ -82,6 +82,8 @@ class NotificationsConsumer {
         this.io.emit("nueva_notificacion", notification);
         console.log(`Notificaciones emitida con exito : ${content}`)
 
+        this.channel.ack(msg)
+
       } catch (err) {
         console.log("Error al emitir la notificacion :", err)
         this.channel.nack(msg, false, true)// esto si vuelve a reintantar
