@@ -25,6 +25,7 @@ export default function PanelAdministrador() {
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
   const [moderadorAEliminar, setModeradorAEliminar] = useState(null);
   const [moderadorAEditar, setModeradorAEditar] = useState(null);
+  const [loadingState, setLoadingState] = useState({});
   const [loading, setLoading] = useState(true);
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
@@ -70,24 +71,37 @@ export default function PanelAdministrador() {
     }
   }, [moderadorAEditar]);
 
-  const cambiarStateUsuario = async function (userId, currentState) {
+  const cambiarStateUsuario = async (userId, currentState) => {
     try {
-      const response = await userApi.patch("/deactivate-user", { id: userId, isActive: !currentState })
-      console.log(response)
+      console.log('Intentando cambiar estado de usuario:', {
+        userId,
+        currentState,
+        newState: !currentState
+      });
+  
+      // Usar la misma ruta de actualización de usuario
+      const response = await userApi.patch(`update-user/id/${userId}`, { 
+        isActive: !currentState 
+      });
+  
+      console.log('Respuesta del servidor:', response);
+  
+      // Actualizar la lista de moderadores después de cambiar el estado
+      setModeradores(prevModeradores => 
+        prevModeradores.map((mod) =>
+          mod.id === userId ? { ...mod, isActive: !currentState } : mod
+        )
+      );
+  
     } catch (err) {
-      console.log(err)
+      console.error('Error al cambiar el estado del usuario:', err);
+      console.error('Detalles del error:', err.response?.data || err.message);
     }
-  }
-
+  };
+  
   // Función para activar o desactivar un moderador
-  const manejarActivarDesactivarModerador = (id, currentState) => {
-    setModeradores(
-      moderadores.map((mod) =>
-        mod.id === id ? { ...mod, isActive: !mod.isActive } : mod
-      )
-    );
-
-    cambiarStateUsuario(id, currentState)
+  const manejarActivarDesactivarModerador = (id, currentState) => {   
+    cambiarStateUsuario(id, currentState);
   };
 
   // Función para confirmar la eliminación de un moderador
@@ -180,7 +194,12 @@ const formularioAgregarModerador = (
           />
         </button>
       </div>
-      <FormCreateUser />
+      <FormCreateUser 
+        onClose={() => {
+          setMostrarFormulario(false);
+          resetFormFields();
+        }} 
+      />
     </div>
   </div>
 );
@@ -225,7 +244,11 @@ const formularioEditarModerador = (
           />
         </button>
       </div>
-      <FormUpdateUser userData={moderadorAEditar} />
+      <FormUpdateUser  userData={moderadorAEditar} onClose={() => {
+        setMostrarFormularioEditar(false);
+        setModeradorAEditar(null);
+        resetFormFields(); //reinicia los campos si es necesario
+      }} />
     </div>
   </div>
 );
