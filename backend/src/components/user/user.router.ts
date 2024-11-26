@@ -2,6 +2,7 @@ import express from "express";
 import UserController from "./user.controller";
 import AuthMiddleware from "../auth/auth.middleware";
 import upload from "../cloudinary/multer.middleware";
+import { createUserLimiter, resetPasswordLimiter, uploadImageLimiter } from "../../config/rate-limit";
 
 class UserRouter {
   private UserController: UserController;
@@ -14,7 +15,7 @@ class UserRouter {
   get router() {
     const router = express.Router();
 
-    router.post("/create-user", this.AuthMiddleware.authorize, this.AuthMiddleware.authorizeRole(["ADMIN"]), this.UserController.createUser);
+    router.post("/create-user", createUserLimiter, this.AuthMiddleware.authorize, this.AuthMiddleware.authorizeRole(["ADMIN"]), this.UserController.createUser);
     router.patch("/update-user/id/:id", this.AuthMiddleware.authorize, this.AuthMiddleware.authorizeRole(["ADMIN"]), this.UserController.updateUserData);
     router.patch("/deactivate-user", this.AuthMiddleware.authorize, this.AuthMiddleware.authorizeRole(["ADMIN"]), this.UserController.changeUserState)
     router.patch(
@@ -23,10 +24,10 @@ class UserRouter {
       this.AuthMiddleware.authorizeRole(["ADMIN"]),
       this.UserController.deleteUser
     )
-    router.post('/upload-image', upload.single('image'), this.AuthMiddleware.authorize, this.UserController.uploadImage)
+    router.post('/upload-image', upload.single('image'), uploadImageLimiter, this.AuthMiddleware.authorize, this.UserController.uploadImage)
     router.post('/get-user-notifications', this.AuthMiddleware.authorize, this.UserController.getUserNotifications)
     router.post('/read-notification', this.AuthMiddleware.authorize, this.UserController.markNotificationAsRead)
-    router.post("/reset-password", this.AuthMiddleware.authorize, this.UserController.resetPasswordUser);
+    router.post("/reset-password", this.UserController.resetPasswordUser);
     router.route("/me").get(this.UserController.getUserById);
     router
       .route("/confirmar-usuario")
@@ -47,6 +48,7 @@ class UserRouter {
     );
     router.patch(
       "/change-password",
+      resetPasswordLimiter,
       this.AuthMiddleware.authorize,
       this.UserController.changeUserPassword
     )

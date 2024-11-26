@@ -24,45 +24,46 @@ export type ScrappedData = z.infer<typeof scrappedDataSchema>;
 export const commentScrappedClassificationSchema = z.object({
   comentarioScrapedId: z.string(),
   clasificadorId: z.string(),
+  intensidadPrivacidad: z.number().int().min(1).max(3),
+  elementoTiempo: z.union([z.literal(0), z.literal(0.25), z.literal(0.5), z.literal(0.75), z.literal(1)]),
+  interesPublico: z.number().int().min(1).max(3),
+  caracterPersonaPublico: z.number().int().min(0).max(3),
+  origenInformacion: z.union([
+    z.literal(0),
+    z.literal(-0.25),
+    z.literal(-0.5),
+    z.literal(-0.75)
+  ]),
+  empatiaPrivacidad: z.union([z.literal(0), z.literal(0.25), z.literal(0.5), z.literal(0.75), z.literal(1)]),
+  empatiaExpresion: z.union([z.literal(0), z.literal(0.25), z.literal(0.5), z.literal(0.75), z.literal(1)]),
+  notas: z.string().optional(),
+});
 
-  // Privacidad Intrusiva: 1, 2, 3
+export type CommentScrapdClassification = z.infer<typeof commentScrappedClassificationSchema>;
+
+
+const baseClassificationSchema = z.object({
   intensidadPrivacidad: z.number().int().min(1).max(3).optional(),
-
-  // Tiempo: 0, 0.25, 0.5, 0.75, 1
   elementoTiempo: z.union([z.literal(0), z.literal(0.25), z.literal(0.5), z.literal(0.75), z.literal(1)]).optional(),
-
-  // Interés Público: 1, 2, 3
   interesPublico: z.number().int().min(1).max(3).optional(),
-
-  // Carácter Público de la Persona: 0, 1, 2, 3
   caracterPersonaPublico: z.number().int().min(0).max(3).optional(),
-
-  // Origen de la Información: 0, -0.25, -0.5, -0.75
   origenInformacion: z.union([
     z.literal(0),
     z.literal(-0.25),
     z.literal(-0.5),
     z.literal(-0.75)
   ]).optional(),
-
-  // Empatía hacia la Privacidad: 0, 0.25, 0.5, 0.75, 1
   empatiaPrivacidad: z.union([z.literal(0), z.literal(0.25), z.literal(0.5), z.literal(0.75), z.literal(1)]).optional(),
-
-  // Empatía hacia la Libertad de Expresión: 0, 0.25, 0.5, 0.75, 1
   empatiaExpresion: z.union([z.literal(0), z.literal(0.25), z.literal(0.5), z.literal(0.75), z.literal(1)]).optional(),
-
-  notas: z.string().optional(),
 });
 
-
-export type CommentScrapdClassification = z.infer<typeof commentScrappedClassificationSchema>;
-
-export const editCommentScrapedSchema = commentScrappedClassificationSchema.extend({
-  commentId: z.string(),
+export const editCommentScrapedSchema = z.object({
+  commentId: z.string().min(1),
+  clasificadorId: z.string().min(1),
   motivo: z.nativeEnum(MotivoAccion),
-  detalle: z.string().min(1).max(255)
-})
-
+  detalle: z.string().min(1).max(255).optional(),
+  notas: z.string().optional(),
+}).merge(baseClassificationSchema);
 
 export type EditCommnetScraperdDto = z.infer<typeof editCommentScrapedSchema>
 

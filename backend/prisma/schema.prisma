@@ -23,7 +23,7 @@ model ComentarioScraped {
   expressionScore        Float?
   vulnerabilidad         Float                   @default(1)
   intensidadPrivacidad   Int?
-  elementoTiempo         Int?
+  elementoTiempo         Float?
   interesPublico         Int?
   caracterPersonaPublico Int?
   origenInformacion      Float?

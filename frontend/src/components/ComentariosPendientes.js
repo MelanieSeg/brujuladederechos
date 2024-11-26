@@ -27,7 +27,7 @@ export default function ComentariosPendientes() {
   const [barraClasificacionVisible, setBarraClasificacionVisible] = useState(false);
   const [comentarioSeleccionado, setComentarioSeleccionado] = useState(null);
   const [clasificacion, setClasificacion] = useState({
-    intensidadPrivacidad: '',
+    pr_x: '',
     elementoTiempo: '',
     empatiaPrivacidad: '',
     interesPublico: '',
@@ -189,10 +189,37 @@ export default function ComentariosPendientes() {
 
   const enviarClasificacion = async () => {
     try {
+      // Validaciones adicionales en el frontend antes de enviar
+      if (clasificacion.pr_x < 1 || clasificacion.pr_x > 3) {
+        showError("Interferencia en la Privacidad debe estar entre 1 y 3.");
+        return;
+      }
+      if (clasificacion.elementoTiempo < 0 || clasificacion.elementoTiempo > 1) {
+        showError("Tiempo debe estar entre 0 y 1.");
+        return;
+      }
+      if (clasificacion.empatiaPrivacidad < 0 || clasificacion.empatiaPrivacidad > 1) {
+        showError("Empatía hacia la privacidad debe estar entre 0 y 1.");
+        return;
+      }
+      if (clasificacion.interesPublico < 1 || clasificacion.interesPublico > 3) {
+        showError("Interés Público debe estar entre 1 y 3.");
+        return;
+      }
+      if (clasificacion.caracterPersonaPublico < 0 || clasificacion.caracterPersonaPublico > 3) {
+        showError("Figura Pública debe estar entre 0 y 3.");
+        return;
+      }
+      if (clasificacion.origenInformacion < -0.75 || clasificacion.origenInformacion > 0) {
+        showError("Origen de la información debe estar entre -0.75 y 0.");
+        return;
+      }
+
+      // Enviar datos al backend
       const response = await api.post("/comments/clasificar", {
         comentarioScrapedId: comentarioSeleccionado.id,
         clasificadorId: user.id,
-        intensidadPrivacidad: Number(clasificacion.intensidadPrivacidad),
+        intensidadPrivacidad: Number(clasificacion.pr_x),
         elementoTiempo: Number(clasificacion.elementoTiempo),
         empatiaPrivacidad: Number(clasificacion.empatiaPrivacidad),
         interesPublico: Number(clasificacion.interesPublico),
@@ -215,13 +242,12 @@ export default function ComentariosPendientes() {
         showSuccess("Comentario clasificado exitosamente.");
         // Resetear el formulario de clasificación
         setClasificacion({
-          intensidadPrivacidad: '',
-          elementoTiempo: '',
-          empatiaPrivacidad: '',
-          interesPublico: '',
-          caracterPersonaPublico: '',
-          origenInformacion: '',
-          empatiaExpresion: ''
+          pr_x: 1, // Valor inicial adecuado
+          elementoTiempo: 0,
+          empatiaPrivacidad: 0,
+          interesPublico: 1,
+          caracterPersonaPublico: 0,
+          origenInformacion: 0
         });
         setComentarioSeleccionado(null);
       }
@@ -305,26 +331,25 @@ export default function ComentariosPendientes() {
                   }`}
               >
                 <div className="flex items-center space-x-2">
-                  <PlusIcon className={`w-5 h-5 ${
-                    isDarkMode
-                      ? 'text-white group-hover:text-gray-200'
-                      : 'text-gray-500'
-                  }`} />
+                  <PlusIcon className={`w-5 h-5 ${isDarkMode
+                    ? 'text-white group-hover:text-gray-200'
+                    : 'text-gray-500'
+                    }`} />
                   <span>Fecha</span>
                 </div>
               </button>
               {mostrarSelectorFecha && !mostrarCalendario && (
                 <div className={`absolute mt-2 w-48 rounded-md shadow-lg z-10 
-                  ${isDarkMode 
-                    ? 'bg-gray-800 border-gray-700 text-white' 
+                  ${isDarkMode
+                    ? 'bg-gray-800 border-gray-700 text-white'
                     : 'bg-white border-gray-300 text-gray-700'
                   }`}>
                   <div className="py-1">
                     <button
                       onClick={() => toggleCalendario('desde')}
                       className={`block w-full text-left px-4 py-2 text-base 
-                        ${isDarkMode 
-                          ? 'hover:bg-gray-700 text-gray-300' 
+                        ${isDarkMode
+                          ? 'hover:bg-gray-700 text-gray-300'
                           : 'hover:bg-gray-100 text-gray-700'
                         }`}>
                       Desde {fechaDesde && (
@@ -341,8 +366,8 @@ export default function ComentariosPendientes() {
                     <button
                       onClick={() => toggleCalendario('hasta')}
                       className={`block w-full text-left px-4 py-2 text-base 
-                        ${isDarkMode 
-                          ? 'hover:bg-gray-700 text-gray-300' 
+                        ${isDarkMode
+                          ? 'hover:bg-gray-700 text-gray-300'
                           : 'hover:bg-gray-100 text-gray-700'
                         }`}>
                       Hasta {fechaHasta && (
@@ -358,10 +383,10 @@ export default function ComentariosPendientes() {
                     </button>
                     <div className="border-t border-gray-200">
                       <button onClick={eliminarFiltro} className={`block w-full text-left px-4 py-2 text-sm 
-                          ${isDarkMode 
-                            ? 'text-gray-400 hover:bg-gray-700' 
-                            : 'text-gray-500 hover:bg-gray-100'
-                          }`}>
+                          ${isDarkMode
+                          ? 'text-gray-400 hover:bg-gray-700'
+                          : 'text-gray-500 hover:bg-gray-100'
+                        }`}>
                         Limpiar
                       </button>
                     </div>
@@ -391,7 +416,7 @@ export default function ComentariosPendientes() {
                     ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
                     : 'bg-white border-gray-300 focus:ring-blue-500'
                   }`}
-                  />
+              />
               <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
               <input
                 type="date"
@@ -404,11 +429,11 @@ export default function ComentariosPendientes() {
                     ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
                     : 'bg-white border-gray-300 focus:ring-blue-500'
                   }`}
-                  />
+              />
             </div>
-            <Formulario 
-              comentariosFiltrados={comentariosFiltrados} 
-              columns={columnasPendientesPDF} 
+            <Formulario
+              comentariosFiltrados={comentariosFiltrados}
+              columns={columnasPendientesPDF}
               formatData={formatData}
               fileName="comentarios_pendientes.pdf"
               className="w-auto" // Eliminar la clase w-full para evitar que el botón ocupe todo el ancho en pantallas pequeñas
@@ -447,7 +472,7 @@ export default function ComentariosPendientes() {
                     </td>
                     <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{comentario.sourceUrl}</td>
                     <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
-                      {isValid(parseISO(comentario.fechaScraping)) 
+                      {isValid(parseISO(comentario.fechaScraping))
                         ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
                         : "Fecha Inválida"}
                     </td>
@@ -455,8 +480,8 @@ export default function ComentariosPendientes() {
                       <button
                         onClick={() => clasificarComentario(comentario)}
                         className={`py-2 px-4 rounded-lg 
-                          ${isDarkMode 
-                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                          ${isDarkMode
+                            ? 'bg-blue-500 text-white hover:bg-blue-600'
                             : 'bg-blue-600 text-white hover:bg-blue-700'
                           }`}
                       >
@@ -505,8 +530,8 @@ export default function ComentariosPendientes() {
                       <button
                         onClick={() => clasificarComentario(comentario)}
                         className={`py-2 px-4 rounded-lg 
-                          ${isDarkMode 
-                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                          ${isDarkMode
+                            ? 'bg-blue-500 text-white hover:bg-blue-600'
                             : 'bg-blue-600 text-white hover:bg-blue-700'
                           }`}
                       >
@@ -533,9 +558,9 @@ export default function ComentariosPendientes() {
 
         {/* Barra de Clasificación Responsiva */}
         {barraClasificacionVisible && (
-          <div className={`fixed inset-0 z-30 ${isDarkMode 
-              ? 'bg-gray-900 bg-opacity-70' 
-              : 'bg-gray-800 bg-opacity-50'
+          <div className={`fixed inset-0 z-30 ${isDarkMode
+            ? 'bg-gray-900 bg-opacity-70'
+            : 'bg-gray-800 bg-opacity-50'
             } 
             flex justify-center sm:justify-end items-center sm:items-start
             overflow-hidden`}>
@@ -565,28 +590,29 @@ export default function ComentariosPendientes() {
               <p>{comentarioSeleccionado?.comentario}</p>
 
               <div className="mt-4">
+                {/* Interferencia en la Privacidad */}
                 <label className="block mt-2">
-                  Privacidad intrusiva:
+                  Interferencia en la Privacidad (1-3):
                   <input
                     type="number"
                     min="1"
                     max="3"
-                    name="intensidadPrivacidad"
-                    value={clasificacion.intensidadPrivacidad}
+                    name="pr_x"
+                    value={clasificacion.pr_x}
                     onChange={handleInputChange}
                     placeholder="PR"
                     className={`border rounded w-full mt-1 p-1 
-                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
-                <p className={`text-sm mt-1 ${
-                  isDarkMode 
-                    ? 'text-gray-300' 
-                    : 'text-gray-500' 
-                }`}>
-                  Grado de intrusión en la privacidad. Valor de 1 a 3.
+                <p className={`text-sm mt-1 ${isDarkMode
+                  ? 'text-gray-300'
+                  : 'text-gray-500'
+                  }`}>
+                  Grado de interferencia en la privacidad. Valor de 1 a 3.
                 </p>
 
+                {/* Tiempo */}
                 <label className="block mt-4">
                   Tiempo (0-1):
                   <input
@@ -599,17 +625,17 @@ export default function ComentariosPendientes() {
                     placeholder="T"
                     step="0.1"
                     className={`border rounded w-full mt-1 p-1 
-                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
-                <p className={`text-sm mt-1 ${
-                  isDarkMode 
-                    ? 'text-gray-300' 
-                    : 'text-gray-500' 
-                }`}>
+                <p className={`text-sm mt-1 ${isDarkMode
+                  ? 'text-gray-300'
+                  : 'text-gray-500'
+                  }`}>
                   Tiempo relacionado con la información (antigüedad). Valor de 0 a 1.
                 </p>
 
+                {/* Empatía hacia la Privacidad */}
                 <label className="block mt-4">
                   Empatía hacia la privacidad (0-1):
                   <input
@@ -622,17 +648,17 @@ export default function ComentariosPendientes() {
                     onChange={handleInputChange}
                     placeholder="E.Privacidad"
                     className={`border rounded w-full mt-1 p-1 
-                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
-                <p className={`text-sm mt-1 ${
-                  isDarkMode 
-                    ? 'text-gray-300' 
-                    : 'text-gray-500' 
-                }`}>
+                <p className={`text-sm mt-1 ${isDarkMode
+                  ? 'text-gray-300'
+                  : 'text-gray-500'
+                  }`}>
                   Empatía hacia la privacidad de la persona. Valor de 0 a 1.
                 </p>
 
+                {/* Interés Público */}
                 <label className="block mt-4">
                   Interés público (1-3):
                   <input
@@ -644,44 +670,44 @@ export default function ComentariosPendientes() {
                     onChange={handleInputChange}
                     placeholder="IP"
                     className={`border rounded w-full mt-1 p-1 
-                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
-                <p className={`text-sm mt-1 ${
-                  isDarkMode 
-                    ? 'text-gray-300' 
-                    : 'text-gray-500' 
-                }`}>
+                <p className={`text-sm mt-1 ${isDarkMode
+                  ? 'text-gray-300'
+                  : 'text-gray-500'
+                  }`}>
                   Nivel de interés público sobre el asunto. Valor de 1 a 3.
                 </p>
 
+                {/* Figura Pública */}
                 <label className="block mt-4">
-                  Figura pública (0-2):
+                  Figura pública (0-3):
                   <input
                     type="number"
                     min="0"
-                    max="2"
+                    max="3"  // Rango ajustado a 3
                     name="caracterPersonaPublico"
                     value={clasificacion.caracterPersonaPublico}
                     onChange={handleInputChange}
                     placeholder="PF"
                     className={`border rounded w-full mt-1 p-1 
-                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
-                <p className={`text-sm mt-1 ${
-                  isDarkMode 
-                    ? 'text-gray-300' 
-                    : 'text-gray-500' 
-                }`}>
-                  Indica si es una figura pública sobre el asunto. Valor de 0 a 2.
+                <p className={`text-sm mt-1 ${isDarkMode
+                  ? 'text-gray-300'
+                  : 'text-gray-500'
+                  }`}>
+                  Indica si es una figura pública sobre el asunto. Valor de 0 a 3.
                 </p>
 
+                {/* Origen de la Información */}
                 <label className="block mt-4">
                   Origen de la información (-0.75 - 0):
                   <input
                     type="number"
-                    min="-1"
+                    min="-0.75"  // Rango ajustado a -0.75
                     max="0"
                     name="origenInformacion"
                     placeholder="OI"
@@ -689,17 +715,17 @@ export default function ComentariosPendientes() {
                     value={clasificacion.origenInformacion}
                     onChange={handleInputChange}
                     className={`border rounded w-full mt-1 p-1 
-                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
-                <p className={`text-sm mt-1 ${
-                  isDarkMode 
-                    ? 'text-gray-300' 
-                    : 'text-gray-500' 
-                }`}>
+                <p className={`text-sm mt-1 ${isDarkMode
+                  ? 'text-gray-300'
+                  : 'text-gray-500'
+                  }`}>
                   Origen de la información, si es legal o cuestionable. Valor de -0.75 a 0.
                 </p>
 
+                {/* Empatía hacia la Libertad de Expresión */}
                 <label className="block mt-4">
                   Empatía hacia la libertad de expresión (0-1):
                   <input
@@ -712,18 +738,16 @@ export default function ComentariosPendientes() {
                     onChange={handleInputChange}
                     placeholder="E.Libertad"
                     className={`border rounded w-full mt-1 p-1 
-                      ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
-                <p className={`text-sm mt-1 ${
-                  isDarkMode 
-                    ? 'text-gray-300' 
-                    : 'text-gray-500' 
-                }`}>
+                <p className={`text-sm mt-1 ${isDarkMode
+                  ? 'text-gray-300'
+                  : 'text-gray-500'
+                  }`}>
                   Empatía hacia la libertad de expresión. Valor de 0 a 1.
                 </p>
               </div>
-
               <div className="flex mt-6 justify-between">
                 <button
                   onClick={() => setBarraClasificacionVisible(false)}

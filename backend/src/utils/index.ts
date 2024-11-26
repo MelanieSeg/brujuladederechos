@@ -1,3 +1,4 @@
+import { ResultadoIBF } from "@prisma/client";
 import crypto from "crypto";
 import { z } from "zod";
 
@@ -69,6 +70,37 @@ const getFormattedDate = (): string => {
 
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
 };
+
+export const calculateIBF = (
+  intensidadPrivacidad: number,
+  elementoTiempo: number,
+  empatiaPrivacidad: number,
+  interesPublico: number,
+  caracterPersonaPublico: number,
+  origenInformacion: number
+): { ibfScore: number; resultadoIbf: ResultadoIBF; empatiaExpresion: number; aprobadoPorModelo: boolean } => {
+  const V = 1;
+  const E_expresion = 1 - empatiaPrivacidad;
+
+  const numerador = V + intensidadPrivacidad + elementoTiempo + empatiaPrivacidad;
+  const denominador = interesPublico + caracterPersonaPublico - origenInformacion + E_expresion;
+
+  const ibfScore = numerador / denominador;
+
+  let resultadoIbf: ResultadoIBF;
+  if (ibfScore > 1) {
+    resultadoIbf = ResultadoIBF.PRIVACIDAD_PREDOMINA;
+  } else if (ibfScore < 1) {
+    resultadoIbf = ResultadoIBF.LIBERTAD_EXPRESION_PREDOMINA;
+  } else {
+    resultadoIbf = ResultadoIBF.EQUILIBRIO_ENTRE_DERECHOS;
+  }
+
+  const aprobadoPorModelo = resultadoIbf === ResultadoIBF.EQUILIBRIO_ENTRE_DERECHOS ? true : false;
+
+  return { ibfScore, resultadoIbf, empatiaExpresion: E_expresion, aprobadoPorModelo };
+}
+
 
 
 

@@ -18,11 +18,21 @@
 
 # Tareas para query's de vista resumen
 
-- [ ] total de comentarios analizados
-- [ ] tasa de aprobacion modelo ia
+- [x] total de comentarios analizados
+- [x] tasa de aprobacion modelo ia
 - [x] asegurarse que la respuesa tenga la hora para poder mostrar el grafico
 - [x] cantidad comentarios pendientes
 - [x] cantidad comentarios clasificados
 - [x] cantidad de comentarios graves
+
+
+# Request de para recuperar password
+http://localhost:4000/user/request-reset-password
+este manda el correo con el link y el token
+
+ruta para validar = http://localhost:4000/user/reset-password
+aca hay que poner el toker y la nueva password
+
+
 
 

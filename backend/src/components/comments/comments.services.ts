@@ -1,6 +1,6 @@
-import { CLASIFICACION, ComentarioScraped, EstadoComentario, Gravedad, MotivoAccion, PrismaClient, TipoAccion } from "@prisma/client";
-import { cleanComment, parseFecha } from "../../utils";
-import { CommentScrapdClassification, CommentScrapped, commentScrappedClassificationSchema, EditCommnetScraperdDto } from "../../schemas/commentScrapped";
+import { CLASIFICACION, ComentarioScraped, Estado, EstadoComentario, Gravedad, MotivoAccion, PrismaClient, ResultadoIBF, TipoAccion } from "@prisma/client";
+import { calculateIBF, cleanComment, parseFecha } from "../../utils";
+import { CommentQueueDTO, CommentScrapdClassification, CommentScrapped, commentScrappedClassificationSchema, EditCommnetScraperdDto } from "../../schemas/commentScrapped";
 
 class CommentsService {
   private prisma: PrismaClient;
@@ -31,13 +31,46 @@ class CommentsService {
       } = data;
 
       const result = await this.prisma.$transaction(async (prisma) => {
+
         const comment = await prisma.comentarioScraped.findUnique({
-          where: { id: comentarioScrapedId }
+          where: { id: comentarioScrapedId },
+          include: {
+            comentarios: {
+              orderBy: {
+                fechaClasificacion: 'desc'
+              },
+              take: 1
+            }
+          }
         });
 
         if (!comment) {
           throw new Error("Comentario no encontrado.");
         }
+
+
+        if (comment.clasificado && comment.comentarios.length > 0) {
+          console.log("CLASIFICADO_ANTES")
+
+          const { clasificadorId, comentarioScrapedId, ...updateData } = data
+          const editData: EditCommnetScraperdDto = {
+            commentId: comment.id,
+            clasificadorId: user.id,
+            motivo: MotivoAccion.RECLASIFICACION,
+            detalle: 'Actualización de clasificación manual',
+            ...updateData
+          };
+
+          return await this.editCommentClassified(editData)
+        }
+
+        const {
+          ibfScore,
+          resultadoIbf,
+          empatiaExpresion,
+          aprobadoPorModelo
+        } = calculateIBF(intensidadPrivacidad, elementoTiempo, empatiaPrivacidad, interesPublico, caracterPersonaPublico, origenInformacion);
+
 
         const commentUpdatedIbf = await prisma.comentarioScraped.update({
           where: { id: comment.id },
@@ -52,6 +85,9 @@ class CommentsService {
             origenInformacion,
             empatiaPrivacidad,
             empatiaExpresion,
+            ibfScore,
+            resultadoIbf,
+            aprobadoPorModelo,
           }
         });
 
@@ -98,7 +134,7 @@ class CommentsService {
         return { success: false, data: null, msg: "Usuario no válido" };
       }
 
-      const { commentId, comentarioScrapedId, clasificadorId, notas, motivo, detalle, ...data } = updateCommentDto
+      const { commentId, clasificadorId, notas, motivo, detalle, ...data } = updateCommentDto
 
       const result = await this.prisma.$transaction(async (prisma) => {
         const comment = await prisma.comentarioScraped.findFirst({
@@ -134,13 +170,41 @@ class CommentsService {
         if (cambios.length === 0 && clasificadorId === comment.comentarios[0]?.clasificadorId) {
           return comment
         }
+        let ibfScore = comment.ibfScore;
+        let resultadoIbf = comment.resultadoIbf;
+        let aprobadoPorModelo = comment.aprobadoPorModelo;
 
+        if (cambios.length > 0) {
+          const intensidadPrivacidad = data.intensidadPrivacidad ?? comment.intensidadPrivacidad ?? 1;
+          const elementoTiempo = data.elementoTiempo ?? comment.elementoTiempo ?? 0;
+          const empatiaPrivacidad = data.empatiaPrivacidad ?? comment.empatiaPrivacidad ?? 0;
+          const interesPublico = data.interesPublico ?? comment.interesPublico ?? 1;
+          const caracterPersonaPublico = data.caracterPersonaPublico ?? comment.caracterPersonaPublico ?? 0;
+          const origenInformacion = data.origenInformacion ?? comment.origenInformacion ?? 0;
+
+
+          const ibfResult = calculateIBF(
+            intensidadPrivacidad,
+            elementoTiempo,
+            empatiaPrivacidad,
+            interesPublico,
+            caracterPersonaPublico,
+            origenInformacion
+          );
+
+          ibfScore = ibfResult.ibfScore;
+          resultadoIbf = ibfResult.resultadoIbf;
+          aprobadoPorModelo = ibfResult.aprobadoPorModelo;
+        }
         const updatedComment = await prisma.comentarioScraped.update({
           where: {
             id: comment.id
           },
           data: {
-            ...data
+            ...data,
+            ibfScore,
+            resultadoIbf,
+            aprobadoPorModelo
           },
           include: {
             comentarios: true,
@@ -171,19 +235,15 @@ class CommentsService {
               motivoAccion: motivo,
               entidad: 'ComentarioScraped',
               entidadId: comment.id,
-              detalles: `${updateCommentDto.detalle}. Operacion realizada por ${user.name}`,
+              detalles: `${updateCommentDto.detalle ? updateCommentDto.detalle + " ." : ""} Operacion realizada por ${user.name}`,
               cambios: {
                 create: cambios
               }
             }
           })
         }
-
         return updatedComment
-
       })
-
-
 
       return {
         msg: "Comentario editado con exito",
