@@ -7,10 +7,21 @@ import PropTypes from 'prop-types';
 import { format } from 'date-fns';
 import { ArrowDownTrayIcon } from '@heroicons/react/20/solid'; // Importa el ícono de descarga correcto
 
-const Formulario = ({ comentariosFiltrados, columns, formatData, fileName }) => {
+const Formulario = ({ comentariosFiltrados, columns, formatData, fileName, pdfTitle }) => {
   // Función para generar el PDF
   const generatePDF = (comentarios) => {
     const doc = new jsPDF({ unit: 'pt', format: 'a4', margin: 40 });
+
+    // Centrar el título del PDF
+    if (pdfTitle) {
+      const pageWidth = doc.internal.pageSize.getWidth(); // Obtener el ancho de la página
+      const textWidth = doc.getTextWidth(pdfTitle); // Obtener el ancho del texto del título
+      const textX = (pageWidth - textWidth) / 2; // Calcular la posición x para centrar el título
+
+      doc.setFontSize(18); // Ajusta el tamaño de fuente para el título
+      doc.setTextColor(40); // Ajusta el color del texto (opcional)
+      doc.text(pdfTitle, textX, 30); // Agrega el título en la posición calculada (centrado)
+    }
 
     // Extraer los títulos de las columnas
     const tableColumn = columns.map(col => col.title);
@@ -22,7 +33,7 @@ const Formulario = ({ comentariosFiltrados, columns, formatData, fileName }) => 
     doc.autoTable({
       head: [tableColumn],
       body: tableRows,
-      startY: 40,
+      startY: 60, // Ajusta la posición de inicio de la tabla para dejar espacio para el título
       styles: { cellPadding: 5, fontSize: 10, overflow: "linebreak" },
       columnStyles: columns.reduce((acc, col, index) => {
         acc[index] = { cellWidth: col.width, halign: col.halign };
@@ -61,7 +72,7 @@ const Formulario = ({ comentariosFiltrados, columns, formatData, fileName }) => 
 
   return (
     <button
-      onClick={handleDownloadPDF}//valor cambiado
+      onClick={handleDownloadPDF}
       className="flex items-center justify-center bg-black text-white 
                  px-3 py-2 rounded-md 
                  hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black 
@@ -90,11 +101,13 @@ Formulario.propTypes = {
   ).isRequired,
   formatData: PropTypes.func.isRequired,
   fileName: PropTypes.string, // Nuevo prop para el nombre del archivo
+  pdfTitle: PropTypes.string, // Nuevo prop para el título del PDF
 };
 
 // Valores por defecto para las props
 Formulario.defaultProps = {
   fileName: "comentarios_pendientes.pdf",
+  pdfTitle: "Comentarios Pendientes", // Valor por defecto del título del PDF
 };
 
 export default Formulario;

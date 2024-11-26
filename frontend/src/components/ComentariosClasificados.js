@@ -667,6 +667,7 @@ export default function ComentariosClasificados() {
               columns={columnasClasificados}
               formatData={formatData}
               fileName="comentarios_clasificados.pdf"
+              pdfTitle="Comentarios Clasificados" // Añadir el título del PDF específico para esta vista////AGREGADO
               className="w-auto" // Mantener la clase w-auto para responsividad
             />
           </div>

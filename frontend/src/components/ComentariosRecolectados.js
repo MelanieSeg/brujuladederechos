@@ -546,6 +546,7 @@ export default function ComentariosRecolectados() {
                     columns={columnsPDF}
                     formatData={formatData}
                     fileName="comentarios_recolectados.pdf"
+                    pdfTitle="Comentarios Recolectados" // Añadir el título del PDF específico para esta vista////
                     className="w-auto"
                   />
                 </div>

@@ -436,6 +436,7 @@ export default function ComentariosPendientes() {
               columns={columnasPendientesPDF}
               formatData={formatData}
               fileName="comentarios_pendientes.pdf"
+              pdfTitle="Comentarios Pendientes" // Añadir el título del PDF específico para esta vista/////AGREGADO
               className="w-auto" // Eliminar la clase w-full para evitar que el botón ocupe todo el ancho en pantallas pequeñas
             />
           </div>
