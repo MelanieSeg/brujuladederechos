@@ -10,8 +10,6 @@ class NotificationsService {
   }
 
 
-
-
   createGlobalNotification = async (globalNotificationDto: GlobalNotificationDto) => {
     try {
 
@@ -23,7 +21,6 @@ class NotificationsService {
         }
       })
 
-
       return {
         success: 'Notificacion GLOBAL creada exitosamente',
       }
@@ -32,6 +29,43 @@ class NotificationsService {
       return {
         success: false,
         message: err
+      }
+    }
+  }
+
+  markGlobalNotificationAsRead = async (globalNotificaionId: string, userId: string) => {
+    try {
+
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userId
+        }
+      })
+
+      if (!user) {
+        return {
+          success: false,
+          msg: "Error, no se pudo realizar la accion"
+        }
+      }
+
+      const markAsRead = await this.prisma.userNotifications.create({
+        data: {
+          notificationId: globalNotificaionId,
+          userId: user.id,
+          isRead: true,
+        }
+      })
+
+      return {
+        success: true,
+        msg: "Se completo la accion de leer la notificacion con exito"
+      }
+
+    } catch (err) {
+      return {
+        success: false,
+        msg: err
       }
     }
   }

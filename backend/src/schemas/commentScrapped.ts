@@ -72,4 +72,56 @@ export const deleteCommentScrapedSchema = z.object({
   notas: z.string()
 })
 
+const SentimientoEnum = z.enum(['NEG', 'NEU', 'POS']);
+
+const EmocionEnum = z.enum([
+  'anger',
+  'disgust',
+  'sadness',
+  'joy',
+  'surprise',
+  'fear',
+]);
+
+const GravedadEnum = z.enum(['grave', 'moderada', 'leve']);
+
+const ResultadoIbfEnum = z.enum([
+  'PRIVACIDAD_PREDOMINA',
+  'LIBERTAD_EXPRESION_PREDOMINA',
+  'EQUILIBRIO_ENTRE_DERECHOS',
+]);
+
+export const commentQueueSchema = z.object({
+  id: z.string(),
+  texto: z.string(),
+  fecha: z.number().int().positive(),
+  autor: z.string(),
+  sourceUrl: z.string().url(),
+  news_url: z.string().url(),
+  texto_limpio: z.string(),
+  sentimiento: SentimientoEnum,
+  emocion: EmocionEnum,
+  gravedad: GravedadEnum,
+  factor_tiempo: z.number().nonnegative(),
+  interes_publico: z.number().nonnegative(),
+  origen_informacion: z.number(),
+  empatia_privacidad: z.number().min(0).max(1),
+  empatia_expresion: z.number().min(0).max(1),
+  personas_mencionadas: z.array(z.string()),
+  figuras_publicas_mencionadas: z.array(z.string()),
+  PF_x: z.number().int().nonnegative(),
+  PR_x: z.number().int().nonnegative(),
+  V: z.number().int().nonnegative(),
+  numerador: z.number(),
+  denominador: z.number(),
+  ibf: z.number(),
+  resultadoIbf: ResultadoIbfEnum,
+  fechaClasificacion: z.string().refine((date) => !isNaN(Date.parse(date)), {
+    message: "Fecha de clasificación invalida. Se espara que este en formato ISO.",
+  }),
+});
+
+
+export type CommentQueueDTO = z.infer<typeof commentQueueSchema>
+
 
