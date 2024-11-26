@@ -62,7 +62,7 @@ export default function FormCreateUser({ onClose }) {
           type="text"
           {...register('name')}
           placeholder="Nombre del moderador"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.name
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.name
             ? 'border-red-500'
             : isDarkMode
               ? 'border-gray-600 bg-gray-700 text-white'
@@ -89,7 +89,7 @@ export default function FormCreateUser({ onClose }) {
           type="email"
           {...register('email')}
           placeholder="Email del moderador"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.email
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.email
             ? 'border-red-500'
             : isDarkMode
               ? 'border-gray-600 bg-gray-700 text-white'
@@ -116,7 +116,7 @@ export default function FormCreateUser({ onClose }) {
           type="password"
           {...register('password')}
           placeholder="**********"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.password
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.password
             ? 'border-red-500'
             : isDarkMode
               ? 'border-gray-600 bg-gray-700 text-white'
@@ -143,7 +143,7 @@ export default function FormCreateUser({ onClose }) {
           type="password"
           {...register('confirmPassword')}
           placeholder="**********"
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.confirmPassword
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.confirmPassword
             ? 'border-red-500'
             : isDarkMode
               ? 'border-gray-600 bg-gray-700 text-white'
@@ -168,7 +168,7 @@ export default function FormCreateUser({ onClose }) {
         </label>
         <select
           {...register('isActive')}
-          className={`mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.rol
+          className={`border mt-1 p-2 w-full rounded-md focus:outline-none focus:ring-2 ${errors.rol
             ? 'border-red-500'
             : isDarkMode
               ? 'border-gray-600 bg-gray-700 text-white'
