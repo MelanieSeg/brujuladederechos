@@ -5,7 +5,7 @@ import userApi from '../../services/axiosUserInstance';
 import { ThemeContext } from '../../utils/ThemeContext';
 import React, { useState, useContext } from 'react';
 
-export default function FormCreateUser() {
+export default function FormCreateUser({ onClose }) {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [mostrarFormularioEditar, setMostrarFormularioEditar] = useState(false);
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
@@ -205,7 +205,8 @@ export default function FormCreateUser() {
           className={`bg-red-600 text-white py-2 px-4 rounded w-[48%] ${isDarkMode
             ? 'bg-gray-600 text-gray-200 hover:bg-gray-500'
             : 'bg-red-500 text-white hover:bg-red-600'}`}
-          onClick={() => setMostrarFormulario(false)}
+          onClick={() => {reset(); //reinicia los campos del formulario
+            onClose();}}
         >
           Cancelar
         </button>
