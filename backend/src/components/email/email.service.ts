@@ -2,6 +2,8 @@ import { Transporter } from "nodemailer";
 import { transport } from "../../config/mailtrap";
 import { PrismaClient, TipoToken } from "@prisma/client";
 import { generateRandomToken } from "../../utils";
+import { Resend } from "resend";
+import { resend } from "../../config/resend";
 
 interface sendEmailInterface {
   id: string;
@@ -12,20 +14,23 @@ interface sendEmailInterface {
 
 class EmailService {
   private transport: Transporter;
+  private resend: Resend
   private prisma: PrismaClient;
   constructor() {
     this.transport = transport;
     this.prisma = new PrismaClient();
+    this.resend = resend
   }
 
   sendEmailVerification = async (userData: sendEmailInterface) => {
     const token = await this.createVerificationToken(userData.id);
     const confirmationLink = `http://localhost:3000/confirmar-cuenta?token=${token}`;
-    await this.transport.sendMail({
-      from: "Brujula_de_derechos <Admin@brujula_dd.com>",
+
+
+    await this.resend.emails.send({
+      from: "Brujula_de_derechos <onboarding@resend.dev>",
       to: userData.userEmail,
       subject: "Brujula de derechos digitales - Confirma tu cuenta",
-      text: "Brujula de derechos digitales - Confirma tu cuenta",
       html: `<p>Hola : ${userData.userName}, se ha creado una cuante en nuestra aplicacion de Brujula de derechos digitales con el rol de ${userData.rol}. Para poder usar nuestra aplicacion porfavor confirma tu cuenta  </p>
               <p>Ingresa al siguiente enlace:</p>
 <p> y ingresa el siguiente codigo:<b>${token}</b> </p>
@@ -39,15 +44,15 @@ class EmailService {
     userData: Omit<sendEmailInterface, "rol">,
   ) => {
     const token = await this.createRestartPasswordToken(userData.id);
+    const validationTokenLink = `http://localhost:3000/reset-password?token=${token}`;
 
-    await this.transport.sendMail({
-      from: "Brujula_de_derechos <Admin@brujula_dd.com>",
+    await this.resend.emails.send({
+      from: "Brujula_de_derechos <onboarding@resend.dev>",
       to: userData.userEmail,
       subject: "Brujula de derechos digitales - Recuperar contraseña",
-      text: "Brujula de derechos digitales - Recupera tu contraseña",
       html: `<p>Hola, haz solicitado la recuperacion de contraseña</p>
               <p>Ingresa al siguiente enlace para inicar el proceso de creacion de tu nueva contraseña:</p>
-<a href="# TODO: agregar la direccion que se va a crear en el frontend">Recperar contraseña</a>
+<a href="${validationTokenLink}">Recperar contraseña</a>
 <p> y ingresa el siguiente codigo:<b>${token}</b> </p>
 <p>este codigo expira en: 10 minutos</p>
 `,
