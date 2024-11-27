@@ -433,7 +433,8 @@ class CommentsService {
       return { success: false, msg: err };
     }
   };
-  addCommentsBatch = async (comments: CommentScrapped[], webSiteName: string) => {
+  addCommentsBatch = async (comments: CommentQueueDTO[], webSiteName: string) => {
+
     try {
       const findWebsite = await this.getWebSite(webSiteName);
 
@@ -441,49 +442,86 @@ class CommentsService {
         return { success: false, msg: "No se especifico el sitio web" };
       }
 
+      const gravedadMap: { [key: string]: Gravedad } = {
+        grave: Gravedad.GRAVE,
+        moderada: Gravedad.MODERADA,
+        leve: Gravedad.LEVE
+      }
       const dataToInsert = comments.map((comment) => {
-        const commentDate = parseFecha(String(comment.fecha));
+        const commentDate = new Date(comment.fecha);
+        const fechaClasificacion = comment.fechaClasificacion ? new Date(comment.fechaClasificacion) : null;
+        const isClassified = comment.ibf !== undefined;
 
-
-        const gravedadMap: { [key: string]: Gravedad } = {
-          grave: Gravedad.GRAVE,
-          moderada: Gravedad.MODERADA,
-          leve: Gravedad.LEVE
-        }
-
-        if (!commentDate) {
-          return {
-            scrapingId: comment.id,
-            comentario: cleanComment(comment.texto),
-            sourceUrl: comment.sourceUrl,
-            autor: comment.autor || null,
-            fechaComentario: new Date(),
-            sitioWebId: findWebsite.data.id,
-            fechaScraping: new Date(),
-          }
-        }
         return {
           scrapingId: comment.id,
-          comentario: cleanComment(comment.texto),
+          comentario: cleanComment(comment.texto_limpio),
           sourceUrl: comment.sourceUrl,
           autor: comment.autor || null,
-          fechaComentario: commentDate,
+          fechaComentario: commentDate || new Date(),
           sitioWebId: findWebsite.data.id,
           fechaScraping: new Date(),
-          gravedad: gravedadMap[comment.gravedad.toLowerCase()] || null
-        }
+          gravedad: gravedadMap[comment.gravedad.toLowerCase()] || null,
+          ibfScore: comment.ibf || null,
+          resultadoIbf: comment.resultadoIbf as ResultadoIBF,
+          privacyScore: comment.empatia_privacidad || null,
+          expressionScore: comment.empatia_expresion || null,
+          interesPublico: comment.interes_publico || 0,
+          origenInformacion: comment.origen_informacion || 0,
+          empatiaPrivacidad: comment.empatia_privacidad || 0,
+          empatiaExpresion: comment.empatia_expresion || 0,
+          elementoTiempo: Math.floor(comment.factor_tiempo) || 0,
+          caracterPersonaPublico: Math.floor(comment.PF_x) || 0,
+          fechaClasificacion: fechaClasificacion,
+          clasificado: isClassified,
+          intensidadPrivacidad: comment.numerador,
+          aprobadoPorModelo: comment.resultadoIbf === ResultadoIBF.EQUILIBRIO_ENTRE_DERECHOS ? true : false,
+          estado: EstadoComentario.CLASIFICADO
+        };
       });
 
       if (dataToInsert.length === 0) {
         return { success: false, msg: "No hay comentarios para insertar." };
       }
 
-
       const result = await this.prisma.comentarioScraped.createMany({
         data: dataToInsert,
         skipDuplicates: true,
       })
 
+      const insertedIds = comments
+        .filter(comment => dataToInsert.some(insert => insert.scrapingId === comment.id))
+        .map(comment => comment.id);
+
+      const comentariosInsertados = await this.prisma.comentarioScraped.findMany({
+        where: {
+          scrapingId: { in: insertedIds },
+        },
+        select: {
+          id: true,
+          scrapingId: true,
+        },
+      });
+
+      const comentariosClasificadosToInsert = comentariosInsertados.map((inserted) => {
+        const originalComment = comments.find(c => c.id === inserted.scrapingId);
+        if (originalComment && originalComment.ibf !== undefined && originalComment.gravedad) {
+          return {
+            clasificadorId: null,
+            comentarioScrapedId: inserted.id,
+            clasificacion: CLASIFICACION.AUTOMATICA,
+            notas: 'Clasificación automática por IBF-SERVICE',
+            fechaClasificacion: new Date(originalComment.fechaClasificacion),
+          };
+        }
+        return null;
+      }).filter(c => c !== null);
+
+      if (comentariosClasificadosToInsert.length > 0) {
+        await this.prisma.comentarioClasificado.createMany({
+          data: comentariosClasificadosToInsert as any,
+          skipDuplicates: true,
+        });
+      }
 
       return { success: true };
 
@@ -492,7 +530,6 @@ class CommentsService {
       return { success: false, msg: err }
     }
   }
-
 
   getWebSite = async (urlWeb: string) => {
     try {
