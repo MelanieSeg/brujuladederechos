@@ -1,11 +1,11 @@
 import React, { useState, useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import api from '../services/axiosAuthInstance';
+import api from '../services/axiosUserInstance';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { userSchema } from '../lib/validations/user';
-import { ThemeContext } from '../utils/ThemeContext'; //
+import { ThemeContext } from '../utils/ThemeContext';
 
 const RecuperarContraseña = () => {
     const navigate = useNavigate();
@@ -27,8 +27,7 @@ const RecuperarContraseña = () => {
       setIsLoading(true);
       setEmailError('');
       try {
-        const response = await api.post('/forgot-password', data);
-        
+        const response = await api.post('/request-reset-password', data);
         toast.success(response.data.message || 'Solicitud de restablecimiento enviada');
         navigate('/login');
       } catch (error) {

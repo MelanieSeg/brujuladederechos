@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { userSchema } from '../lib/validations/user'; // Usa el esquema existente
-import api from '../services/axiosAuthInstance';
+import { ResetPasswordSchema } from '../lib/validations/user'; // Usa el esquema existente
+import api from '../services/axiosUserInstance';
 import { toast } from 'react-toastify';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeContext } from '../utils/ThemeContext';
@@ -10,6 +10,8 @@ import { ThemeContext } from '../utils/ThemeContext';
 const RestablecerContraseña = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [apiError, setApiError] = useState(null);
+  const [apiSuccess, setApiSuccess] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [token, setToken] = useState('');
   const { isDarkMode } = useContext(ThemeContext);
@@ -27,14 +29,13 @@ const RestablecerContraseña = () => {
     setToken(resetToken);
   }, [location, navigate]);
 
-  const { 
-    register, 
-    handleSubmit, 
-    formState: { errors } 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
   } = useForm({
-    resolver: yupResolver(
-      userSchema.pick(['password', 'confirmPassword']) // Usa solo validaciones de password y confirmPassword
-    )
+    resolver: yupResolver(ResetPasswordSchema),
   });
 
   const onSubmit = async (data) => {
@@ -42,15 +43,22 @@ const RestablecerContraseña = () => {
     try {
       const response = await api.post('/reset-password', {
         token,
-        newPassword: data.password
+        password: data.password
       });
       
-      toast.success(response.data.message || 'Contraseña restablecida exitosamente');
-      navigate('/login');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Error al restablecer la contraseña');
-    } finally {
-      setIsLoading(false);
+      if (response.status === 200) {
+        setApiSuccess('Contraseña restablecida exitosamente');
+        reset();
+
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      } else {
+        setApiError('Hubo un error al restablecer la contraseña. Inténtalo de nuevo.');
+      }
+    } catch (err) {
+      console.error(err);
+      setApiError(err.response?.data?.message || 'Hubo un error al restablecer la contraseña. Inténtalo de nuevo.');
     }
   };
 
@@ -62,39 +70,34 @@ const RestablecerContraseña = () => {
         <div>
           <h2 className={`mt-6 text-center text-3xl font-extrabold 
             ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Restablecer Contraseña
+            Restablecer contraseña
           </h2>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label 
-                htmlFor="newPassword" 
-                className={`block text-sm font-medium mb-1 
-                  ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
-              >
-                Nueva Contraseña
+            <label 
+                className={`block mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Nueva contraseña
               </label>
               <input
-                {...register('newPassword')}
-                id="newPassword"
+                {...register('password')}
                 type="password"
                 className={`block w-full rounded-md border p-2 
                   ${isDarkMode 
                     ? 'bg-gray-700 text-white border-gray-600 focus:ring-blue-500 focus:border-blue-500' 
                     : 'bg-white text-gray-900 border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
                   }`}
-                placeholder="Nueva Contraseña"
+                placeholder="Nueva contraseña"
               />
-              {errors.newPassword && (
+              {errors.password && (
                 <p className="mt-2 text-sm text-red-500">
-                  {errors.newPassword.message}
+                  {errors.password.message}
                 </p>
               )}
             </div>
             <div>
               <label 
-                htmlFor="confirmPassword" 
                 className={`block text-sm font-medium mb-1 
                   ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
               >
@@ -118,18 +121,25 @@ const RestablecerContraseña = () => {
               )}
             </div>
           </div>
+
+          {apiError && (
+            <p className="text-red-500 text-sm mt-2">{apiError}</p>
+          )}
+          {apiSuccess && (
+            <p className="text-green-500 text-sm mt-2">{apiSuccess}</p>
+          )}
   
           <div>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className={`w-full py-2 rounded-md ${
                 isDarkMode 
                   ? 'bg-blue-700 text-white hover:bg-blue-600' 
                   : 'bg-indigo-600 text-white hover:bg-indigo-700'
-              } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {isLoading ? 'Restableciendo...' : 'Restablecer Contraseña'}
+              {isSubmitting ? 'Restableciendo...' : 'Restablecer Contraseña'}
             </button>
           </div>
         </form>
