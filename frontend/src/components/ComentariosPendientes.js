@@ -1,3 +1,6 @@
+
+
+////FALTA ARREGLAR BOTON +FECHA PARA QUE AL CLIQUEARLO PERMITA INGRESAR FECHAS EN LOS 2 NUEVOS CAMPOS DE FECHAS Y TAMBIEN FALTA AGREGARLE EL ICONO ANTERIOR.
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import api from "../services/axios";
@@ -18,12 +21,19 @@ export default function ComentariosPendientes() {
   const [loading, setLoading] = useState(true);
   const [paginaActual, setPaginaActual] = useState(1);
   const [comentariosPorPagina] = useState(10);
-  const [fechaDesde, setFechaDesde] = useState("");
-  const [fechaHasta, setFechaHasta] = useState("");
+  const [fechaDesde, setFechaDesde] = useState(null);
+  const [fechaHasta, setFechaHasta] = useState(null);
   const [comentariosFiltrados, setComentariosFiltrados] = useState([]);
+  const [isDesdeCalendarOpen, setIsDesdeCalendarOpen] = useState(false);
+  const [isHastaCalendarOpen, setIsHastaCalendarOpen] = useState(false);
+  const desdeCalendarRef = useRef(null);
+  const desdeCalendarButtonRef = useRef(null);
+  const hastaCalendarRef = useRef(null);
+  const hastaCalendarButtonRef = useRef(null);
+
   const [mostrarSelectorFecha, setMostrarSelectorFecha] = useState(false);
-  const [mostrarCalendario, setMostrarCalendario] = useState(false);
-  const [calendarioTipo, setCalendarioTipo] = useState(null);
+  const fechaButtonRef = useRef(null);
+
   const [barraClasificacionVisible, setBarraClasificacionVisible] = useState(false);
   const [comentarioSeleccionado, setComentarioSeleccionado] = useState(null);
   const [clasificacion, setClasificacion] = useState({
@@ -35,8 +45,6 @@ export default function ComentariosPendientes() {
     origenInformacion: '',
     empatiaExpresion: ''
   });
-  const fechaButtonRef = useRef(null);
-  const calendarioRef = useRef(null);
 
   useEffect(() => {
     const fetchComentarios = async () => {
@@ -57,7 +65,6 @@ export default function ComentariosPendientes() {
     fetchComentarios();
   }, []);
   console.log(comentarios)
-
   useEffect(() => {
     filtrarComentarios();
   }, [fechaDesde, fechaHasta, comentarios]);
@@ -68,21 +75,27 @@ export default function ComentariosPendientes() {
       return;
     }
 
-    const desde = fechaDesde ? parseISO(fechaDesde) : null;
-    const hasta = fechaHasta ? parseISO(fechaHasta) : null;
-
     const filtrados = comentarios.filter((comentario) => {
       const fechaComentario = parseISO(comentario.fechaScraping);
       if (!isValid(fechaComentario)) return false;
 
-      if (desde && hasta) {
-        return fechaComentario >= desde && fechaComentario <= hasta;
-      } else if (desde) {
-        return fechaComentario >= desde;
-      } else if (hasta) {
-        return fechaComentario <= hasta;
+      let dateMatch = true;
+
+      if (fechaDesde) {
+        const desdeDate = new Date(fechaDesde);
+        desdeDate.setHours(0, 0, 0, 0);
+        fechaComentario.setHours(0, 0, 0, 0);
+        dateMatch = dateMatch && fechaComentario.getTime() >= desdeDate.getTime();
       }
-      return true;
+
+      if (fechaHasta) {
+        const hastaDate = new Date(fechaHasta);
+        hastaDate.setHours(0, 0, 0, 0);
+        fechaComentario.setHours(0, 0, 0, 0);
+        dateMatch = dateMatch && fechaComentario.getTime() <= hastaDate.getTime();
+      }
+
+      return dateMatch;
     });
 
     setComentariosFiltrados(filtrados);
@@ -95,54 +108,65 @@ export default function ComentariosPendientes() {
   const totalPaginas = Math.ceil(comentariosFiltrados.length / comentariosPorPagina);
 
   const eliminarFiltro = () => {
-    setFechaDesde("");
-    setFechaHasta("");
+    setFechaDesde(null);
+    setFechaHasta(null);
     setComentariosFiltrados(comentarios);
     setPaginaActual(1);
+    setIsDesdeCalendarOpen(false);
+    setIsHastaCalendarOpen(false);
     setMostrarSelectorFecha(false);
-    setMostrarCalendario(false);
-    setCalendarioTipo(null);
   };
 
-  const toggleCalendario = (tipo) => {
-    if (calendarioTipo === tipo && mostrarCalendario) {
-      setMostrarCalendario(false);
-      setCalendarioTipo(null);
-    } else {
-      setMostrarCalendario(true);
-      setCalendarioTipo(tipo);
-      setMostrarSelectorFecha(false);
-    }
+  const toggleDesdeCalendar = () => {
+    setIsDesdeCalendarOpen(!isDesdeCalendarOpen);
+    setIsHastaCalendarOpen(false);
   };
 
-  const handleDateSelect = (date) => {
-    const formattedDate = format(date, "yyyy-MM-dd");
-    if (calendarioTipo === 'desde') {
-      setFechaDesde(formattedDate);
-      setMostrarSelectorFecha(true);
-    } else if (calendarioTipo === 'hasta') {
-      setFechaHasta(formattedDate);
-    }
-    setMostrarCalendario(false);
-    setCalendarioTipo(null);
-    setMostrarSelectorFecha(true);
+  const toggleHastaCalendar = () => {
+    setIsHastaCalendarOpen(!isHastaCalendarOpen);
+    setIsDesdeCalendarOpen(false);
   };
 
-  const handleFechaDesdeChange = (e) => {
-    setFechaDesde(e.target.value);
+  const handleDesdeDateSelect = (date) => {
+    setFechaDesde(date);
+    setIsDesdeCalendarOpen(false);
+    setPaginaActual(1);
   };
 
-  const handleFechaHastaChange = (e) => {
-    setFechaHasta(e.target.value);
+  const handleHastaDateSelect = (date) => {
+    setFechaHasta(date);
+    setIsHastaCalendarOpen(false);
+    setPaginaActual(1);
   };
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (fechaButtonRef.current && !fechaButtonRef.current.contains(event.target) &&
-        calendarioRef.current && !calendarioRef.current.contains(event.target)) {
+      if (
+        isDesdeCalendarOpen &&
+        desdeCalendarRef.current &&
+        !desdeCalendarRef.current.contains(event.target) &&
+        desdeCalendarButtonRef.current &&
+        !desdeCalendarButtonRef.current.contains(event.target)
+      ) {
+        setIsDesdeCalendarOpen(false);
+      }
+
+      if (
+        isHastaCalendarOpen &&
+        hastaCalendarRef.current &&
+        !hastaCalendarRef.current.contains(event.target) &&
+        hastaCalendarButtonRef.current &&
+        !hastaCalendarButtonRef.current.contains(event.target)
+      ) {
+        setIsHastaCalendarOpen(false);
+      }
+
+      if (
+        mostrarSelectorFecha &&
+        fechaButtonRef.current &&
+        !fechaButtonRef.current.contains(event.target)
+      ) {
         setMostrarSelectorFecha(false);
-        setMostrarCalendario(false);
-        setCalendarioTipo(null);
       }
     }
 
@@ -150,7 +174,7 @@ export default function ComentariosPendientes() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [isDesdeCalendarOpen, isHastaCalendarOpen, mostrarSelectorFecha]);
 
   const clasificarComentario = (comentario) => {
     setComentarioSeleccionado(comentario);
@@ -247,7 +271,8 @@ export default function ComentariosPendientes() {
           empatiaPrivacidad: 0,
           interesPublico: 1,
           caracterPersonaPublico: 0,
-          origenInformacion: 0
+          origenInformacion: 0,
+          empatiaExpresion: 0,
         });
         setComentarioSeleccionado(null);
       }
@@ -338,7 +363,7 @@ export default function ComentariosPendientes() {
                   <span>Fecha</span>
                 </div>
               </button>
-              {mostrarSelectorFecha && !mostrarCalendario && (
+              {mostrarSelectorFecha && (
                 <div className={`absolute mt-2 w-48 rounded-md shadow-lg z-10 
                   ${isDarkMode
                     ? 'bg-gray-800 border-gray-700 text-white'
@@ -346,7 +371,7 @@ export default function ComentariosPendientes() {
                   }`}>
                   <div className="py-1">
                     <button
-                      onClick={() => toggleCalendario('desde')}
+                      onClick={toggleDesdeCalendar}
                       className={`block w-full text-left px-4 py-2 text-base 
                         ${isDarkMode
                           ? 'hover:bg-gray-700 text-gray-300'
@@ -359,12 +384,20 @@ export default function ComentariosPendientes() {
                             : 'bg-gray-100 text-gray-700'
                           }`}
                         >
-                          {fechaDesde}
+                          {format(fechaDesde, 'yyyy-MM-dd')}
                         </span>
                       )}
                     </button>
+                    {isDesdeCalendarOpen && (
+                      <div
+                        ref={desdeCalendarRef}
+                        className={`absolute left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10`}
+                      >
+                        <Calendario onDateSelect={handleDesdeDateSelect} />
+                      </div>
+                    )}
                     <button
-                      onClick={() => toggleCalendario('hasta')}
+                      onClick={toggleHastaCalendar}
                       className={`block w-full text-left px-4 py-2 text-base 
                         ${isDarkMode
                           ? 'hover:bg-gray-700 text-gray-300'
@@ -377,10 +410,18 @@ export default function ComentariosPendientes() {
                             : 'bg-gray-100 text-gray-700'
                           }`}
                         >
-                          {fechaHasta}
+                          {format(fechaHasta, 'yyyy-MM-dd')}
                         </span>
                       )}
                     </button>
+                    {isHastaCalendarOpen && (
+                      <div
+                        ref={hastaCalendarRef}
+                        className={`absolute left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10`}
+                      >
+                        <Calendario onDateSelect={handleHastaDateSelect} />
+                      </div>
+                    )}
                     <div className="border-t border-gray-200">
                       <button onClick={eliminarFiltro} className={`block w-full text-left px-4 py-2 text-sm 
                           ${isDarkMode
@@ -393,51 +434,70 @@ export default function ComentariosPendientes() {
                   </div>
                 </div>
               )}
-
-              {mostrarCalendario && (
-                <div ref={calendarioRef} className="absolute left-0 mt-2 z-20">
-                  <Calendario onDateSelect={handleDateSelect} />
-                </div>
-              )}
             </div>
           </div>
 
           {/* Inputs de Fecha y Botón de Descarga */}
           <div className="flex flex-row items-center space-x-4">
+            {/* Contenedor Flex para alinear horizontalmente */}
             <div className="flex flex-row space-x-2 mb-2">
-              <input
-                type="date"
-                value={fechaDesde}//AQUI 29 mejor valor
-                onChange={handleFechaDesdeChange}
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
+              <div className="relative">
+                <input
+                  ref={desdeCalendarButtonRef}
+                  readOnly
+                  onClick={toggleDesdeCalendar}
+                  className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
                   w-24 sm:w-auto md:w-auto lg:w-auto
-                  text-xs md:text-base 
+                  text-xs md:text-base cursor-pointer
                   ${isDarkMode
-                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                    : 'bg-white border-gray-300 focus:ring-blue-500'
-                  }`}
-              />
-              <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
-              <input
-                type="date"
-                value={fechaHasta}
-                onChange={handleFechaHastaChange}//AQUI 29 mejor valor
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
+                      ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
+                      : 'bg-white border-gray-300 focus:ring-blue-500'
+                    }`}
+                  value={fechaDesde ? format(fechaDesde, 'yyyy-MM-dd') : ''}
+                  placeholder="Fecha desde"
+                />
+                {isDesdeCalendarOpen && (
+                  <div
+                    ref={desdeCalendarRef}
+                    className={`absolute top-full left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10`}
+                  >
+                    <Calendario onDateSelect={handleDesdeDateSelect} />
+                  </div>
+                )}
+              </div>
+              <span className={isDarkMode ? 'text-gray-300' : 'text-gray-800'}>-</span>
+              <div className="relative">
+                <input
+                  ref={hastaCalendarButtonRef}
+                  readOnly
+                  onClick={toggleHastaCalendar}
+                  className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
                   w-24 sm:w-auto md:w-auto lg:w-auto
-                  text-xs md:text-base 
+                  text-xs md:text-base cursor-pointer
                   ${isDarkMode
-                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                    : 'bg-white border-gray-300 focus:ring-blue-500'
-                  }`}
-              />
+                      ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
+                      : 'bg-white border-gray-300 focus:ring-blue-500'
+                    }`}
+                  value={fechaHasta ? format(fechaHasta, 'yyyy-MM-dd') : ''}
+                  placeholder="Fecha hasta"
+                />
+                {isHastaCalendarOpen && (
+                  <div
+                    ref={hastaCalendarRef}
+                    className={`absolute top-full left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10`}
+                  >
+                    <Calendario onDateSelect={handleHastaDateSelect} />
+                  </div>
+                )}
+              </div>
             </div>
             <Formulario
               comentariosFiltrados={comentariosFiltrados}
               columns={columnasPendientesPDF}
               formatData={formatData}
               fileName="comentarios_pendientes.pdf"
-              pdfTitle="Comentarios Pendientes" // Añadir el título del PDF específico para esta vista/////AGREGADO
-              className="w-auto" // Eliminar la clase w-full para evitar que el botón ocupe todo el ancho en pantallas pequeñas
+              pdfTitle="Comentarios Pendientes"
+              className="w-auto"
             />
           </div>
         </div>
@@ -603,7 +663,7 @@ export default function ComentariosPendientes() {
                     onChange={handleInputChange}
                     placeholder="PR"
                     className={`border rounded w-full mt-1 p-1 
-        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+          ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
                 <p className={`text-sm mt-1 ${isDarkMode
@@ -626,7 +686,7 @@ export default function ComentariosPendientes() {
                     placeholder="T"
                     step="0.1"
                     className={`border rounded w-full mt-1 p-1 
-        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+          ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
                 <p className={`text-sm mt-1 ${isDarkMode
@@ -649,7 +709,7 @@ export default function ComentariosPendientes() {
                     onChange={handleInputChange}
                     placeholder="E.Privacidad"
                     className={`border rounded w-full mt-1 p-1 
-        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+          ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
                 <p className={`text-sm mt-1 ${isDarkMode
@@ -671,7 +731,7 @@ export default function ComentariosPendientes() {
                     onChange={handleInputChange}
                     placeholder="IP"
                     className={`border rounded w-full mt-1 p-1 
-        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+          ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
                 <p className={`text-sm mt-1 ${isDarkMode
@@ -693,7 +753,7 @@ export default function ComentariosPendientes() {
                     onChange={handleInputChange}
                     placeholder="PF"
                     className={`border rounded w-full mt-1 p-1 
-        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+          ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
                 <p className={`text-sm mt-1 ${isDarkMode
@@ -716,7 +776,7 @@ export default function ComentariosPendientes() {
                     value={clasificacion.origenInformacion}
                     onChange={handleInputChange}
                     className={`border rounded w-full mt-1 p-1 
-        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+          ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
                 <p className={`text-sm mt-1 ${isDarkMode
@@ -739,7 +799,7 @@ export default function ComentariosPendientes() {
                     onChange={handleInputChange}
                     placeholder="E.Libertad"
                     className={`border rounded w-full mt-1 p-1 
-        ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
+          ${isDarkMode ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-800 border-gray-300'}`}
                   />
                 </label>
                 <p className={`text-sm mt-1 ${isDarkMode
