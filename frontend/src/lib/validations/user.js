@@ -70,4 +70,21 @@ export const changePasswordSchema = yup.object().shape({
     .required('Debes confirmar la nueva contraseña'),
 });
 
+export const ResetPasswordSchema = yup.object().shape({
+  password: yup
+    .string()
+    .min(6, 'La contraseña debe tener al menos 6 caracteres')
+    .max(24, 'La contraseña no puede tener más de 24 caracteres')
+    .matches(/[a-z]/, 'La contraseña debe contener al menos una letra minúscula')
+    .matches(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
+    .matches(/[0-9]/, 'La contraseña debe contener al menos un número')
+    .matches(/[@$!%*?&#]/, 'La contraseña debe contener al menos un carácter especial')
+    .required('La contraseña es requerida'),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password'), null], 'Las contraseñas deben coincidir')
+    .required('Confirmar contraseña es requerido')
+});
+
+
 
