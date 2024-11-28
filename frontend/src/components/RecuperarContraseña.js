@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import api from '../services/axiosUserInstance';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { userSchema } from '../lib/validations/user';
 import { ThemeContext } from '../utils/ThemeContext';
@@ -25,22 +25,23 @@ const RecuperarContraseña = () => {
   
     const onSubmit = async (data) => {
       setIsLoading(true);
-      setEmailError('');
+      setEmailError(''); // Reinicia el mensaje de error
       try {
-        const response = await api.post('/request-reset-password', data);
-        toast.success(response.data.message || 'Solicitud de restablecimiento enviada');
-        navigate('/login');
+          const response = await api.post('/request-reset-password', data);
+          toast.success(response.data.message || 'Solicitud de restablecimiento enviada');
+          navigate('/login');
       } catch (error) {
-        // Manejo específico para correo no encontrado
-        if (error.response?.status === 404) {
-          setEmailError('El correo electrónico no está registrado en el sistema');
-        } else {
-          toast.error(error.response?.data?.message || 'Error al solicitar restablecimiento de contraseña');
+        if (error.response?.status === 400) {
+          setEmailError('Correo electrónico inválido');
+        } else if(error.response?.status === 500) {
+          setEmailError('Error interno del servidor');
+        }else {
+          setEmailError('Hubo un problema al procesar tu solicitud. Por favor, inténtalo de nuevo.');
         }
       } finally {
-        setIsLoading(false);
+          setIsLoading(false);
       }
-    };
+  };
 
     return (
         <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 
@@ -73,11 +74,6 @@ const RecuperarContraseña = () => {
                   }`}
                   placeholder="tu-correo@ejemplo.com"
                 />
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.email.message}
-                  </p>
-                )}
                 {emailError && (
                   <p className="text-red-500 text-sm mt-1">
                     {emailError}
