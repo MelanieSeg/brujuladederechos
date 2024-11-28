@@ -1,5 +1,3 @@
-// src/components/ComentariosClasificados.jsx
-
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { PlusIcon, TrashIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { format, parseISO, isValid } from 'date-fns';
@@ -484,19 +482,19 @@ export default function ComentariosClasificados() {
               isDarkMode={isDarkMode}
             />
           </div>
+          <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           <button
             onClick={() => {
               setFechaDesde(null);
               setFechaHasta(null);
             }}
-            className={`w-full px-3 py-2 rounded-md text-sm 
-              ${isDarkMode 
-                ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+            className={`w-full text-left px-4 py-2 text-sm
+              ${isDarkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}
+            `}
           >
-            Limpiar Fechas
+            Limpiar
           </button>
+          </div>
         </div>
       </div>
     )
@@ -634,7 +632,7 @@ export default function ComentariosClasificados() {
                       ? 'text-white group-hover:text-gray-200'
                       : 'text-gray-500'
                   }`} />
-                  <span>Fechas</span>
+                  <span>Fecha</span>
                 </div>
               </button>
               {renderDateDropdown()}
