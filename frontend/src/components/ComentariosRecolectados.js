@@ -2,13 +2,14 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import api from "../services/axios";
 import { format, parseISO, isValid } from "date-fns";
-import { truncateComentario } from "../utils/truncarComentario";
-import Calendario from "./Objects/Calendario";
+import { es } from "date-fns/locale";
+import Calendario, { DatePicker } from "./Objects/Calendario"; // Asegúrate de que la ruta es correcta
 import Paginacion from "./Objects/Paginacion";
 import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
 import { Toast, showSuccess, showError } from "./Objects/Toast";
 import { ThemeContext } from '../utils/ThemeContext';
+import { truncateComentario } from "../utils/truncarComentario";
 
 export default function ComentariosRecolectados() {
   const [defaultComentarios] = useState([]);
@@ -17,22 +18,20 @@ export default function ComentariosRecolectados() {
   const { isDarkMode } = useContext(ThemeContext);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  ///calendar open eliminado
   const [selectedEstado, setSelectedEstado] = useState({
     PENDIENTE_CLASIFICACION: true,
     CLASIFICADO: true,
   });
-  const [fechaDesde, setFechaDesde] = useState("");
-  const [fechaHasta, setFechaHasta] = useState("");
+  const [fechaDesde, setFechaDesde] = useState(null);
+  const [fechaHasta, setFechaHasta] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedDateType, setSelectedDateType] = useState("");
+///eliminado dado nuevo calendario implementado  
   const commentsPerPage = 10;
 
   const dropdownRef = useRef(null);
   const gravedadButtonRef = useRef(null);
   const dateDropdownRef = useRef(null);
-  const dateButtonRef = useRef(null);
-  const calendarRef = useRef(null);
 
   // Estados para manejar la eliminación
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
@@ -71,18 +70,9 @@ export default function ComentariosRecolectados() {
       if (
         isDateDropdownOpen &&
         dateDropdownRef.current &&
-        !dateDropdownRef.current.contains(event.target) &&
-        dateButtonRef.current &&
-        !dateButtonRef.current.contains(event.target)
+        !dateDropdownRef.current.contains(event.target)
       ) {
         setIsDateDropdownOpen(false);
-      }
-      if (
-        isCalendarOpen &&
-        calendarRef.current &&
-        !calendarRef.current.contains(event.target)
-      ) {
-        setIsCalendarOpen(false);
       }
     }
 
@@ -90,7 +80,7 @@ export default function ComentariosRecolectados() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isDropdownOpen, isDateDropdownOpen, isCalendarOpen]);
+  }, [isDropdownOpen, isDateDropdownOpen]);//se borra isCalendarOpenporque se utiliza otra forma ahora, para cuando hagas el merge
 
   const handleGravedadClick = () => {
     setDropdownOpen(!isDropdownOpen);
@@ -136,9 +126,7 @@ export default function ComentariosRecolectados() {
           ? "bg-gray-600"
           : "bg-gray-300";
       case "CLASIFICADO":
-        return isDarkMode
-          ? "bg-green-300"
-          : "bg-green-200";
+        return isDarkMode ? "bg-green-300" : "bg-green-200";
       default:
         return isDarkMode
           ? "bg-gray-500"
@@ -148,35 +136,13 @@ export default function ComentariosRecolectados() {
 
   const toggleDateDropdown = () => {
     setIsDateDropdownOpen(!isDateDropdownOpen);
-    setIsCalendarOpen(false);
   };
 
   const handlePageClick = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  const handleDateOptionClick = (option) => {
-    if (option === "desde" || option === "hasta") {
-      setSelectedDateType(option);
-      setIsCalendarOpen(true);
-    } else if (option === "eliminar") {
-      setFechaDesde("");
-      setFechaHasta("");
-      setIsDateDropdownOpen(false);
-      setIsCalendarOpen(false);
-    }
-  };
-
-  const handleDateClick = (date) => {
-    const formattedDate = format(date, "yyyy-MM-dd");
-    if (selectedDateType === "desde") {
-      setFechaDesde(formattedDate);
-    } else if (selectedDateType === "hasta") {
-      setFechaHasta(formattedDate);
-    }
-    setIsCalendarOpen(false);
-  };
-
+  // Definir renderDropdown antes de usarlo en el JS
   const renderDropdown = () => {
     return isDropdownOpen && (
       <div
@@ -260,7 +226,9 @@ export default function ComentariosRecolectados() {
       comentario.estado === "PENDIENTE_CLASIFICACION" ? "Pendiente" : "Clasificado";
     const sitioWeb = comentario.sourceUrl;
     const fecha = isValid(parseISO(comentario.fechaScraping))
-      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
+      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy", {
+          locale: es,
+        })
       : "Fecha Inválida";
 
     return [comentarioTexto, estado, sitioWeb, fecha];
@@ -269,10 +237,11 @@ export default function ComentariosRecolectados() {
   const filteredComments = comentarios.filter((comentario) => {
     const estadoMatch = selectedEstado[comentario.estado];
     const fechaComentario = parseISO(comentario.fechaScraping);
-    const dateMatch =
-      (!fechaDesde || (isValid(fechaComentario) && format(fechaComentario, "yyyy-MM-dd") >= fechaDesde)) &&
-      (!fechaHasta || (isValid(fechaComentario) && format(fechaComentario, "yyyy-MM-dd") <= fechaHasta));
-    return estadoMatch && dateMatch;
+
+    const desdeMatch = fechaDesde ? fechaComentario >= fechaDesde : true;
+    const hastaMatch = fechaHasta ? fechaComentario <= fechaHasta : true;
+
+    return estadoMatch && desdeMatch && hastaMatch;
   });
 
   const indexOfLastComment = currentPage * commentsPerPage;
@@ -335,9 +304,12 @@ export default function ComentariosRecolectados() {
           ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
           ¿Está seguro de eliminar este comentario?
         </h3>
-        <p className={`text-sm mb-4 
-          ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-          Esta acción no se puede deshacer. Por favor, ingresa un motivo para la eliminación.
+        <p
+          className={`text-sm mb-4 
+              ${isDarkMode ? "text-gray-400" : "text-gray-700"}`}
+        >
+          Esta acción no se puede deshacer. Por favor, ingresa un motivo para la
+          eliminación.
         </p>
         <form onSubmit={(e) => { e.preventDefault(); manejarEliminarComentario(); }}>
           {/* Campos de formulario */}
@@ -396,7 +368,6 @@ export default function ComentariosRecolectados() {
             {/* Botón de Fecha con Dropdown */}
             <div className="relative">
               <button
-                ref={dateButtonRef}
                 onClick={toggleDateDropdown}
                 className={`px-4 py-2 mb-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
                   ${isDateDropdownOpen
@@ -416,73 +387,48 @@ export default function ComentariosRecolectados() {
               {isDateDropdownOpen && (
                 <div
                   ref={dateDropdownRef}
-                  className={`absolute mt-2 w-48 rounded-md shadow-lg z-20 
-                    ${isDarkMode
-                      ? 'bg-gray-800 border border-gray-700 text-white'
-                      : 'bg-white text-gray-700'
-                    }`}
+                  className={`absolute mt-2 rounded-md shadow-lg z-20 
+                        ${
+                          isDarkMode
+                            ? "bg-gray-800 text-white"
+                            : "bg-white text-gray-700"
+                        }`}
+                  style={{ width: "220px" }} // Ajusta el ancho si es necesario
                 >
-                  <button
-                    className={`block w-full text-left px-4 py-2 text-base 
-                      ${isDarkMode
-                        ? 'hover:bg-gray-700 text-gray-300'
-                        : 'hover:bg-gray-100 text-gray-700'
-                      }`}
-                    onClick={() => handleDateOptionClick("desde")}
-                  >
-                    Desde
-                    {fechaDesde && (
-                      <span className={`ml-2 mx-2 text-sm px-2 py-1 rounded-full 
-                        ${isDarkMode
-                          ? 'bg-gray-700 text-gray-300'
-                          : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {fechaDesde}
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    className={`block w-full text-left px-4 py-2 text-base 
-                      ${isDarkMode
-                        ? 'hover:bg-gray-700 text-gray-300'
-                        : 'hover:bg-gray-100 text-gray-700'
-                      }`}
-                    onClick={() => handleDateOptionClick("hasta")}
-                  >
-                    Hasta {fechaHasta && (
-                      <span className={`ml-2 text-sm px-2 py-1 rounded-full 
-                        ${isDarkMode
-                          ? 'bg-gray-700 text-gray-300'
-                          : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {fechaHasta}
-                      </span>
-                    )}
-                  </button>
-                  <div className={`border-t 
-                    ${isDarkMode
-                      ? 'border-gray-700'
-                      : 'border-gray-200'
-                    }`}>
+                  <div className="px-4 py-2">
+                    {/* Fecha Desde */}
+                    <div className="mb-4">
+                      <DatePicker
+                        selectedDate={fechaDesde}
+                        onDateChange={setFechaDesde}
+                        placeholder="Selecciona desde"
+                        isDarkMode={isDarkMode}
+                      />
+                    </div>
+                    {/* Fecha Hasta */}
+                    <div className="mb-4">
+                      <DatePicker
+                        selectedDate={fechaHasta}
+                        onDateChange={setFechaHasta}
+                        placeholder="Selecciona hasta"
+                        isDarkMode={isDarkMode}
+                      />
+                    </div>
                     <button
-                      className={`block w-full text-left px-4 py-2 text-sm 
-                        ${isDarkMode
-                          ? 'text-gray-400 hover:bg-gray-700'
-                          : 'text-gray-500 hover:bg-gray-100'
-                        }`}
-                      onClick={() => handleDateOptionClick("eliminar")}
+                      onClick={() => {
+                        setFechaDesde(null);
+                        setFechaHasta(null);
+                      }}
+                      className={`w-full px-3 py-2 rounded-md text-sm 
+                            ${
+                              isDarkMode
+                                ? "bg-gray-600 text-gray-200 hover:bg-gray-500"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            }`}
                     >
                       Limpiar
                     </button>
                   </div>
-                </div>
-              )}
-
-              {isCalendarOpen && (
-                <div ref={calendarRef} className="absolute left-0 mt-2 calendario-container z-50">
-                  <Calendario onDateSelect={handleDateClick} />
                 </div>
               )}
             </div>
@@ -510,47 +456,40 @@ export default function ComentariosRecolectados() {
             </div>
           </div>
 
-          {/* Inputs de Fecha y Botón de Descarga */}
+          {/* Inputs de Fecha y Botón de Descarga AQUI SE IMPLEMENTARON LOS CAMBIOS DEL CALENDARIO NUEVO*/}
           <div className="flex flex-row items-center space-x-4">
             <div className="flex flex-row space-x-2 mb-2">
-            <input
-                type="date"
-                  value={fechaDesde}
-                    onChange={(e) => setFechaDesde(e.target.value)}
-                    className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
-                      w-24 sm:w-auto md:w-auto lg:w-auto
-                      text-xs md:text-base 
-                      ${isDarkMode
-                        ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                        : 'bg-white border-gray-300 focus:ring-blue-500'
-                      }`}
-                      />
-                      <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
-                      <input
-                        type="date"
-                        value={fechaHasta}
-                        onChange={(e) => setFechaHasta(e.target.value)}
-                        className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
-                          w-24 sm:w-auto md:w-auto lg:w-auto
-                          text-xs md:text-base 
-                          ${isDarkMode
-                            ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                            : 'bg-white border-gray-300 focus:ring-blue-500'
-                          }`}
-                      />
-
-                  </div>
-                  {/* Componente Formulario para descargar el PDF */}
-                  <Formulario
-                    comentariosFiltrados={filteredComments}
-                    columns={columnsPDF}
-                    formatData={formatData}
-                    fileName="comentarios_recolectados.pdf"
-                    pdfTitle="Comentarios Recolectados" // Añadir el título del PDF específico para esta vista////
-                    className="w-auto"
-                  />
-                </div>
-              </div>
+              <DatePicker
+                selectedDate={fechaDesde}
+                onDateChange={setFechaDesde}
+                placeholder="Desde"
+                isDarkMode={isDarkMode}
+              />
+              <span
+                className={
+                  isDarkMode ? "text-white mx-2" : "text-gray-800 mx-2"
+                }
+              >
+                -
+              </span>
+              <DatePicker
+                selectedDate={fechaHasta}
+                onDateChange={setFechaHasta}
+                placeholder="Hasta"
+                isDarkMode={isDarkMode}
+              />
+            </div>
+            {/* Componente Formulario para descargar el PDF */}
+            <Formulario
+              comentariosFiltrados={filteredComments}
+              columns={columnsPDF}
+              formatData={formatData}
+              fileName="comentarios_recolectados.pdf"
+              pdfTitle="Comentarios Recolectados"///Para que el PDF tenga el titulo de su respectiva vista
+              className="w-auto"
+            />
+          </div>
+        </div>
 
         {/* Vista de tabla para pantallas grandes */}
         <div className="overflow-x-auto hidden sm:block">
