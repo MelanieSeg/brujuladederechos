@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
-import { PlusIcon } from "@heroicons/react/20/solid";
+import { PlusIcon } from "@heroicons/react/24/outline";
 import api from "../services/axios";
 import { truncateComentario } from "../utils/truncarComentario";
 import { format, parseISO, isValid } from "date-fns";
-import Calendario from './Objects/Calendario';
+import { es } from "date-fns/locale";
+import Calendario, { DatePicker } from "./Objects/Calendario"; // Asegúrate de que la ruta es correcta
 import Paginacion from "./Objects/Paginacion";
 import { useAuth } from "../hooks/useAuth";
 import Formulario from "./Objects/Formulario";
@@ -16,14 +17,15 @@ export default function ComentariosPendientes() {
   const { user } = useAuth();
   const [comentarios, setComentarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
+  const [fechaDesde, setFechaDesde] = useState(null);
+  const [fechaHasta, setFechaHasta] = useState(null);
   const [paginaActual, setPaginaActual] = useState(1);
-  const [comentariosPorPagina] = useState(10);
-  const [fechaDesde, setFechaDesde] = useState("");
-  const [fechaHasta, setFechaHasta] = useState("");
-  const [comentariosFiltrados, setComentariosFiltrados] = useState([]);
-  const [mostrarSelectorFecha, setMostrarSelectorFecha] = useState(false);
-  const [mostrarCalendario, setMostrarCalendario] = useState(false);
-  const [calendarioTipo, setCalendarioTipo] = useState(null);
+  const commentsPerPage = 10;
+
+  const dateDropdownRef = useRef(null);
+
+  // Estados para manejar la clasificación
   const [barraClasificacionVisible, setBarraClasificacionVisible] = useState(false);
   const [comentarioSeleccionado, setComentarioSeleccionado] = useState(null);
   const [clasificacion, setClasificacion] = useState({
@@ -35,20 +37,20 @@ export default function ComentariosPendientes() {
     origenInformacion: '',
     empatiaExpresion: ''
   });
-  const fechaButtonRef = useRef(null);
-  const calendarioRef = useRef(null);
 
+  // Recuperar comentarios al montar el componente
   useEffect(() => {
     const fetchComentarios = async () => {
       setLoading(true);
       try {
         const response = await api.get("/comments/get-all-comments-pending");
         setComentarios(response.data.data);
-        setComentariosFiltrados(response.data.data);
+        // setComentariosFiltrados(response.data.data);//da error declarar esta linea buscar el error
       } catch (err) {
         console.error("Error al obtener los comentarios", err);
         setComentarios([]);
-        setComentariosFiltrados([]);
+      
+        // setComentariosFiltrados([]);///comentar mientras se busca el error
       } finally {
         setLoading(false);
       }
@@ -56,93 +58,16 @@ export default function ComentariosPendientes() {
 
     fetchComentarios();
   }, []);
-  console.log(comentarios)
 
-  useEffect(() => {
-    filtrarComentarios();
-  }, [fechaDesde, fechaHasta, comentarios]);
-
-  const filtrarComentarios = () => {
-    if (!fechaDesde && !fechaHasta) {
-      setComentariosFiltrados(comentarios);
-      return;
-    }
-
-    const desde = fechaDesde ? parseISO(fechaDesde) : null;
-    const hasta = fechaHasta ? parseISO(fechaHasta) : null;
-
-    const filtrados = comentarios.filter((comentario) => {
-      const fechaComentario = parseISO(comentario.fechaScraping);
-      if (!isValid(fechaComentario)) return false;
-
-      if (desde && hasta) {
-        return fechaComentario >= desde && fechaComentario <= hasta;
-      } else if (desde) {
-        return fechaComentario >= desde;
-      } else if (hasta) {
-        return fechaComentario <= hasta;
-      }
-      return true;
-    });
-
-    setComentariosFiltrados(filtrados);
-    setPaginaActual(1);
-  };
-
-  const indiceUltimoComentario = paginaActual * comentariosPorPagina;
-  const indicePrimerComentario = indiceUltimoComentario - comentariosPorPagina;
-  const comentariosAMostrar = comentariosFiltrados.slice(indicePrimerComentario, indiceUltimoComentario);
-  const totalPaginas = Math.ceil(comentariosFiltrados.length / comentariosPorPagina);
-
-  const eliminarFiltro = () => {
-    setFechaDesde("");
-    setFechaHasta("");
-    setComentariosFiltrados(comentarios);
-    setPaginaActual(1);
-    setMostrarSelectorFecha(false);
-    setMostrarCalendario(false);
-    setCalendarioTipo(null);
-  };
-
-  const toggleCalendario = (tipo) => {
-    if (calendarioTipo === tipo && mostrarCalendario) {
-      setMostrarCalendario(false);
-      setCalendarioTipo(null);
-    } else {
-      setMostrarCalendario(true);
-      setCalendarioTipo(tipo);
-      setMostrarSelectorFecha(false);
-    }
-  };
-
-  const handleDateSelect = (date) => {
-    const formattedDate = format(date, "yyyy-MM-dd");
-    if (calendarioTipo === 'desde') {
-      setFechaDesde(formattedDate);
-      setMostrarSelectorFecha(true);
-    } else if (calendarioTipo === 'hasta') {
-      setFechaHasta(formattedDate);
-    }
-    setMostrarCalendario(false);
-    setCalendarioTipo(null);
-    setMostrarSelectorFecha(true);
-  };
-
-  const handleFechaDesdeChange = (e) => {
-    setFechaDesde(e.target.value);
-  };
-
-  const handleFechaHastaChange = (e) => {
-    setFechaHasta(e.target.value);
-  };
-
+  // Manejar clics fuera del dropdown de fechas
   useEffect(() => {
     function handleClickOutside(event) {
-      if (fechaButtonRef.current && !fechaButtonRef.current.contains(event.target) &&
-        calendarioRef.current && !calendarioRef.current.contains(event.target)) {
-        setMostrarSelectorFecha(false);
-        setMostrarCalendario(false);
-        setCalendarioTipo(null);
+      if (
+        isDateDropdownOpen &&
+        dateDropdownRef.current &&
+        !dateDropdownRef.current.contains(event.target)
+      ) {
+        setIsDateDropdownOpen(false);
       }
     }
 
@@ -150,11 +75,96 @@ export default function ComentariosPendientes() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [isDateDropdownOpen]);
 
+  const toggleDateDropdown = () => {
+    setIsDateDropdownOpen(!isDateDropdownOpen);
+  };
+
+  const handlePageClick = (pageNumber) => {
+    setPaginaActual(pageNumber);
+  };
+
+  const columns = [
+    { title: "Comentario", width: "2/6", halign: "left" },
+    { title: "Estado", width: "1/6", halign: "center" },
+    { title: "Sitio Web", width: "1/6", halign: "left" },
+    { title: "Fecha", width: "1/6", halign: "center" },
+    { title: "Acciones", width: "1/6", halign: "center" },
+  ];
+
+  const columnsPDF = [
+    { title: "Comentario", width: "2/5", halign: "left" },
+    { title: "Estado", width: "1/5", halign: "center" },
+    { title: "Sitio Web", width: "1/5", halign: "left" },
+    { title: "Fecha", width: "1/5", halign: "center" },
+  ];
+
+  const formatData = (comentario) => {
+    const comentarioTexto = comentario.comentario;
+    const estado =
+      comentario.estado === "PENDIENTE_CLASIFICACION"
+        ? "Pendiente"
+        : "Clasificado";
+    const sitioWeb = comentario.sourceUrl;
+    const fecha = isValid(parseISO(comentario.fechaScraping))
+      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy", { locale: es })
+      : "Fecha Inválida";
+
+    return [comentarioTexto, estado, sitioWeb, fecha];
+  };
+
+  // Filtrar comentarios según fechas
+  const filteredComments = comentarios.filter((comentario) => {
+    const fechaComentario = parseISO(comentario.fechaScraping);
+
+    const desdeMatch = fechaDesde ? fechaComentario >= fechaDesde : true;
+    const hastaMatch = fechaHasta ? fechaComentario <= fechaHasta : true;
+
+    return desdeMatch && hastaMatch;
+  });
+
+  const indexOfLastComment = paginaActual * commentsPerPage;
+  const indexOfFirstComment = indexOfLastComment - commentsPerPage;
+  const currentComments = filteredComments.slice(
+    indexOfFirstComment,
+    indexOfLastComment
+  );
+  const totalPaginas = Math.ceil(filteredComments.length / commentsPerPage);
+
+  const getBadgeColorClass = (estado) => {
+    switch (estado) {
+      case "PENDIENTE_CLASIFICACION":
+        return isDarkMode
+          ? "bg-gray-600 text-gray-200"
+          : "bg-gray-300 text-gray-800";
+      case "CLASIFICADO":
+        return isDarkMode
+          ? "bg-green-300 text-green-800"
+          : "bg-green-200 text-green-600";
+      default:
+        return isDarkMode
+          ? "bg-gray-500 text-white"
+          : "bg-gray-500 text-white";
+    }
+  };
+
+  const getStatusColorClass = (estado) => {
+    switch (estado) {
+      case "PENDIENTE_CLASIFICACION":
+        return isDarkMode ? "bg-gray-600" : "bg-gray-300";
+      case "CLASIFICADO":
+        return isDarkMode ? "bg-green-300" : "bg-green-200";
+      default:
+        return isDarkMode ? "bg-gray-500" : "bg-gray-500";
+    }
+  };
+
+  // Función de clasificación adaptada a la lógica del primer código
   const clasificarComentario = (comentario) => {
     setComentarioSeleccionado(comentario);
     setBarraClasificacionVisible(true);
+    // No se reinicia aquí la clasificación, se hace después de una clasificación exitosa
   };
 
   const handleInputChange = (e) => {
@@ -168,23 +178,6 @@ export default function ComentariosPendientes() {
     }
 
     setClasificacion({ ...clasificacion, [name]: parsedValue });
-  };
-
-  const getStatusColorClass = (estado) => {
-    switch (estado) {
-      case "PENDIENTE_CLASIFICACION":
-        return isDarkMode
-          ? "bg-gray-600"
-          : "bg-gray-300";
-      case "CLASIFICADO":
-        return isDarkMode
-          ? "bg-green-300"
-          : "bg-green-200";
-      default:
-        return isDarkMode
-          ? "bg-green-300"
-          : "bg-green-200";
-    }
   };
 
   const enviarClasificacion = async () => {
@@ -235,9 +228,6 @@ export default function ComentariosPendientes() {
         setComentarios((prevComentarios) =>
           prevComentarios.filter((c) => c.id !== comentarioSeleccionado.id)
         );
-        setComentariosFiltrados((prevComentariosFiltrados) =>
-          prevComentariosFiltrados.filter((c) => c.id !== comentarioSeleccionado.id)
-        );
         // Mostrar toast de éxito
         showSuccess("Comentario clasificado exitosamente.");
         // Resetear el formulario de clasificación
@@ -248,64 +238,19 @@ export default function ComentariosPendientes() {
           interesPublico: 1,
           caracterPersonaPublico: 0,
           origenInformacion: 0
+          
         });
         setComentarioSeleccionado(null);
       }
     } catch (error) {
       console.error("Error al guardar la clasificación", error);
       console.log("Respuesta del servidor:", error.response?.data);
-      showError("Error al guardar la clasificación: " + (error.response?.data?.msg || error.message));
+      showError(
+        "Error al guardar la clasificación: " +
+          (error.response?.data?.msg || error.message)
+      );
     }
   };
-
-  const columnasPendientes = [
-    {
-      title: "Comentario",
-      width: 250,
-      halign: 'left',
-    },
-    {
-      title: "Sitio Web",
-      width: 150,
-      halign: 'left',
-    },
-    {
-      title: "Fecha",
-      width: 150,
-      halign: 'center',
-    },
-    {
-      title: "Acciones",
-      width: 150,
-      halign: 'center',
-    },
-  ];
-
-  const columnasPendientesPDF = [
-    {
-      title: "Comentario",
-      width: 250,
-      halign: 'left',
-    },
-    {
-      title: "Sitio Web",
-      width: 150,
-      halign: 'left',
-    },
-    {
-      title: "Fecha",
-      width: 100,
-      halign: 'center',
-    },
-  ];
-
-  const formatData = (comentario) => [
-    comentario.comentario,
-    comentario.sourceUrl,
-    isValid(parseISO(comentario.fechaScraping))
-      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
-      : "Fecha Inválida"
-  ];
 
   return (
     <div className={`p-2 sm:p-4 min-h-screen lg:p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
@@ -322,81 +267,70 @@ export default function ComentariosPendientes() {
             {/* Botón de Fecha con Dropdown */}
             <div className="relative">
               <button
-                ref={fechaButtonRef}
-                onClick={() => setMostrarSelectorFecha(!mostrarSelectorFecha)}
-                className={`px-4 py-2 mb-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border
-                  ${mostrarSelectorFecha
-                    ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
-                    : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }`}
+                onClick={toggleDateDropdown}
+                className={`px-4 py-2 mb-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
+                      ${
+                        isDateDropdownOpen
+                          ? "bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500"
+                          : "bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      }`}
               >
                 <div className="flex items-center space-x-2">
-                  <PlusIcon className={`w-5 h-5 ${isDarkMode
-                    ? 'text-white group-hover:text-gray-200'
-                    : 'text-gray-500'
-                    }`} />
+                  <PlusIcon
+                    className={`w-5 h-5 ${
+                      isDarkMode
+                        ? "text-white group-hover:text-gray-200"
+                        : "text-gray-500"
+                    }`}
+                  />
                   <span>Fecha</span>
                 </div>
               </button>
-              {mostrarSelectorFecha && !mostrarCalendario && (
-                <div className={`absolute mt-2 w-48 rounded-md shadow-lg z-10 
-                  ${isDarkMode
-                    ? 'bg-gray-800 border-gray-700 text-white'
-                    : 'bg-white border-gray-300 text-gray-700'
-                  }`}>
-                  <div className="py-1">
-                    <button
-                      onClick={() => toggleCalendario('desde')}
-                      className={`block w-full text-left px-4 py-2 text-base 
-                        ${isDarkMode
-                          ? 'hover:bg-gray-700 text-gray-300'
-                          : 'hover:bg-gray-100 text-gray-700'
-                        }`}>
-                      Desde {fechaDesde && (
-                        <span className={`ml-2 mx-2 text-sm px-2 py-1 rounded-full 
-                          ${isDarkMode
-                            ? 'bg-gray-700 text-gray-300'
-                            : 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {fechaDesde}
-                        </span>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => toggleCalendario('hasta')}
-                      className={`block w-full text-left px-4 py-2 text-base 
-                        ${isDarkMode
-                          ? 'hover:bg-gray-700 text-gray-300'
-                          : 'hover:bg-gray-100 text-gray-700'
-                        }`}>
-                      Hasta {fechaHasta && (
-                        <span className={`ml-2 text-sm px-2 py-1 rounded-full 
-                          ${isDarkMode
-                            ? 'bg-gray-700 text-gray-300'
-                            : 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {fechaHasta}
-                        </span>
-                      )}
-                    </button>
-                    <div className="border-t border-gray-200">
-                      <button onClick={eliminarFiltro} className={`block w-full text-left px-4 py-2 text-sm 
-                          ${isDarkMode
-                          ? 'text-gray-400 hover:bg-gray-700'
-                          : 'text-gray-500 hover:bg-gray-100'
-                        }`}>
-                        Limpiar
-                      </button>
+              {isDateDropdownOpen && (
+                <div
+                  ref={dateDropdownRef}
+                  className={`absolute mt-2 rounded-md shadow-lg z-20 
+                            ${
+                              isDarkMode
+                                ? "bg-gray-800 text-white"
+                                : "bg-white text-gray-700"
+                            }`}
+                  style={{ width: "220px" }} // Ajusta el ancho si es necesario
+                >
+                  <div className="px-4 py-2">
+                    {/* Fecha Desde */}
+                    <div className="mb-4">
+                      <DatePicker
+                        selectedDate={fechaDesde}
+                        onDateChange={setFechaDesde}
+                        placeholder="Selecciona desde"
+                        isDarkMode={isDarkMode}
+                      />
                     </div>
+                    {/* Fecha Hasta */}
+                    <div className="mb-4">
+                      <DatePicker
+                        selectedDate={fechaHasta}
+                        onDateChange={setFechaHasta}
+                        placeholder="Selecciona hasta"
+                        isDarkMode={isDarkMode}
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        setFechaDesde(null);
+                        setFechaHasta(null);
+                      }}
+                      className={`w-full px-3 py-2 rounded-md text-sm 
+                            ${
+                              isDarkMode
+                                ? "bg-gray-600 text-gray-200 hover:bg-gray-500"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            }`}
+                    >
+                      Limpiar Fechas
+                    </button>
                   </div>
-                </div>
-              )}
-
-              {mostrarCalendario && (
-                <div ref={calendarioRef} className="absolute left-0 mt-2 z-20">
-                  <Calendario onDateSelect={handleDateSelect} />
                 </div>
               )}
             </div>
@@ -405,35 +339,27 @@ export default function ComentariosPendientes() {
           {/* Inputs de Fecha y Botón de Descarga */}
           <div className="flex flex-row items-center space-x-4">
             <div className="flex flex-row space-x-2 mb-2">
-              <input
-                type="date"
-                value={fechaDesde}//AQUI 29 mejor valor
-                onChange={handleFechaDesdeChange}
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
-                  w-24 sm:w-auto md:w-auto lg:w-auto
-                  text-xs md:text-base 
-                  ${isDarkMode
-                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                    : 'bg-white border-gray-300 focus:ring-blue-500'
-                  }`}
+              <DatePicker
+                selectedDate={fechaDesde}
+                onDateChange={setFechaDesde}
+                placeholder="Desde"
+                isDarkMode={isDarkMode}
               />
-              <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
-              <input
-                type="date"
-                value={fechaHasta}
-                onChange={handleFechaHastaChange}//AQUI 29 mejor valor
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
-                  w-24 sm:w-auto md:w-auto lg:w-auto
-                  text-xs md:text-base 
-                  ${isDarkMode
-                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                    : 'bg-white border-gray-300 focus:ring-blue-500'
-                  }`}
+              <span
+                className={isDarkMode ? "text-white mx-2" : "text-gray-800 mx-2"}
+              >
+                -
+              </span>
+              <DatePicker
+                selectedDate={fechaHasta}
+                onDateChange={setFechaHasta}
+                placeholder="Hasta"
+                isDarkMode={isDarkMode}
               />
             </div>
             <Formulario
-              comentariosFiltrados={comentariosFiltrados}
-              columns={columnasPendientesPDF}
+              comentariosFiltrados={filteredComments}
+              columns={columnsPDF}
               formatData={formatData}
               fileName="comentarios_pendientes.pdf"
               className="w-auto" // Eliminar la clase w-full para evitar que el botón ocupe todo el ancho en pantallas pequeñas
@@ -445,13 +371,17 @@ export default function ComentariosPendientes() {
         <div className="overflow-x-auto w-full hidden sm:block">
           <table className={`min-w-full table-fixed border-collapse rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md overflow-hidden`}>
             <thead>
-              <tr className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                {columnasPendientes.map((columna) => (
-                  <th key={columna.title} className={`px-6 py-4 text-left font-medium border-b w-${columna.width}
-                    ${isDarkMode
-                      ? 'text-gray-300 border-gray-700'
-                      : 'text-gray-500 border-gray-300'
-                    }`}>
+              <tr className={`${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
+                {columns.map((columna) => (
+                  <th
+                    key={columna.title}
+                    className={`px-6 py-4 text-left font-medium border-b w-${columna.width} 
+                          ${
+                            isDarkMode
+                              ? "text-gray-300 border-gray-700"
+                              : "text-gray-500 border-gray-300"
+                          }`}
+                  >
                     {columna.title}
                   </th>
                 ))}
@@ -464,16 +394,54 @@ export default function ComentariosPendientes() {
                     <Cargando />
                   </td>
                 </tr>
-              ) : comentariosAMostrar.length > 0 ? (
-                comentariosAMostrar.map((comentario, index) => (
-                  <tr key={index} className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+              ) : currentComments.length > 0 ? (
+                currentComments.map((comentario, index) => (
+                  <tr
+                    key={index}
+                    className={`border-b ${
+                      isDarkMode ? "border-gray-700" : "border-gray-200"
+                    }`}
+                  >
+                    <td
+                      className={`px-6 py-4 max-w-xs break-all ${
+                        isDarkMode ? "text-gray-300" : "text-gray-800"
+                      }`}
+                    >
                       {truncateComentario(comentario.comentario, 100)}
                     </td>
-                    <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{comentario.sourceUrl}</td>
-                    <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>
+                    <td
+                      className={`px-4 py-4 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-800"
+                      }`}
+                    >
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getBadgeColorClass(
+                          comentario.estado
+                        )}`}
+                      >
+                        {comentario.estado === "PENDIENTE_CLASIFICACION"
+                          ? "Pendiente"
+                          : "Clasificado"}
+                      </span>
+                    </td>
+                    <td
+                      className={`px-6 py-4 max-w-xs break-all ${
+                        isDarkMode ? "text-gray-300" : "text-gray-800"
+                      }`}
+                    >
+                      {comentario.sourceUrl}
+                    </td>
+                    <td
+                      className={`px-4 py-4 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-800"
+                      }`}
+                    >
                       {isValid(parseISO(comentario.fechaScraping))
-                        ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
+                        ? format(
+                            parseISO(comentario.fechaScraping),
+                            "dd-MM-yyyy",
+                            { locale: es }
+                          )
                         : "Fecha Inválida"}
                     </td>
                     <td className="px-6 py-4 flex items-center space-x-2">
@@ -507,20 +475,36 @@ export default function ComentariosPendientes() {
           <div className="space-y-4 w-full">
             {loading ? (
               <Cargando />
-            ) : comentariosAMostrar.length > 0 ? (
-              comentariosAMostrar.map((comentario, index) => (
-                <div key={index} className={`w-full border p-4 rounded-md ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-300' : 'bg-white border-gray-200'}`}>
+            ) : currentComments.length > 0 ? (
+              currentComments.map((comentario, index) => (
+                <div
+                  key={index}
+                  className={`w-full border p-4 rounded-md ${
+                    isDarkMode
+                      ? "bg-gray-800 border-gray-700 text-gray-300"
+                      : "bg-white border-gray-200"
+                  }`}
+                >
                   <div className="flex flex-col space-y-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
-                        <div className={`w-4 h-4 rounded-full ${getStatusColorClass(comentario.estado)}`}></div>
-                        <span className="ml-2 font-medium truncate break-all">{comentario.sourceUrl}</span>
+                        <div
+                          className={`w-4 h-4 rounded-full ${getStatusColorClass(
+                            comentario.estado
+                          )}`}
+                        ></div>
+                        <span className="ml-2 font-medium truncate">
+                          {comentario.sourceUrl}
+                        </span>
                       </div>
                       <div className="text-sm">
                         {isValid(parseISO(comentario.fechaScraping))
-                          ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
-                          : "Fecha Inválida"
-                        }
+                          ? format(
+                              parseISO(comentario.fechaScraping),
+                              "dd-MM-yyyy",
+                              { locale: es }
+                            )
+                          : "Fecha Inválida"}
                       </div>
                     </div>
                     <div className="text-sm break-all">

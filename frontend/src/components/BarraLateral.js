@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useRef, useContext,useEffect} from 'react';
 import { BellIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
 import { SunIcon, MoonIcon } from '@heroicons/react/24/solid';
@@ -14,6 +14,7 @@ import {
   CogIcon, 
   UserGroupIcon 
 } from '@heroicons/react/24/outline';
+
 export default function BarraLateral({ collapsed = false, isMobile = false }) { // Added isMobile prop
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -21,6 +22,8 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
   const notificacionesRef = useRef(null);
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);
   const [isLogoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(collapsed);
+
   const toggleNotificaciones = () => {
     setNotificacionesVisibles(!notificacionesVisibles);
   };
@@ -32,6 +35,24 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
       console.log(err);
     }
   };
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsCollapsed(true);
+        setNotificacionesVisibles(false);
+      } else {
+        setIsCollapsed(collapsed);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [collapsed]);
+
 
   const menuItems = [
     { 
@@ -60,10 +81,10 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
     },
     { 
       icon: ArchiveBoxIcon, 
-       label: 'Historial de cambios', 
-       path: '/historial-de-cambios',
-       requiredRole: ['ADMIN', 'MODERADOR'] 
-     },
+      label: 'Historial de cambios', 
+      path: '/historial-de-cambios',
+      requiredRole: ['ADMIN', 'MODERADOR'] 
+    },
     { 
       icon: UserGroupIcon, 
       label: 'Panel administrador', 
@@ -79,7 +100,7 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
   ];
 
   const renderMenuItem = (item) => {
-    // Veriticar si el usuario tiene el rol requerido
+    // Verificar si el usuario tiene el rol requerido
     const hasRequiredRole = item.requiredRole.includes(user?.rol);
     
     if (!hasRequiredRole) return null;
@@ -110,7 +131,7 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
       );
     }
 
-    // Vista expandida solo iconos y etiquetas
+    // Vista expandida iconos y etiquetas
     return (
       <Link 
         key={item.path}
@@ -177,7 +198,7 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
       `}>
       <div className="flex flex-col flex-grow">
         {/* Header Section */}
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between ">
           {!collapsed ? (
             <h1 
               className={`text-xl font-semibold
@@ -195,42 +216,57 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
               BDD
             </h1>
           )}
-
+           {/* TODAS SOLUCIONES TESTEADAS, VALORES PARA TODAS RESOLUCIONES */}
           {!collapsed && (
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={toggleTheme}
-                className={`p-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}
-              >
-                {isDarkMode ? (
-                  <SunIcon className="h-6 w-6 text-white" />
-                ) : (
-                  <MoonIcon className="h-6 w-6 text-black" />
-                )}
-              </button>
-              <div className="relative">
-                <button onClick={toggleNotificaciones} className="mt-4">
-                  <BellIcon className="h-6 w-6" />
-                </button>
-                {notificacionesVisibles && (
-                  <div className="fixed inset-0 w-0 z-50" onClick={() => setNotificacionesVisibles(false)}>
-                    <div 
-                      ref={notificacionesRef} 
-                      className="absolute"
-                      style={{
-                        top: notificacionesRef.current?.parentElement?.getBoundingClientRect().bottom ?? 40,
-                        left: notificacionesRef.current?.parentElement?.getBoundingClientRect().left ?? 250,
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <BarraDeNotificaciones
-                        visible={notificacionesVisibles}
-                        onClose={() => setNotificacionesVisibles(false)}
-                      />
+            <div className="flex items-center space-x-4 ml-auto">
+           <button
+              onClick={toggleTheme}
+              className={`
+                p-3 rounded-full 
+                ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'} 
+                -translate-x-7 -translate-y-4 
+                sm:-translate-x-5 -sm:translate-y-5 
+                md:translate-x-1 md:translate-y-0 
+                lg:translate-x-3 lg:translate-y-3
+                xl:translate-x-2 xl:translate-y-1
+              `}
+              aria-label="Alternar tema"
+            >
+              {isDarkMode ? (
+               <SunIcon className="h-5 w-5 text-white" />
+              ) : (
+              <MoonIcon className="h-5 w-5 text-black" />
+            )}
+          </button>
+
+
+              
+              {/* Condicionalmente renderizar el BellIcon solo si no es móvil */}
+              {!isMobile && (
+                <div className="relative">
+                  <button onClick={toggleNotificaciones} className="mt-4" aria-label="Abrir notificaciones">
+                    <BellIcon className="h-6 w-6" />
+                  </button>
+                  {notificacionesVisibles && (
+                    <div className="fixed inset-0 w-0 z-50" onClick={() => setNotificacionesVisibles(false)}>
+                      <div 
+                        ref={notificacionesRef} 
+                        className="absolute"
+                        style={{
+                          top: notificacionesRef.current?.parentElement?.getBoundingClientRect().bottom ?? 40,
+                          left: notificacionesRef.current?.parentElement?.getBoundingClientRect().left ?? 250,
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <BarraDeNotificaciones
+                          visible={notificacionesVisibles}
+                          onClose={() => setNotificacionesVisibles(false)}
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -305,10 +341,10 @@ export default function BarraLateral({ collapsed = false, isMobile = false }) { 
               <ArrowRightOnRectangleIcon className="h-6 w-6" />
             </button>
           </div>
-          
         )}
       </div>
       {isLogoutModalVisible && <LogoutModal />}
     </div>
   );
 }
+/////////////////////////////////////////////////////////////////////////ULTIMO
