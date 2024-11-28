@@ -22,7 +22,7 @@ services:
       - ./backend:/usr/src/app
     command: npm run dev
     environment:
-      - DATABASE_URL=postgresql://brujuladederechosdb_owner:OWz5hXby7sZC@ep-white-feather-a505h2nv.us-east-2.aws.neon.tech/brujuladederechosdb?sslmode=require
+      - DATABASE_URL=postgresql://brujulasderechosdb3_owner:GzxPI2HEJ5KR@ep-steep-brook-a5f69drx.us-east-2.aws.neon.tech/brujulasderechosdb3?sslmode=require
       - JWT_SECRET=SECRET_KEY
       - RABBITMQ_URL=amqp://scraping_service:your_secure_password@rabbitmq:5672/
       - RABBITMQ_QUEUE=comentarios_scraping_queue
@@ -51,7 +51,7 @@ services:
     - RABBITMQ_PASSWORD=your_secure_password
     - RABBITMQ_HOST=rabbitmq
     - RABBITMQ_PORT=5672
-    - DATABASE_URL=postgresql://brujuladederechosdb_owner:OWz5hXby7sZC@ep-white-feather-a505h2nv.us-east-2.aws.neon.tech/brujuladederechosdb?sslmode=require
+    - DATABASE_URL=postgresql://brujulasderechosdb3_owner:GzxPI2HEJ5KR@ep-steep-brook-a5f69drx.us-east-2.aws.neon.tech/brujulasderechosdb3?sslmode=require
     - JWT_SECRET=SECRET_KEY
     - SERVICE_EMAIL=usuario3.test@test.com
     - SERVICE_PASSWORD=password123
@@ -75,7 +75,7 @@ services:
       - RABBITMQ_PASSWORD=your_secure_password
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
-      - DATABASE_URL=postgresql://brujuladederechosdb_owner:OWz5hXby7sZC@ep-white-feather-a505h2nv.us-east-2.aws.neon.tech/brujuladederechosdb?sslmode=require
+      - DATABASE_URL=postgresql://brujulasderechosdb3_owner:GzxPI2HEJ5KR@ep-steep-brook-a5f69drx.us-east-2.aws.neon.tech/brujulasderechosdb3?sslmode=require
       - JWT_SECRET=SECRET_KEY
       - CELERY_BROKER_URL=amqp://scraping_service:your_secure_password@rabbitmq:5672
       - CELERY_RESULT_BACKEND=rpc://
