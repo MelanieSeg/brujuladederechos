@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { ResetPasswordSchema } from '../lib/validations/user'; // Usa el esquema existente
 import api from '../services/axiosUserInstance';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeContext } from '../utils/ThemeContext';
 
