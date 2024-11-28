@@ -1,7 +1,10 @@
+// src/components/ComentariosClasificados.jsx
+
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { PlusIcon, TrashIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { format, parseISO, isValid } from 'date-fns';
-import Calendario from './Objects/Calendario';
+import { es } from 'date-fns/locale';
+import Calendario, { DatePicker } from './Objects/Calendario'; // Importar correctamente
 import Paginacion from './Objects/Paginacion';
 import Formulario from "./Objects/Formulario";
 import api from '../services/axios';
@@ -15,31 +18,27 @@ export default function ComentariosClasificados() {
   const { user } = useAuth();
   const { isDarkMode } = useContext(ThemeContext);
   const [comentarios, setComentarios] = useState([]);
-  const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Estados para filtros
+  const [isGravedadDropdownOpen, setGravedadDropdownOpen] = useState(false);
+  const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false); // Cambio de nombre para mantener consistencia
   const [selectedGravedad, setSelectedGravedad] = useState({
     Baja: true,
     Moderada: true,
     Alta: true,
   });
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
 
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-
-  const [showDetailedColumns, setShowDetailedColumns] = useState(false);
-
-  // Estado de carga
-  const [loading, setLoading] = useState(true);
+  const [fechaDesde, setFechaDesde] = useState(null);
+  const [fechaHasta, setFechaHasta] = useState(null);
 
   // Estados para paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const commentsPerPage = 10;
 
-  const calendarRef = useRef(null);
-  const calendarButtonRef = useRef(null);
-  const dropdownRef = useRef(null);
-  const gravedadButtonRef = useRef(null);
+  // Refs para detectar clics fuera de los dropdowns
+  const gravedadDropdownRef = useRef(null);
+  const dateDropdownRef = useRef(null);
 
   // Estados para edición de puntuación
   const [barraEdicionVisible, setBarraEdicionVisible] = useState(false);
@@ -55,20 +54,19 @@ export default function ComentariosClasificados() {
   });
   const puntuacionRef = useRef(null);
 
-  // Estados para manejar la eliminación
+  // Estados para manejo de eliminación
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
   const [comentarioAEliminar, setComentarioAEliminar] = useState(null);
-  const [password, setPassword] = useState("");
   const [reason, setReason] = useState("");
 
-  // Estado temporal para almacenar el comentario eliminado (para Deshacer)
+  // Estado para deshacer eliminación
   const [comentarioEliminado, setComentarioEliminado] = useState(null);
 
+  // Fetch de comentarios clasificados
   useEffect(() => {
     const fetchComentariosClasificados = async () => {
       try {
         const response = await api.get('/comments/get-all-classified-comments');
-        console.log(response.data.data);
         setComentarios(response.data.data);
       } catch (err) {
         setComentarios([]);
@@ -80,26 +78,25 @@ export default function ComentariosClasificados() {
     fetchComentariosClasificados();
   }, []);
 
+  // Manejo de clics fuera de los dropdowns y barra de edición
   useEffect(() => {
     function handleClickOutside(event) {
+      // Cerrar Dropdown de Gravedad
       if (
-        isCalendarOpen &&
-        calendarRef.current &&
-        !calendarRef.current.contains(event.target) &&
-        calendarButtonRef.current &&
-        !calendarButtonRef.current.contains(event.target)
+        isGravedadDropdownOpen &&
+        gravedadDropdownRef.current &&
+        !gravedadDropdownRef.current.contains(event.target)
       ) {
-        setIsCalendarOpen(false);
+        setGravedadDropdownOpen(false);
       }
 
+      // Cerrar Dropdown de Fecha
       if (
-        isDropdownOpen &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target) &&
-        gravedadButtonRef.current &&
-        !gravedadButtonRef.current.contains(event.target)
+        isDateDropdownOpen &&
+        dateDropdownRef.current &&
+        !dateDropdownRef.current.contains(event.target)
       ) {
-        setDropdownOpen(false);
+        setIsDateDropdownOpen(false);
       }
 
       // Cerrar la barra de edición si se hace clic fuera
@@ -108,17 +105,7 @@ export default function ComentariosClasificados() {
         puntuacionRef.current &&
         !puntuacionRef.current.contains(event.target)
       ) {
-        setBarraEdicionVisible(false);
-        setComentarioSeleccionado(null);
-        setPuntuacion({
-          intensidadPrivacidad: '',
-          elementoTiempo: '',
-          empatiaPrivacidad: '',
-          interesPublico: '',
-          caracterPersonaPublico: '',
-          origenInformacion: '',
-          empatiaExpresion: ''
-        });
+        cerrarBarraEdicion();
       }
     }
 
@@ -126,17 +113,18 @@ export default function ComentariosClasificados() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isCalendarOpen, isDropdownOpen, barraEdicionVisible]);
+  }, [isGravedadDropdownOpen, isDateDropdownOpen, barraEdicionVisible]);
 
-  const toggleDropdown = () => {
-    setDropdownOpen(!isDropdownOpen);
+  // Funciones para togglear dropdowns
+  const toggleGravedadDropdown = () => {
+    setGravedadDropdownOpen(!isGravedadDropdownOpen);
   };
 
-  const handleGravedadClick = () => {
-    setShowDetailedColumns(!showDetailedColumns);
-    setDropdownOpen(!isDropdownOpen);
+  const toggleDateDropdown = () => {
+    setIsDateDropdownOpen(!isDateDropdownOpen);
   };
 
+  // Funciones para manejar cambios en Gravedad
   const handleGravedadChange = (gravedad) => {
     setSelectedGravedad((prevState) => ({
       ...prevState,
@@ -145,7 +133,7 @@ export default function ComentariosClasificados() {
     setPaginaActual(1);
   };
 
-  const limpiarSeleccion = () => {
+  const limpiarSeleccionGravedad = () => {
     setSelectedGravedad({
       Baja: false,
       Moderada: false,
@@ -154,206 +142,7 @@ export default function ComentariosClasificados() {
     setPaginaActual(1);
   };
 
-  const getBadgeColor = (gravedad) => {
-    switch (gravedad) {
-      case 'GRAVE':
-        return 'bg-red-500 text-white';
-      case 'MODERADA':
-        return 'bg-yellow-400 text-white';
-      case 'LEVE':
-        return 'bg-green-500 text-white';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
-
-  const getStatusColorClass = (estado) => {
-    switch (estado) {
-      case "PENDIENTE_CLASIFICACION":
-        return isDarkMode
-          ? "bg-gray-600"
-          : "bg-gray-300";
-      case "CLASIFICADO":
-        return isDarkMode
-          ? "bg-green-300"
-          : "bg-green-200";
-      default:
-        return isDarkMode
-          ? "bg-green-300"
-          : "bg-green-200";
-    }
-  };
-
-  const mapGravedad = (gravedadApi) => {
-    switch (gravedadApi.toUpperCase()) {
-      case 'LEVE':
-        return 'Baja';
-      case 'MODERADA':
-        return 'Moderada';
-      case 'ALTA':
-        return 'Alta';
-      default:
-        return 'Desconocida';
-    }
-  };
-
-  const toggleCalendar = () => {
-    setIsCalendarOpen(!isCalendarOpen);
-  };
-
-  const handleDateSelect = (date) => {
-    setSelectedDate(date);
-    setIsCalendarOpen(false);
-    setPaginaActual(1);
-  };
-
-  // Ajuste del renderCalendar para mejorar la visualización
-  const renderCalendar = () => {
-    return (
-      <div
-        ref={calendarRef}
-        className={`absolute top-full left-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10`}
-      >
-        <Calendario onDateSelect={handleDateSelect} />
-      </div>
-    );
-  };
-
-  const renderDropdown = () => {
-    return (
-      <div
-        ref={dropdownRef}
-        className={`absolute mt-2 w-56 rounded-md shadow-lg ring-1 z-50 
-          ${isDarkMode ? 'bg-gray-800 ring-gray-700 text-white' : 'bg-white ring-black ring-opacity-5 text-gray-700'}
-        `}
-      >
-        <div className="py-1">
-          <div className="px-4 py-2">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectedGravedad.Baja}
-                onChange={() => handleGravedadChange('Baja')}
-                className="form-checkbox text-green-500"
-              />
-              <span className="flex items-center">
-                <span className="mr-2">↓</span>
-                <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>Baja</span>
-              </span>
-              <span className="ml-auto text-gray-500">36</span>
-            </label>
-          </div>
-          <div className="px-4 py-2">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectedGravedad.Moderada}
-                onChange={() => handleGravedadChange('Moderada')}
-                className="form-checkbox text-yellow-500"
-              />
-              <span className="flex items-center">
-                <span className="mr-2">→</span>
-                <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>Moderada</span>
-              </span>
-              <span className="ml-auto text-gray-500">33</span>
-            </label>
-          </div>
-          <div className="px-4 py-2">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectedGravedad.Alta}
-                onChange={() => handleGravedadChange('Alta')}
-                className="form-checkbox text-red-500"
-              />
-              <span className="flex items-center">
-                <span className="mr-2">↑</span>
-                <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>Alta</span>
-              </span>
-              <span className="ml-auto text-gray-500">31</span>
-            </label>
-          </div>
-          <div className="border-t border-gray-200">
-            <button
-              onClick={limpiarSeleccion}
-              className={`w-full text-left px-4 py-2 text-sm 
-                ${isDarkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}
-              `}
-            >
-              Limpiar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const filteredComentarios = comentarios.filter((comentario) => {
-    const gravedadMapeada = mapGravedad(
-      comentario.gravedad ? comentario.gravedad : 'Desconocida'
-    );
-
-    const gravedadMatch =
-      selectedGravedad[gravedadMapeada] || gravedadMapeada === 'Desconocida';
-
-    let dateMatch = true;
-    if (selectedDate) {
-      const comentarioDate = new Date(comentario.fechaClasificacion);
-      comentarioDate.setHours(0, 0, 0, 0);
-      const selectedDateOnly = new Date(selectedDate);
-      selectedDateOnly.setHours(0, 0, 0, 0);
-      dateMatch = comentarioDate.getTime() >= selectedDateOnly.getTime();
-    }
-
-    return gravedadMatch && dateMatch;
-  });
-
-  const totalPaginas = Math.ceil(filteredComentarios.length / commentsPerPage);
-
-  const indexOfLastComment = paginaActual * commentsPerPage;
-  const indexOfFirstComment = indexOfLastComment - commentsPerPage;
-  const currentComentarios = filteredComentarios.slice(
-    indexOfFirstComment,
-    indexOfLastComment
-  );
-
-  const handlePageChange = (pageNumber) => {
-    setPaginaActual(pageNumber);
-  };
-
-  const columnasClasificados = [
-    {
-      title: "Comentario",
-      width: 250,
-      halign: 'left',
-    },
-    {
-      title: "Gravedad",
-      width: 100,
-      halign: 'center',
-    },
-    {
-      title: "Sitio Web",
-      width: 80,
-      halign: 'center',
-    },
-    {
-      title: "Fecha de Clasificación",
-      width: 80,
-      halign: 'center',
-    },
-  ];
-
-  const formatData = (comentario) => [
-    comentario.comentario.comentario, // Texto del comentario
-    mapGravedad(comentario?.gravedad ? comentario.gravedad : 'Desconocida'), // Gravedad
-    comentario.comentario.sitioWeb?.nombre || 'Sin sitio web', // Sitio web
-    isValid(parseISO(comentario.fechaClasificacion))
-      ? format(parseISO(comentario.fechaClasificacion), "dd-MM-yyyy")
-      : "Fecha Inválida"
-  ];
-
-  // Funciones para editar puntuación
+  // Funciones para manejar edición de puntuación
   const editarComentario = (comentario) => {
     setComentarioSeleccionado(comentario);
     setBarraEdicionVisible(true);
@@ -365,6 +154,20 @@ export default function ComentariosClasificados() {
       caracterPersonaPublico: comentario.caracterPersonaPublico || '',
       origenInformacion: comentario.origenInformacion || '',
       empatiaExpresion: comentario.empatiaExpresion || ''
+    });
+  };
+
+  const cerrarBarraEdicion = () => {
+    setBarraEdicionVisible(false);
+    setComentarioSeleccionado(null);
+    setPuntuacion({
+      intensidadPrivacidad: '',
+      elementoTiempo: '',
+      empatiaPrivacidad: '',
+      interesPublico: '',
+      caracterPersonaPublico: '',
+      origenInformacion: '',
+      empatiaExpresion: ''
     });
   };
 
@@ -385,6 +188,35 @@ export default function ComentariosClasificados() {
     try {
       const comentarioId = comentarioSeleccionado.comentario.id; // Asegúrate de obtener el ID correcto
 
+
+
+      // Validaciones adicionales antes de enviar
+      if (puntuacion.intensidadPrivacidad < 1 || puntuacion.intensidadPrivacidad > 3) {
+        showError("Interferencia en la Privacidad debe estar entre 1 y 3.");
+        return;
+      }
+      if (puntuacion.elementoTiempo < 0 || puntuacion.elementoTiempo > 1) {
+        showError("Tiempo debe estar entre 0 y 1.");
+        return;
+      }
+      if (puntuacion.empatiaPrivacidad < 0 || puntuacion.empatiaPrivacidad > 1) {
+        showError("Empatía hacia la privacidad debe estar entre 0 y 1.");
+        return;
+      }
+      if (puntuacion.interesPublico < 1 || puntuacion.interesPublico > 3) {
+        showError("Interés Público debe estar entre 1 y 3.");
+        return;
+      }
+      if (puntuacion.caracterPersonaPublico < 0 || puntuacion.caracterPersonaPublico > 3) {
+        showError("Figura Pública debe estar entre 0 y 3.");
+        return;
+      }
+      if (puntuacion.origenInformacion < -0.75 || puntuacion.origenInformacion > 0) {
+        showError("Origen de la información debe estar entre -0.75 y 0.");
+        return;
+      }
+
+      // Enviar datos al backend
       const response = await api.post("/comments/clasificar", {
         comentarioScrapedId: comentarioId,
         clasificadorId: user.id,
@@ -398,10 +230,8 @@ export default function ComentariosClasificados() {
         userId: user.id
       });
 
-      console.log('Edición de clasificación guardada:', response.data);
-
       if (response.status === 200) {
-        setBarraEdicionVisible(false);
+        cerrarBarraEdicion();
         showSuccess("Edición de clasificación guardada exitosamente.");
         // Actualizar el comentario en el estado
         setComentarios((prevComentarios) =>
@@ -425,56 +255,75 @@ export default function ComentariosClasificados() {
       }
     } catch (error) {
       console.error("Error al guardar la edición de clasificación", error);
-      console.log("Respuesta del servidor:", error.response?.data);
       showError("Error al guardar la edición de clasificación: " + (error.response?.data?.msg || error.message));
     }
   };
 
-  // Funciones para manejar la eliminación de comentarios
+  // Funciones para manejar eliminación de comentarios
   const confirmarEliminarComentario = (comentario) => {
     setComentarioAEliminar(comentario);
     setMostrarModalEliminar(true);
-    setPassword("");
     setReason("");
   };
 
-  const manejarEliminarComentario = () => {
-    // Simular la eliminación: remover el comentario del estado
-    setComentarios((prevComentarios) =>
-      prevComentarios.filter(
-        (comentario) => comentario.comentario.id !== comentarioAEliminar.comentario.id
-      )
-    );
+  const manejarEliminarComentario = async () => {
+    if (!comentarioAEliminar) return;
 
-    // Almacenar el comentario eliminado para poder deshacer
-    setComentarioEliminado(comentarioAEliminar);
+    try {
+      // Llamada a la API para eliminar el comentario
+      const response = await api.delete(`/comments/delete/${comentarioAEliminar.comentario.id}`, {
+        data: { motivo: reason },
+      });
+      if (response.status === 200) {
+        // Remover el comentario del estado
+        setComentarios((prevComentarios) =>
+          prevComentarios.filter(
+            (comentario) => comentario.comentario.id !== comentarioAEliminar.comentario.id
+          )
+        );
 
-    // Mostrar el toast de eliminación
-    showSuccess("Comentario borrado exitosamente.", true, deshacerEliminacion);
+        // Almacenar el comentario eliminado para poder deshacer
+        setComentarioEliminado(comentarioAEliminar);
 
-    // Cerrar el modal y resetear estados
-    setMostrarModalEliminar(false);
-    setComentarioAEliminar(null);
-    setPassword("");
-    setReason("");
+        // Mostrar el toast de eliminación con opción para deshacer
+        showSuccess("Comentario borrado exitosamente.", true, deshacerEliminacion);
+
+        // Cerrar el modal y resetear estados
+        setMostrarModalEliminar(false);
+        setComentarioAEliminar(null);
+        setReason("");
+      }
+    } catch (error) {
+      console.error("Error al eliminar el comentario", error);
+      showError("Error al eliminar el comentario: " + (error.response?.data?.msg || error.message));
+    }
   };
 
   const manejarCancelarEliminar = () => {
     setMostrarModalEliminar(false);
     setComentarioAEliminar(null);
-    setPassword("");
     setReason("");
   };
 
-  const deshacerEliminacion = () => {
+  const deshacerEliminacion = async () => {
     if (comentarioEliminado) {
-      setComentarios((prevComentarios) => [comentarioEliminado, ...prevComentarios]);
-      showInfo("Eliminación deshecha.");
-      setComentarioEliminado(null);
+      try {
+        // Llamada a la API para restaurar el comentario
+        const response = await api.post(`/comments/restore/${comentarioEliminado.comentario.id}`);
+        if (response.status === 200) {
+          // Agregar el comentario de nuevo al estado
+          setComentarios((prevComentarios) => [comentarioEliminado, ...prevComentarios]);
+          showInfo("Eliminación deshecha.");
+          setComentarioEliminado(null);
+        }
+      } catch (error) {
+        console.error("Error al restaurar el comentario", error);
+        showError("Error al restaurar el comentario: " + (error.response?.data?.msg || error.message));
+      }
     }
   };
 
-  // Modal para confirmar la eliminación de un comentario con campos de contraseña y motivo
+  // Modal para confirmar la eliminación de un comentario con motivo
   const modalEliminarComentario = (
     <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 
       ${isDarkMode ? 'bg-opacity-70' : 'bg-opacity-50'}`}>
@@ -537,17 +386,230 @@ export default function ComentariosClasificados() {
     </div>
   );
 
-  // Calcular el número total de columnas
-  const baseColumns = 4; // Comentario, Gravedad, Sitio Web, Fecha de Clasificación
-  const detailedColumns = 7; // PR, T, E.Privacidad, PI, PF, OI, E.Libertad
-  const totalColumns = showDetailedColumns
-    ? baseColumns + detailedColumns
-    : baseColumns;
+  // Funciones para renderizar los dropdowns
+  const renderGravedadDropdown = () => (
+    isGravedadDropdownOpen && (
+      <div
+        ref={gravedadDropdownRef}
+        className={`absolute mt-2 w-56 rounded-md shadow-lg ring-1 z-50 
+          ${isDarkMode ? 'bg-gray-800 ring-gray-700 text-white' : 'bg-white ring-black ring-opacity-5 text-gray-700'}
+        `}
+      >
+        <div className="py-1">
+          <div className="px-4 py-2">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedGravedad.Baja}
+                onChange={() => handleGravedadChange('Baja')}
+                className={`form-checkbox 
+                  ${isDarkMode
+                    ? 'text-green-400 bg-gray-700 border-gray-600'
+                    : 'text-green-500'
+                  }`}
+              />
+              <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>Baja</span>
+            </label>
+          </div>
+          <div className="px-4 py-2">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedGravedad.Moderada}
+                onChange={() => handleGravedadChange('Moderada')}
+                className={`form-checkbox 
+                  ${isDarkMode
+                    ? 'text-yellow-400 bg-gray-700 border-gray-600'
+                    : 'text-yellow-500'
+                  }`}
+              />
+              <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>Moderada</span>
+            </label>
+          </div>
+          <div className="px-4 py-2">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedGravedad.Alta}
+                onChange={() => handleGravedadChange('Alta')}
+                className={`form-checkbox 
+                  ${isDarkMode
+                    ? 'text-red-400 bg-gray-700 border-gray-600'
+                    : 'text-red-500'
+                  }`}
+              />
+              <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>Alta</span>
+            </label>
+          </div>
+          <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+            <button
+              onClick={limpiarSeleccionGravedad}
+              className={`w-full text-left px-4 py-2 text-sm
+                ${isDarkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}
+              `}
+            >
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  );
+
+  const renderDateDropdown = () => (
+    isDateDropdownOpen && (
+      <div
+        ref={dateDropdownRef}
+        className={`absolute mt-2 rounded-md shadow-lg z-20 
+          ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-700'}
+        `}
+        style={{ width: '220px' }}
+      >
+        <div className="px-4 py-2">
+          {/* Fecha Desde */}
+          <div className="mb-4">
+            <DatePicker
+              selectedDate={fechaDesde}
+              onDateChange={setFechaDesde}
+              placeholder="Selecciona desde"
+              isDarkMode={isDarkMode}
+            />
+          </div>
+          {/* Fecha Hasta */}
+          <div className="mb-4">
+            <DatePicker
+              selectedDate={fechaHasta}
+              onDateChange={setFechaHasta}
+              placeholder="Selecciona hasta"
+              isDarkMode={isDarkMode}
+            />
+          </div>
+          <button
+            onClick={() => {
+              setFechaDesde(null);
+              setFechaHasta(null);
+            }}
+            className={`w-full px-3 py-2 rounded-md text-sm 
+              ${isDarkMode 
+                ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+          >
+            Limpiar Fechas
+          </button>
+        </div>
+      </div>
+    )
+  );
+
+  // Función para obtener el color de la gravedad
+  const getBadgeColor = (gravedad) => {
+    if (!gravedad) {
+      return 'bg-gray-500 text-white';
+    }
+    switch (gravedad.toUpperCase()) {
+      case 'ALTA':
+        return 'bg-red-500 text-white';
+      case 'MODERADA':
+        return 'bg-yellow-500 text-white';
+      case 'BAJA':
+        return 'bg-green-500 text-white';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
+
+  // Función para mapear gravedad de la API a etiquetas legibles
+  const mapGravedad = (gravedadApi) => {
+    if (!gravedadApi) {
+      return 'Desconocida';
+    }
+    switch (gravedadApi.toUpperCase()) {
+      case 'BAJA':
+        return 'Baja';
+      case 'MODERADA':
+        return 'Moderada';
+      case 'ALTA':
+        return 'Alta';
+      default:
+        return 'Desconocida';
+    }
+  };
+
+  // Filtrar comentarios según gravedad y fechas
+  const filteredComentarios = comentarios.filter((comentario) => {
+    const gravedadMapeada = mapGravedad(
+      comentario.gravedad ? comentario.gravedad : 'Desconocida'
+    );
+
+    const gravedadMatch =
+      selectedGravedad[gravedadMapeada] || gravedadMapeada === 'Desconocida';
+
+    const fechaComentario = parseISO(comentario.fechaClasificacion);
+
+    const desdeMatch = fechaDesde ? fechaComentario >= fechaDesde : true;
+    const hastaMatch = fechaHasta ? fechaComentario <= fechaHasta : true;
+
+    const dateMatch = desdeMatch && hastaMatch;
+
+    return gravedadMatch && dateMatch;
+  });
+
+  const totalPaginas = Math.ceil(filteredComentarios.length / commentsPerPage);
+
+  const indexOfLastComment = paginaActual * commentsPerPage;
+  const indexOfFirstComment = indexOfLastComment - commentsPerPage;
+  const currentComentarios = filteredComentarios.slice(
+    indexOfFirstComment,
+    indexOfLastComment
+  );
+
+  const handlePageChange = (pageNumber) => {
+    setPaginaActual(pageNumber);
+  };
+
+  // Definir las columnas para PDF
+  const columnasClasificados = [
+    {
+      title: "Comentario",
+      width: 250,
+      halign: 'left',
+    },
+    {
+      title: "Gravedad",
+      width: 100,
+      halign: 'center',
+    },
+    {
+      title: "Sitio Web",
+      width: 80,
+      halign: 'center',
+    },
+    {
+      title: "Fecha de Clasificación",
+      width: 80,
+      halign: 'center',
+    },
+  ];
+
+  const formatData = (comentario) => [
+    comentario.comentario.comentario, // Texto del comentario
+    mapGravedad(comentario?.gravedad ? comentario.gravedad : 'Desconocida'), // Gravedad
+    comentario.comentario.sourceUrl || 'Sin sitio web', // Sitio web
+    isValid(parseISO(comentario.fechaClasificacion))
+      ? format(parseISO(comentario.fechaClasificacion), "dd-MM-yyyy", { locale: es })
+      : "Fecha Inválida"
+  ];
+
+  // Calcular el número total de columnas para la tabla
+  const baseColumns = 5; // Comentario, Gravedad, Sitio Web, Fecha de Clasificación, Acciones
+  const totalColumns = baseColumns;
 
   return (
-    <div className={`p-2 sm:p-4 min-h-screen lg:p-8 min-h-screen flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
+    <div className={`p-2 sm:p-4 min-h-screen lg:p-8 flex flex-col ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'}`}>
       {/* Contenedor de Toasts */}
       <Toast />
+
       <div className="flex-grow">
         <h2 className={`text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
           Comentarios clasificados
@@ -556,40 +618,34 @@ export default function ComentariosClasificados() {
         {/* Controles de Filtro y Descarga */}
         <div className="flex flex-wrap items-center justify-between space-y-2 md:space-y-0 md:space-x-0">
           <div className="flex flex-row flex-wrap items-center space-x-2">
-            {/* Botón para el calendario */}
+            {/* Botón de Fecha con Dropdown */}
             <div className="relative">
               <button
-                ref={calendarButtonRef}
-                onClick={toggleCalendar}
-                className={`px-2 py-2 mb-2 sm:px-4 py-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
-                ${isCalendarOpen
+                onClick={toggleDateDropdown}
+                className={`fecha-button px-4 py-2 mb-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
+                  ${isDateDropdownOpen
                     ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
               >
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <PlusIcon className={`w-4 h-4 sm:w-5 sm:h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`} />
-                  <span>
-                    {selectedDate ? (
-                      <span>
-                        Fecha: <span className={`font-semibold`}>{format(new Date(selectedDate), 'dd/MM/yyyy')}</span>
-                      </span>
-                    ) : (
-                      'Fecha'
-                    )}
-                  </span>
+                <div className="flex items-center space-x-2">
+                  <PlusIcon className={`w-5 h-5 ${
+                    isDarkMode
+                      ? 'text-white group-hover:text-gray-200'
+                      : 'text-gray-500'
+                  }`} />
+                  <span>Fechas</span>
                 </div>
               </button>
-              {isCalendarOpen && renderCalendar()}
+              {renderDateDropdown()}
             </div>
 
-            {/* Botón de Gravedad con Dropdown y funcionalidad de mostrar columnas detalladas */}
+            {/* Botón de Gravedad con Dropdown */}
             <div className="relative">
               <button
-                ref={gravedadButtonRef}
-                onClick={handleGravedadClick}
-                className={`px-2 py-2 mb-2 sm:px-4 py-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
-                ${isDropdownOpen
+                onClick={toggleGravedadDropdown}
+                className={`px-4 py-2 mb-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
+                  ${isGravedadDropdownOpen
                     ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
@@ -599,22 +655,21 @@ export default function ComentariosClasificados() {
                   <span>Gravedad</span>
                 </div>
               </button>
-              {isDropdownOpen && renderDropdown()}
+              {renderGravedadDropdown()}
             </div>
 
-            {/* Botón Quitar Filtros AQUI */}
+            {/* Botón Quitar Filtros */}
             <button
               className={`px-2 py-2 mb-2 sm:px-4 py-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
               bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center space-x-1 sm:space-x-2`}
               onClick={() => {
-                setSelectedDate(null);
+                setFechaDesde(null);
+                setFechaHasta(null);
                 setSelectedGravedad({
                   Baja: true,
                   Moderada: true,
                   Alta: true,
                 });
-                setStartDate(null);
-                setEndDate(null);
                 setPaginaActual(1);
               }}
             >
@@ -627,38 +682,19 @@ export default function ComentariosClasificados() {
           <div className="flex flex-row items-center space-x-4">
             {/* Contenedor Flex para alinear horizontalmente */}
             <div className="flex flex-row space-x-2 mb-2">
-              <input
-                type="date"
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
-                w-24 sm:w-auto md:w-auto lg:w-auto
-                text-xs md:text-base 
-                ${isDarkMode
-                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                    : 'bg-white border-gray-300 focus:ring-blue-500'
-                  }`}
-                value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
-                onChange={(e) => {
-                  const date = e.target.value ? new Date(e.target.value) : null;
-                  setStartDate(date);
-                  setPaginaActual(1);
-                }}
+              {/* Reemplazar <input type="date"> con DatePicker */}
+              <DatePicker
+                selectedDate={fechaDesde}
+                onDateChange={setFechaDesde}
+                placeholder="Desde"
+                isDarkMode={isDarkMode}
               />
-              <span className={isDarkMode ? 'text-gray-300' : 'text-gray-800'}>-</span>
-              <input
-                type="date"
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
-                w-24 sm:w-auto md:w-auto lg:w-auto
-                text-xs md:text-base 
-                ${isDarkMode
-                    ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                    : 'bg-white border-gray-300 focus:ring-blue-500'
-                  }`}
-                value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
-                onChange={(e) => {
-                  const date = e.target.value ? new Date(e.target.value) : null;
-                  setEndDate(date);
-                  setPaginaActual(1);
-                }}
+              <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
+              <DatePicker
+                selectedDate={fechaHasta}
+                onDateChange={setFechaHasta}
+                placeholder="Hasta"
+                isDarkMode={isDarkMode}
               />
             </div>
             {/* Componente Formulario para descargar el PDF */}
@@ -667,14 +703,14 @@ export default function ComentariosClasificados() {
               columns={columnasClasificados}
               formatData={formatData}
               fileName="comentarios_clasificados.pdf"
-              pdfTitle="Comentarios Clasificados" // Añadir el título del PDF específico para esta vista////AGREGADO
-              className="w-auto" // Mantener la clase w-auto para responsividad
+              pdfTitle="Comentarios Clasificados"
+              className="w-auto"
             />
           </div>
         </div>
 
         {/* Vista de Tabla para Pantallas Grandes */}
-        <div className="overflow-x-auto w-full hidden sm:block">
+        <div className="overflow-x-auto w-full hidden sm:block mt-6">
           <table className={`min-w-full table-fixed ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg border-collapse`}>
             <thead>
               <tr>
@@ -682,39 +718,6 @@ export default function ComentariosClasificados() {
                 ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
                   Comentario
                 </th>
-                {/* Renderizar las columnas adicionales si showDetailedColumns es true */}
-                {showDetailedColumns && (
-                  <>
-                    <th className={`px-2 py-4 text-left font-medium border-b 
-                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
-                      PR
-                    </th>
-                    <th className={`px-2 py-4 text-left font-medium border-b 
-                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
-                      T
-                    </th>
-                    <th className={`px-2 py-4 text-left font-medium border-b 
-                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
-                      E.Privacidad
-                    </th>
-                    <th className={`px-2 py-4 text-left font-medium border-b 
-                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
-                      PI
-                    </th>
-                    <th className={`px-2 py-4 text-left font-medium border-b 
-                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
-                      PF
-                    </th>
-                    <th className={`px-2 py-4 text-left font-medium border-b 
-                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
-                      OI
-                    </th>
-                    <th className={`px-2 py-4 text-left font-medium border-b 
-                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
-                      E.Libertad
-                    </th>
-                  </>
-                )}
                 <th className={`px-6 py-4 text-left font-medium border-b 
                   ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>Gravedad
                 </th>
@@ -753,18 +756,6 @@ export default function ComentariosClasificados() {
                       }`}>
                       {truncateComentario(comentario.comentario.comentario)}
                     </td>
-                    {/* Renderizar los datos adicionales si showDetailedColumns es true */}
-                    {showDetailedColumns && (
-                      <>
-                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.intensidadPrivacidad}</td>
-                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.elementoTiempo}</td>
-                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.empatiaPrivacidad}</td>
-                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.interesPublico}</td>
-                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.caracterPersonaPublico}</td>
-                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.origenInformacion}</td>
-                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.empatiaExpresion}</td>
-                      </>
-                    )}
                     <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
                       <span
                         className={`
@@ -778,33 +769,32 @@ export default function ComentariosClasificados() {
                       </span>
                     </td>
                     <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                      {comentario.comentario?.sitioWeb?.nombre
-                        ? comentario?.comentario?.sitioWeb?.nombre
-                        : 'latercera.com'}
+                      {comentario.comentario.sourceUrl || 'Sin sitio web'}
                     </td>
                     <td className={`px-6 py-4 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
                       {isValid(parseISO(comentario.fechaClasificacion))
-                        ? format(parseISO(comentario.fechaClasificacion), 'dd-MM-yyyy')
+                        ? format(parseISO(comentario.fechaClasificacion), 'dd-MM-yyyy', { locale: es })
                         : "Fecha Inválida"}
                     </td>
                     <td className="px-6 py-4 flex items-center space-x-2">
                       <button
                         onClick={() => confirmarEliminarComentario(comentario)}
                         className={`
-                        ${isDarkMode
-                            ? 'text-gray-400 hover:text-red-400' : 'text-gray-500 hover:text-red-500'
+                          ${isDarkMode
+                            ? 'text-gray-400 hover:text-red-400' 
+                            : 'text-gray-500 hover:text-red-500'
                           } cursor-pointer`}
                         aria-label="Eliminar comentario"
                       >
                         <TrashIcon className="w-5 h-5" />
                       </button>
-
                       <button
-                        className={`
-                        ${isDarkMode
-                            ? 'text-gray-400 hover:text-blue-400' : 'text-gray-500 hover:text-blue-500'
-                          } cursor-pointer`}
                         onClick={() => editarComentario(comentario)}
+                        className={`
+                          ${isDarkMode
+                            ? 'text-gray-400 hover:text-blue-400' 
+                            : 'text-gray-500 hover:text-blue-500'
+                          } cursor-pointer`}
                         aria-label="Editar comentario"
                       >
                         <PencilIcon className="h-5 w-5" />
@@ -834,12 +824,12 @@ export default function ComentariosClasificados() {
                   <div className="flex flex-col space-y-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
-                        <div className={`w-4 h-4 rounded-full ${getStatusColorClass(comentario.estado)}`}></div>
-                        <span className="ml-2 font-medium truncate">{comentario.comentario.sitioWeb?.nombre || 'latercera.com'}</span>
+                        <div className={`w-4 h-4 rounded-full ${getBadgeColor(comentario?.gravedad)}`}></div>
+                        <span className="ml-2 font-medium truncate">{comentario.comentario.sourceUrl || 'Sin sitio web'}</span>
                       </div>
                       <div className="text-sm">
                         {isValid(parseISO(comentario.fechaClasificacion))
-                          ? format(parseISO(comentario.fechaClasificacion), "dd-MM-yyyy")
+                          ? format(parseISO(comentario.fechaClasificacion), "dd-MM-yyyy", { locale: es })
                           : "Fecha Inválida"
                         }
                       </div>
@@ -860,38 +850,6 @@ export default function ComentariosClasificados() {
                         )}
                       </span>
                     </div>
-                    {showDetailedColumns && (
-                      <div className="flex flex-col space-y-1">
-                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                          <span className="font-semibold">PR:</span>
-                          <span>{comentario.comentario.intensidadPrivacidad}</span>
-                        </div>
-                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                          <span className="font-semibold">T:</span>
-                          <span>{comentario.comentario.elementoTiempo}</span>
-                        </div>
-                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                          <span className="font-semibold">E.Privacidad:</span>
-                          <span>{comentario.comentario.empatiaPrivacidad}</span>
-                        </div>
-                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                          <span className="font-semibold">PI:</span>
-                          <span>{comentario.comentario.interesPublico}</span>
-                        </div>
-                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                          <span className="font-semibold">PF:</span>
-                          <span>{comentario.comentario.caracterPersonaPublico}</span>
-                        </div>
-                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                          <span className="font-semibold">OI:</span>
-                          <span>{comentario.comentario.origenInformacion}</span>
-                        </div>
-                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                          <span className="font-semibold">E.Libertad:</span>
-                          <span>{comentario.comentario.empatiaExpresion}</span>
-                        </div>
-                      </div>
-                    )}
                     <div className="flex justify-end space-x-2">
                       <button
                         onClick={() => confirmarEliminarComentario(comentario)}
@@ -951,19 +909,7 @@ export default function ComentariosClasificados() {
                   Edición de clasificación de comentario
                 </h2>
                 <button
-                  onClick={() => {
-                    setBarraEdicionVisible(false);
-                    setComentarioSeleccionado(null);
-                    setPuntuacion({
-                      intensidadPrivacidad: '',
-                      elementoTiempo: '',
-                      empatiaPrivacidad: '',
-                      interesPublico: '',
-                      caracterPersonaPublico: '',
-                      origenInformacion: '',
-                      empatiaExpresion: ''
-                    });
-                  }}
+                  onClick={cerrarBarraEdicion}
                   className="text-gray-500 hover:text-gray-700 text-lg"
                   aria-label="Cerrar barra de edición"
                 >
@@ -1138,19 +1084,7 @@ export default function ComentariosClasificados() {
 
               <div className="flex mt-6 justify-between">
                 <button
-                  onClick={() => {
-                    setBarraEdicionVisible(false);
-                    setComentarioSeleccionado(null);
-                    setPuntuacion({
-                      intensidadPrivacidad: '',
-                      elementoTiempo: '',
-                      empatiaPrivacidad: '',
-                      interesPublico: '',
-                      caracterPersonaPublico: '',
-                      origenInformacion: '',
-                      empatiaExpresion: ''
-                    });
-                  }}
+                  onClick={cerrarBarraEdicion}
                   className="bg-red-600 text-white py-2 px-4 rounded w-[48%]"
                 >
                   Cancelar

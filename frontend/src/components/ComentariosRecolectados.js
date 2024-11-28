@@ -25,7 +25,7 @@ export default function ComentariosRecolectados() {
   });
   const [fechaDesde, setFechaDesde] = useState(null);
   const [fechaHasta, setFechaHasta] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [paginaActual, setPaginaActual] = useState(1);
 ///eliminado dado nuevo calendario implementado  
   const commentsPerPage = 10;
 
@@ -126,7 +126,9 @@ export default function ComentariosRecolectados() {
           ? "bg-gray-600"
           : "bg-gray-300";
       case "CLASIFICADO":
-        return isDarkMode ? "bg-green-300" : "bg-green-200";
+        return isDarkMode
+          ? "bg-green-300"
+          : "bg-green-200";
       default:
         return isDarkMode
           ? "bg-gray-500"
@@ -139,7 +141,7 @@ export default function ComentariosRecolectados() {
   };
 
   const handlePageClick = (pageNumber) => {
-    setCurrentPage(pageNumber);
+    setPaginaActual(pageNumber);
   };
 
   // Definir renderDropdown antes de usarlo en el JS
@@ -244,7 +246,7 @@ export default function ComentariosRecolectados() {
     return estadoMatch && desdeMatch && hastaMatch;
   });
 
-  const indexOfLastComment = currentPage * commentsPerPage;
+  const indexOfLastComment = paginaActual * commentsPerPage;
   const indexOfFirstComment = indexOfLastComment - commentsPerPage;
   const currentComments = filteredComments.slice(
     indexOfFirstComment,
@@ -304,12 +306,9 @@ export default function ComentariosRecolectados() {
           ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
           ¿Está seguro de eliminar este comentario?
         </h3>
-        <p
-          className={`text-sm mb-4 
-              ${isDarkMode ? "text-gray-400" : "text-gray-700"}`}
-        >
-          Esta acción no se puede deshacer. Por favor, ingresa un motivo para la
-          eliminación.
+        <p className={`text-sm mb-4 
+          ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
+          Esta acción no se puede deshacer. Por favor, ingresa un motivo para la eliminación.
         </p>
         <form onSubmit={(e) => { e.preventDefault(); manejarEliminarComentario(); }}>
           {/* Campos de formulario */}
@@ -387,9 +386,8 @@ export default function ComentariosRecolectados() {
               {isDateDropdownOpen && (
                 <div
                   ref={dateDropdownRef}
-                  className={`absolute mt-2 rounded-md shadow-lg z-20 
-                        ${
-                          isDarkMode
+                  className={`absolute mt-2 w-48 rounded-md shadow-lg z-20 
+                    ${isDarkMode
                             ? "bg-gray-800 text-white"
                             : "bg-white text-gray-700"
                         }`}
@@ -617,7 +615,7 @@ export default function ComentariosRecolectados() {
         {/* Paginación centrada */}
         <div className="flex justify-center mt-4">
           <Paginacion
-            paginaActual={currentPage}
+            paginaActual={paginaActual}
             totalPaginas={totalPages}
             onPageChange={handlePageClick}
           />
