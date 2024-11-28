@@ -237,8 +237,8 @@ export default function ComentariosPendientes() {
           empatiaPrivacidad: 0,
           interesPublico: 1,
           caracterPersonaPublico: 0,
-          origenInformacion: 0,
-          empatiaExpresion: 0,//SE AGREGA? no estaba en el codigo
+          origenInformacion: 0
+          
         });
         setComentarioSeleccionado(null);
       }
