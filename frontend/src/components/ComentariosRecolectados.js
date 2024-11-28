@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
-import api from "../services/axios";
+import Scrapi from "../services/axiosScrapingInstance";
 import { format, parseISO, isValid } from "date-fns";
 import { truncateComentario } from "../utils/truncarComentario";
 import Calendario from "./Objects/Calendario";
@@ -9,9 +9,17 @@ import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
 import { Toast, showSuccess, showError } from "./Objects/Toast";
 import { ThemeContext } from '../utils/ThemeContext';
+import { useNavigate } from 'react-router-dom';
+import api from "../services/axios";
+
+const useAccessToken = () => {
+  return localStorage.getItem('accessToken');
+};
 
 export default function ComentariosRecolectados() {
+  const [isCollecting, setIsCollecting] = useState(false);
   const [defaultComentarios] = useState([]);
+  const navigate = useNavigate();
   const [comentarios, setComentarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const { isDarkMode } = useContext(ThemeContext);
@@ -38,6 +46,41 @@ export default function ComentariosRecolectados() {
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
   const [comentarioAEliminar, setComentarioAEliminar] = useState(null);
   const [reason, setReason] = useState("");
+
+  const handleToggle = () => {
+    if (isCollecting) {
+      // Lógica para detener la recolección (solo cambia el estado)
+      console.log("Deteniendo recolección de comentarios...");
+      setIsCollecting(false);
+    } else {
+      handleStartScraping(); // Llama a la función de iniciar la recolección
+    }
+  };
+
+  const accessToken = useAccessToken();
+
+  const handleStartScraping = async () => {
+      //verificar si el token existe
+      if (!accessToken) {
+        showError("No estás autenticado");
+        navigate('/login');
+        return;
+      }
+
+      setIsCollecting(true);
+      
+      try {
+        const response = await Scrapi.post("/start_scraping");
+        
+        console.log("Scraping iniciado:", response.data);
+        showSuccess("Scraping iniciado exitosamente.");
+      
+      } catch (error) {
+        console.error("Error al iniciar el scraping:", error);
+        showError("Error al iniciar el scraping: " + (error.response?.data?.msg || error.message));
+        setIsCollecting(false);
+      }
+    };
 
   useEffect(() => {
     const fetchComentarios = async () => {
@@ -387,9 +430,28 @@ export default function ComentariosRecolectados() {
       <Toast />
 
       <div className="flex-grow">
-        <h2 className={`text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+        <div className="flex flex-grow justify-between mb-4 sm:mb-6"> 
+        <h2 className={`text-xl sm:text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
           Comentarios recolectados
         </h2>
+        <button
+          onClick={handleToggle}
+          className={`px-4 py-2 mb-2 rounded-full text-xs sm:text-sm font-medium transition 
+            ${
+              isCollecting
+                ? // Clases para "Detener recolección"
+                  isDarkMode
+                  ? "bg-red-600 text-white hover:bg-red-500 focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:outline-none"
+                  : "bg-red-500 text-white hover:bg-red-600 focus:ring-2 focus:ring-red-300 focus:ring-offset-2 focus:outline-none"
+                : // Clases para "Recolectar comentarios"
+                  isDarkMode
+                  ? "bg-blue-600 text-white hover:bg-blue-500 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:outline-none"
+                  : "bg-blue-400 text-white hover:bg-blue-500 focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 focus:outline-none"
+            }`}
+        >
+          {isCollecting ? "Detener recolección" : "Recolectar comentarios"}
+        </button>
+        </div>
 
         <div className="flex flex-wrap items-center justify-between space-y-2 md:space-y-0 md:space-x-0">
           <div className="flex flex-row flex-wrap items-center space-x-2">
