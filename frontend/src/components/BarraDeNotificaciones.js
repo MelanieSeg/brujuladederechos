@@ -52,15 +52,14 @@ const Notificacion = ({ mensaje, tipo, icono: IconoComponente, onClose, notifica
 
   return (
     <div
-      className={`flex items-start justify-between p-4 mb-3 border-l-4 rounded transform transition-transform duration-300 ${
-        isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-      } ${getStyle()}`}
+      className={`flex items-start justify-between p-4 mb-3 border-l-4 rounded transform transition-transform duration-300 ${isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+        } ${getStyle()}`}
     >
       <div className="flex items-start">
         <IconoComponente className={`h-5 w-5 mr-3 flex-shrink-0 ${isDarkMode ? 'text-white/70' : ''}`} />
         <span className="text-sm font-medium">{mensaje}</span>
       </div>
-      <button onClick={handleClose} className= {`ml-2 ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>
+      <button onClick={handleClose} className={`ml-2 ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>
         <XMarkIcon className="h-4 w-4" />
       </button>
     </div>
@@ -71,14 +70,13 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
   const { user } = useAuth()
   const { isDarkMode } = useContext(ThemeContext);
   const [userNotifications, setUserNotifications] = useState([])
-  
+
 
 
   useEffect(() => {
     async function getUserNotifications() {
       try {
         const response = await userApi.post("get-user-notifications")
-        console.log(response)
         setUserNotifications(response.data.data)
 
       } catch (err) {
@@ -123,15 +121,13 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
 
   const removeNotification = async (id) => {
     try {
-      // Llamar a la API para eliminar la notificación del backend
       await userApi.post("/read-notification", { notificationId: id });
-      
-      // Actualizar el estado local para eliminar la notificación
-      setUserNotifications(prevNotifications => 
+
+      setUserNotifications(prevNotifications =>
         prevNotifications.filter(notification => notification.id !== id)
       );
 
-  
+
     } catch (error) {
       console.error("Error al eliminar la notificación:", error);
     }
@@ -172,11 +168,11 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
               onClick={() => setCategoriaActiva(categoria.key)}
               className={`px-2 py-1 text-sm rounded-full whitespace-nowrap mr-2
                 ${categoria.key === categoriaActiva
-                  ? (isDarkMode 
-                    ? 'bg-gray-700 text-white' 
+                  ? (isDarkMode
+                    ? 'bg-gray-700 text-white'
                     : 'bg-gray-200 text-black')
                   : (isDarkMode
-                    ? 'bg-gray-900 text-gray-400 hover:bg-gray-700' 
+                    ? 'bg-gray-900 text-gray-400 hover:bg-gray-700'
                     : 'bg-white text-gray-600 hover:bg-gray-200')}`}>
               {categoria.label}
             </button>
@@ -184,8 +180,8 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
         </div>
       </div>
       <div className={`flex flex-col gap-2 p-4 overflow-y-auto scrollbar-thin  
-        ${isDarkMode 
-          ? 'scrollbar-thumb-gray-700 scrollbar-track-gray-800' 
+        ${isDarkMode
+          ? 'scrollbar-thumb-gray-700 scrollbar-track-gray-800'
           : 'scrollbar-thumb-gray-300 scrollbar-track-gray-100'}`}>
         {userNotifications.map((notification, index) => (
           <Notificacion
@@ -193,7 +189,7 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
             mensaje={notification.message}
             tipo={notification.tipoNotificacionApp}
             icono={MessageSquare}
-            onClose={() => removeNotification(notification.id)} 
+            onClose={() => removeNotification(notification.id)}
             notificationId={notification.id} // Asegúrate de pasar el ID de la notificación
           />
         ))}

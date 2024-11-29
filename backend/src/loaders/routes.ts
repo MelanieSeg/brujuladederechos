@@ -6,6 +6,7 @@ import commentsModule from "../components/comments/comments.module";
 import cloudinaryModule from "../components/cloudinary/cloudinary.module";
 import resumentModule from "../components/resumen/resument.module";
 import auditoriaModule from "../components/auditoria/auditoria.module";
+import userConfigModule from "../components/user-configuration/user-config.module";
 
 export default async (server: Application) => {
   server.use("/user", userModule.router);
@@ -15,6 +16,7 @@ export default async (server: Application) => {
   server.use('/services', cloudinaryModule.router)
   server.use("/resumen", resumentModule.router)
   server.use("/auditoria", auditoriaModule.router)
+  server.use("/configuration", userConfigModule.router)
 
   if (commentsModule.initialize) {
     await commentsModule.initialize()

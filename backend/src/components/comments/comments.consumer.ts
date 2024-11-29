@@ -20,6 +20,7 @@ class CommentsConsumer {
   private commentsService: CommentsService
   private notificationsService: NotificationsService
   private totalCommentsInsertCount: number = 0;
+  private messagesInFlight: number = 0
 
   //Los parametros para el batching( para hacer el INSERT por lotes)
   private batchSize: number = 10;
@@ -85,6 +86,7 @@ class CommentsConsumer {
     if (msg) {
       const content = msg.content.toString();
       let comment: any;
+      this.messagesInFlight++
 
 
       try {
@@ -108,23 +110,6 @@ class CommentsConsumer {
           await this.processBatch();
         }, this.batchInterval);
       }
-
-
-      // try{
-      //   //TODO: agregar funcion de insertar comentarios en la base de datso
-      //   const result = await this.commentsService.addComment([comment],comment.sourceUrl)
-
-      //   if(result.success){
-      //     this.channel.ack(msg);
-      //     console.log(`[x] Comentario insertado : ${comment.id}`)
-      //   }else{
-      //     console.log(`Error al insertar comentario: ${result.msg}`)
-      //     this.channel.nack(msg,false,true);//Reintentar mmensaje
-      //   }
-      // }catch(err){
-      //   console.log('Error al insertar el comentario en la base de datos: ',err)
-      //   this.channel.nack(msg,false,true)//se reintenta el comentario
-      // }
     }
   }
 
@@ -149,13 +134,16 @@ class CommentsConsumer {
       const result = await this.commentsService.addCommentsBatch(comments, webSiteName);
 
       if (result.success) {
-        msgs.forEach(msg => this.channel.ack(msg));
+        msgs.forEach(msg => {
+          this.channel.ack(msg)
+          this.messagesInFlight--
+        });
         console.log(`[x] Insertados ${comments.length} comentarios exitosamente.`);
 
         this.totalCommentsInsertCount += comments.length
         // Verificar si la cola está vacía
         const queueInfo = await this.channel.checkQueue(this.queue);
-        if (queueInfo.messageCount === 0) {
+        if (this.messagesInFlight === 0 && queueInfo.messageCount === 0) {
           // Crear y publicar la notif
           const totalNotification = {
             tipo: "TOTAL_COMMENTS_INSERTED",
@@ -176,7 +164,10 @@ class CommentsConsumer {
 
       } else {
         console.error(`Error al insertar comentarios: ${result.msg}`);
-        msgs.forEach(msg => this.channel.nack(msg, false, true));
+        msgs.forEach(msg => {
+          this.channel.nack(msg, false, true);
+          this.messagesInFlight--;
+        });
       }
     } catch (err) {
       console.error('Error al insertar comentarios en la base de datos:', err);

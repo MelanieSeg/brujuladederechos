@@ -50,63 +50,29 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchResumen = async () => {
-      try{
+      try {
         setCargando(true);
-        const rutas = ["/resumen/get-daily","/resumen/get-week","/resumen/get-month","/resumen/get-anual"]
-        const [resdiario,resSemana,resMes,resAño] = await Promise.all(rutas.map(async (ruta) => api.get(ruta)));
+        const rutas = ["/resumen/get-daily", "/resumen/get-week", "/resumen/get-month", "/resumen/get-anual"]
+        const [resdiario, resSemana, resMes, resAño] = await Promise.all(rutas.map(async (ruta) => api.get(ruta)));
         setDiario(resdiario.data.data);
         setSemana(resSemana.data.data);
         setMes(resMes.data.data);
         setAño(resAño.data.data);
         setCargando(false);
-      }catch(e){
+      } catch (e) {
         console.log(e);
       }
 
 
     }
     fetchResumen()
-    }, []);
-    console.log({
-      diario,
-      Semana,
-      Mes,
-      Año
-    });
-
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on('nueva_notificacion', (notificacion) => {
-      if (notificacion.tipo === 'TOTAL_COMMENTS_INSERTED') {
-        toast.success(
-          `Se insertaron ${notificacion.totalComentarios} comentarios exitosamente.`,
-          {
-            duration: 5000,
-          }
-        );
-
-        setTotalComentarios((prev) => prev + notificacion.totalComentarios);
-      } else {
-        setNotificaciones((prev) => [notificacion, ...prev]);
-      }
-    });
-
-
-    socket.on('connect', () => {
-      console.log('Socket.IO conectado');
-    });
-
-    socket.on('disconnect', (reason) => {
-      console.log('Socket.IO desconectado:', reason);
-    });
-
-    return () => {
-      socket.off('nueva_notificacion');
-      socket.off('connect');
-      socket.off('disconnect');
-    };
-  }, [socket]);
+  }, []);
+  console.log({
+    diario,
+    Semana,
+    Mes,
+    Año
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -127,14 +93,14 @@ export default function Dashboard() {
 
 
 
-const DatosHora = diario?.comentarios_por_intervalo?.map(m => m.totalCount)
-const PorcenHora = diario?.comentarios_por_intervalo?.map(m => m.acceptedCount)
-const AñoEmol = Año?.total_comentarios_por_sitio_web?.map(m => m.totalComentariosWebsite)
-const BarraMes = Año?.comentarios_por_mes?.map(m => m.totalComments)
-const SemanaCOM = Semana?.comentarios_por_dia?.map(m  => m.count)
-const semanaApr = Semana?.comentarios_por_dia?.map(m  => m.approvalRate.acceptedCount)
-const MesCOM = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.totalCount)
-const MesApr = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.acceptedCount)
+  const DatosHora = diario?.comentarios_por_intervalo?.map(m => m.totalCount)
+  const PorcenHora = diario?.comentarios_por_intervalo?.map(m => m.acceptedCount)
+  const AñoEmol = Año?.total_comentarios_por_sitio_web?.map(m => m.totalComentariosWebsite)
+  const BarraMes = Año?.comentarios_por_mes?.map(m => m.totalComments)
+  const SemanaCOM = Semana?.comentarios_por_dia?.map(m => m.count)
+  const semanaApr = Semana?.comentarios_por_dia?.map(m => m.approvalRate.acceptedCount)
+  const MesCOM = Mes?.comentarios_por_semana?.map(m => m.approvalRate.totalCount)
+  const MesApr = Mes?.comentarios_por_semana?.map(m => m.approvalRate.acceptedCount)
 
 
   // Datos temporales para demostración (serán reemplazados por datos del backend)
@@ -142,9 +108,9 @@ const MesApr = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.acceptedCou
     datosLineaClasificacionesDia: DatosHora,
     datosLineaTasaAprobacionDia: PorcenHora,
     datosLineaClasificacionesSemana: SemanaCOM,
-    datosLineaTasaAprobacionSemana : semanaApr,
+    datosLineaTasaAprobacionSemana: semanaApr,
     datosLineaClasificacionMes: MesCOM,
-    datosLineaTasaAprobacionMes : MesApr,
+    datosLineaTasaAprobacionMes: MesApr,
     datosBarra: BarraMes,
     datosCircular: AñoEmol,
   };
@@ -247,7 +213,7 @@ const MesApr = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.acceptedCou
         data: datosTemporales.datosCircular,
         backgroundColor: [
           '#4F46E5', // emol.cl
-         
+
         ],
         hoverBackgroundColor: [
           '#6366F1', // emol.cl
@@ -327,7 +293,7 @@ const MesApr = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.acceptedCou
     setTasaAprobacion(datos.tasaAprobacion);
   }, [periodo]);
 
-  if (Cargando){
+  if (Cargando) {
     return <div>Loading...</div>;
   }
 
@@ -453,9 +419,8 @@ const MesApr = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.acceptedCou
 
   return (
     <div
-      className={`p-2 sm:p-4 lg:p-8 min-h-screen flex flex-col overflow-x-hidden ${
-        isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'
-      } flex-1 w-full`}
+      className={`p-2 sm:p-4 lg:p-8 min-h-screen flex flex-col overflow-x-hidden ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'
+        } flex-1 w-full`}
     >
       {/* Botones de selección de período */}
       <div className="mb-6 flex flex-wrap space-x-2">
@@ -465,12 +430,11 @@ const MesApr = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.acceptedCou
             onClick={() => {
               setPeriodo(period);
             }}
-            
-            className={`px-4 py-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border ${
-              periodo === period
+
+            className={`px-4 py-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border ${periodo === period
                 ? 'bg-gray-300 dark:bg-gray-700 ring-2 ring-indigo-500'
                 : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
+              }`}
           >
             {period}
           </button>
@@ -482,9 +446,8 @@ const MesApr = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.acceptedCou
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
           <div
             onClick={() => setSelectedMetric('Total de comentarios analizados')}
-            className={`bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg cursor-pointer ${
-              selectedMetric === 'Total de comentarios analizados' ? 'ring-2 ring-indigo-500' : ''
-            }`}
+            className={`bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg cursor-pointer ${selectedMetric === 'Total de comentarios analizados' ? 'ring-2 ring-indigo-500' : ''
+              }`}
           >
             <h2 className="text-gray-500 dark:text-gray-400 text-sm">
               Total de comentarios analizados
@@ -495,9 +458,8 @@ const MesApr = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.acceptedCou
           </div>
           <div
             onClick={() => setSelectedMetric('Tasa de aprobación')}
-            className={`bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg cursor-pointer ${
-              selectedMetric === 'Tasa de aprobación' ? 'ring-2 ring-indigo-500' : ''
-            }`}
+            className={`bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg cursor-pointer ${selectedMetric === 'Tasa de aprobación' ? 'ring-2 ring-indigo-500' : ''
+              }`}
           >
             <h2 className="text-gray-500 dark:text-gray-400 text-sm">Tasa de aprobación</h2>
             <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">
