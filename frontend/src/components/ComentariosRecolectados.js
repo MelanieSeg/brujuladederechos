@@ -408,6 +408,7 @@ export default function ComentariosRecolectados() {
           </h2>
           <button
             onClick={handleToggle}
+            disabled={isCollecting}
             className={`px-4 py-2 mb-2 rounded-full text-xs sm:text-sm font-medium transition 
             ${isCollecting
                 ? // Clases para "Detener recolección"
@@ -420,7 +421,7 @@ export default function ComentariosRecolectados() {
                   : "bg-blue-400 text-white hover:bg-blue-500 focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 focus:outline-none"
               }`}
           >
-            {isCollecting ? "Detener recolección" : "Recolectar comentarios"}
+            {"Recolectar comentarios"}
           </button>
         </div>
 
