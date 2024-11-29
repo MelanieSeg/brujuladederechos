@@ -546,14 +546,18 @@ export default function ComentariosPendientes() {
             : 'bg-gray-800 bg-opacity-50'
             } 
             flex justify-center sm:justify-end items-center sm:items-start
-            overflow-hidden`}>
+            overflow-hidden`}
+            onClick={() => setBarraClasificacionVisible(false)}
+            >
             <div className={`relative bg-white dark:bg-gray-800 w-full sm:w-[430px] h-full sm:h-auto 
               overflow-y-auto p-6 rounded-lg shadow-lg 
               ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}
               transition-transform transform 
               ${barraClasificacionVisible ? 'translate-x-0' : 'translate-x-full'}
               max-h-screen sm:max-h-full sm:my-auto
-              `}>
+              `}
+              onClick={(e) => e.stopPropagation()}
+              >
               <div className="flex justify-between items-start">
                 <h2 className="text-xl font-bold">
                   Clasificación manual de comentario
