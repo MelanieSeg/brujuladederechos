@@ -16,6 +16,8 @@ import {
 } from 'chart.js';
 import { useSocket } from '../hooks/useSocket';
 import { toast } from 'sonner';
+import api from '../services/axios';
+
 
 // Registrar los componentes de Chart.js necesarios
 ChartJS.register(
@@ -40,6 +42,37 @@ export default function Dashboard() {
   const [tasaAprobacion, setTasaAprobacion] = useState(0);
   const [barThickness, setBarThickness] = useState(30);
   const { isDarkMode } = useContext(ThemeContext);
+  const [diario, setDiario] = useState([]);
+  const [Semana, setSemana] = useState([]);
+  const [Mes, setMes] = useState([]);
+  const [Año, setAño] = useState([]);
+  const [Cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    const fetchResumen = async () => {
+      try{
+        setCargando(true);
+        const rutas = ["/resumen/get-daily","/resumen/get-week","/resumen/get-month","/resumen/get-anual"]
+        const [resdiario,resSemana,resMes,resAño] = await Promise.all(rutas.map(async (ruta) => api.get(ruta)));
+        setDiario(resdiario.data.data);
+        setSemana(resSemana.data.data);
+        setMes(resMes.data.data);
+        setAño(resAño.data.data);
+        setCargando(false);
+      }catch(e){
+        console.log(e);
+      }
+
+
+    }
+    fetchResumen()
+    }, []);
+    console.log({
+      diario,
+      Semana,
+      Mes,
+      Año
+    });
 
   useEffect(() => {
     if (!socket) return;
@@ -58,6 +91,7 @@ export default function Dashboard() {
         setNotificaciones((prev) => [notificacion, ...prev]);
       }
     });
+
 
     socket.on('connect', () => {
       console.log('Socket.IO conectado');
@@ -91,40 +125,47 @@ export default function Dashboard() {
     };
   }, []);
 
+
+
+const DatosHora = diario?.comentarios_por_intervalo?.map(m => m.totalCount)
+const PorcenHora = diario?.comentarios_por_intervalo?.map(m => m.acceptedCount)
+const AñoEmol = Año?.total_comentarios_por_sitio_web?.map(m => m.totalComentariosWebsite)
+const BarraMes = Año?.comentarios_por_mes?.map(m => m.totalComments)
+const SemanaCOM = Semana?.comentarios_por_dia?.map(m  => m.count)
+const semanaApr = Semana?.comentarios_por_dia?.map(m  => m.approvalRate.acceptedCount)
+const MesCOM = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.totalCount)
+const MesApr = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.acceptedCount)
+
+
   // Datos temporales para demostración (serán reemplazados por datos del backend)
   const datosTemporales = {
-    totalComentarios: 573,
-    tasaAprobacion: 88,
-    comentariosPendientes: 125,
-    comentariosClasificados: 100,
-    comentariosGraves: 25,
-    ultimosComentarios: [
-      { texto: 'No estoy de acuerdo.', estado: 'Aceptado' },
-      { texto: 'Me encanta esta publicación.', estado: 'Aceptado' },
-      { texto: 'Este comentario es ofensivo.', estado: 'Rechazado' },
-    ],
-    datosLineaClasificaciones: [25, 40, 50, 75, 117, 60, 80, 95, 70, 85, 55, 70, 90],
-    datosLineaTasaAprobacion: [88, 90, 85, 92, 95, 100, 98, 105, 102, 110, 108, 115, 112],
-    datosBarra: [750, 500, 650, 800, 900, 400, 600, 700, 850, 780, 880, 960],
-    datosCircular: [40, 25, 15, 10, 10],
+    datosLineaClasificacionesDia: DatosHora,
+    datosLineaTasaAprobacionDia: PorcenHora,
+    datosLineaClasificacionesSemana: SemanaCOM,
+    datosLineaTasaAprobacionSemana : semanaApr,
+    datosLineaClasificacionMes: MesCOM,
+    datosLineaTasaAprobacionMes : MesApr,
+    datosBarra: BarraMes,
+    datosCircular: AñoEmol,
   };
 
   const datosTemporalesPorPeriodo = {
     Diario: {
-      totalComentarios: 100,
-      tasaAprobacion: 85,
+      totalComentarios: diario.total_comentarios_analisados,
+      tasaAprobacion: diario.tasa_de_aprobacion_hoy,
     },
     Semanal: {
-      totalComentarios: 700,
-      tasaAprobacion: 90,
+      totalComentarios: Semana?.total_comentarios_analisados_semana,
+      tasaAprobacion: Semana?.tasa_de_aprobacion_semana,
     },
     Mensual: {
-      totalComentarios: 3000,
-      tasaAprobacion: 88,
+      totalComentarios: Mes?.total_comentarios_analisados_mes,
+      tasaAprobacion: Mes?.tasa_de_aprobacion_mes,
     },
     Anual: {
-      totalComentarios: 36000,
-      tasaAprobacion: 87,
+      ComentariosPendientes: Año?.total_comentarios_pendientes,
+      ComentariosGraves: Año?.total_comentarios_graves,
+      comentariosClasificados: Año?.total_comentarios_clasificados,
     },
   };
 
@@ -193,33 +234,23 @@ export default function Dashboard() {
         borderWidth: 1,
         hoverBackgroundColor: isDarkMode ? '#A5B4FC' : '#6366F1',
         hoverBorderColor: isDarkMode ? '#A5B4FC' : '#6366F1',
-        data: datosTemporales.datosBarra.slice(
-          0,
-          periodo === 'Mensual' ? labelsSemanasDelMes.length : 12
-        ),
+        data: datosTemporales.datosBarra
       },
     ],
   };
 
   const datosCircular = {
-    labels: ['emol.cl', 'latercera.cl', 'quora.com', 'stackoverflow.com', 'reddit.com'],
+    labels: ['emol.cl'],
     datasets: [
       {
         label: 'Comentarios por sitio web',
         data: datosTemporales.datosCircular,
         backgroundColor: [
           '#4F46E5', // emol.cl
-          '#10B981', // latercera.cl
-          '#F59E0B', // quora.com
-          '#EF4444', // stackoverflow.com
-          '#6366F1', // reddit.com
+         
         ],
         hoverBackgroundColor: [
           '#6366F1', // emol.cl
-          '#34D399', // latercera.cl
-          '#FBBF24', // quora.com
-          '#F87171', // stackoverflow.com
-          '#818CF8', // reddit.com
         ],
         borderWidth: 1,
       },
@@ -228,11 +259,7 @@ export default function Dashboard() {
 
   // Leyenda personalizada para el gráfico circular
   const leyendaCircular = [
-    { label: 'emol.cl', color: '#4F46E5' },
-    { label: 'latercera.cl', color: '#10B981' },
-    { label: 'quora.com', color: '#F59E0B' },
-    { label: 'stackoverflow.com', color: '#EF4444' },
-    { label: 'reddit.com', color: '#6366F1' },
+    { label: 'emol.cl', color: '#4F46E5' }
   ];
 
   // Opciones de los gráficos
@@ -300,6 +327,10 @@ export default function Dashboard() {
     setTasaAprobacion(datos.tasaAprobacion);
   }, [periodo]);
 
+  if (Cargando){
+    return <div>Loading...</div>;
+  }
+
   const getChartData = () => {
     const lightLineColor = '#4F46E5';
     const darkLineColor = '#818CF8';
@@ -315,7 +346,7 @@ export default function Dashboard() {
                 datasets: [
                   {
                     label: 'Total de comentarios analizados',
-                    data: datosTemporales.datosLineaClasificaciones,
+                    data: datosTemporales.datosLineaClasificacionesDia,
                     fill: true,
                     borderColor: isDarkMode ? darkLineColor : lightLineColor,
                     backgroundColor: isDarkMode ? darkFillColor : lightFillColor,
@@ -330,7 +361,7 @@ export default function Dashboard() {
                 datasets: [
                   {
                     label: 'Total de comentarios analizados (Semanal)',
-                    data: datosTemporales.datosLineaClasificaciones.slice(0, 7),
+                    data: datosTemporales.datosLineaClasificacionesSemana,
                     fill: true,
                     borderColor: isDarkMode ? darkLineColor : lightLineColor,
                     backgroundColor: isDarkMode ? darkFillColor : lightFillColor,
@@ -345,7 +376,7 @@ export default function Dashboard() {
                 datasets: [
                   {
                     label: 'Total de comentarios analizados (Mensual)',
-                    data: datosTemporales.datosBarra.slice(0, labelsSemanasDelMes.length),
+                    data: datosTemporales.datosLineaClasificacionMes,
                     fill: true,
                     borderColor: isDarkMode ? darkLineColor : lightLineColor,
                     backgroundColor: isDarkMode ? darkFillColor : lightFillColor,
@@ -365,7 +396,7 @@ export default function Dashboard() {
                 datasets: [
                   {
                     label: 'Tasa de aprobación',
-                    data: datosTemporales.datosLineaTasaAprobacion,
+                    data: datosTemporales.datosLineaTasaAprobacionDia,
                     fill: true,
                     borderColor: isDarkMode ? '#34D399' : '#10B981',
                     backgroundColor: isDarkMode
@@ -382,7 +413,7 @@ export default function Dashboard() {
                 datasets: [
                   {
                     label: 'Tasa de aprobación (Semanal)',
-                    data: datosTemporales.datosLineaTasaAprobacion.slice(0, 7),
+                    data: datosTemporales.datosLineaTasaAprobacionSemana,
                     fill: true,
                     borderColor: '#10B981',
                     backgroundColor: 'rgba(16, 185, 129, 0.2)',
@@ -397,10 +428,7 @@ export default function Dashboard() {
                 datasets: [
                   {
                     label: 'Tasa de aprobación (Mensual)',
-                    data: datosTemporales.datosLineaTasaAprobacion.slice(
-                      0,
-                      labelsSemanasDelMes.length
-                    ),
+                    data: datosTemporales.datosLineaTasaAprobacionMes,
                     fill: true,
                     borderColor: '#10B981',
                     backgroundColor: 'rgba(16, 185, 129, 0.2)',
@@ -528,7 +556,7 @@ export default function Dashboard() {
             <div>
               <h2 className="text-gray-500 dark:text-gray-400 text-sm">Comentarios pendientes</h2>
               <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">
-                {datosTemporales.comentariosPendientes}
+                {Año.total_comentarios_pendientes}
               </p>
             </div>
             <InformationCircleIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 ml-4 mt-1" />
@@ -537,7 +565,7 @@ export default function Dashboard() {
             <div>
               <h2 className="text-gray-500 dark:text-gray-400 text-sm">Comentarios clasificados</h2>
               <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">
-                {datosTemporales.comentariosClasificados}
+                {Año.total_comentarios_clasificados}
               </p>
             </div>
             <InformationCircleIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 ml-4 mt-1" />
@@ -546,7 +574,7 @@ export default function Dashboard() {
             <div>
               <h2 className="text-gray-500 dark:text-gray-400 text-sm">Comentarios graves</h2>
               <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">
-                {datosTemporales.comentariosGraves}
+                {Año.total_comentarios_graves}
               </p>
             </div>
             <InformationCircleIcon className="h-6 w-6 text-gray-400 dark:text-gray-500 ml-4 mt-1" />
@@ -611,31 +639,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Tabla de últimos comentarios */}
-      <div className="mt-8 bg-white dark:bg-gray-800 shadow-md p-6 rounded-lg">
-        <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
-          Últimos comentarios clasificados
-        </h2>
-        <ul>
-          {datosTemporales.ultimosComentarios.map((comentario, index) => (
-            <li
-              key={index}
-              className="border-b dark:border-gray-700 py-4 flex flex-col sm:flex-row sm:justify-between"
-            >
-              <span className="dark:text-gray-200 mb-2 sm:mb-0">{comentario.texto}</span>
-              <span
-                className={`font-semibold ${
-                  comentario.estado === 'Aceptado'
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-red-600 dark:text-red-400'
-                }`}
-              >
-                {comentario.estado}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }
