@@ -327,7 +327,7 @@ class ResumenService {
         msg: 'Operación exitosa',
       };
     } catch (err) {
-      console.error('Error en getDataResumenSemanal:', err);
+      console.error('Error en getDataResumenMensual:', err);
       return {
         success: false,
         data: null,
@@ -349,19 +349,26 @@ class ResumenService {
 
       const daysInMonth = endOfMonth.getDate();
 
-      const days = [];
+      const weeks = [];
+      let currentWeek = [];
       for (let i = 1; i <= daysInMonth; i++) {
         const day = new Date(startOfMonth);
         day.setDate(i);
-        days.push(day);
+
+        currentWeek.push(day);
+
+        if (day.getDay() === 0 || i === daysInMonth) {
+          weeks.push(currentWeek);
+          currentWeek = [];
+        }
       }
 
-      const dailyCounts = await Promise.all(
-        days.map(async (day) => {
-          const start = new Date(day);
+      const weeklyCounts = await Promise.all(
+        weeks.map(async (week, index) => {
+          const start = new Date(week[0]);
           start.setHours(0, 0, 0, 0);
 
-          const end = new Date(day);
+          const end = new Date(week[week.length - 1]);
           end.setHours(23, 59, 59, 999);
 
           const count = await this.prisma.comentarioScraped.count({
@@ -373,44 +380,51 @@ class ResumenService {
             },
           });
 
-          const approvalRate = await this.getApprovalRateForInterval(start, end)
+          const approvalRate = await this.getApprovalRateForInterval(start, end);
 
           return {
-            day: start.getDate(),
+            week: `Semana ${index + 1}`,
             count,
-            approvalRate
+            approvalRate,
           };
         })
       );
-      const [countAcceptedComments, acceptedCommentsThisMonth, totalCommentsThisMonth, totalComments] =
-        await Promise.all([
-          this.prisma.comentarioScraped.count({
-            where: {
-              resultadoIbf: ResultadoIBF.LIBERTAD_EXPRESION_PREDOMINA,
+
+      const [
+        countAcceptedComments,
+        acceptedCommentsThisMonth,
+        totalCommentsThisMonth,
+        totalComments,
+      ] = await Promise.all([
+        this.prisma.comentarioScraped.count({
+          where: {
+            resultadoIbf: ResultadoIBF.LIBERTAD_EXPRESION_PREDOMINA,
+          },
+        }),
+        this.prisma.comentarioScraped.count({
+          where: {
+            resultadoIbf: ResultadoIBF.LIBERTAD_EXPRESION_PREDOMINA,
+            fechaClasificacion: {
+              gte: startOfMonth,
+              lte: endOfMonth,
             },
-          }),
-          this.prisma.comentarioScraped.count({
-            where: {
-              resultadoIbf: ResultadoIBF.LIBERTAD_EXPRESION_PREDOMINA,
-              fechaClasificacion: {
-                gte: startOfMonth,
-                lte: endOfMonth,
-              },
+          },
+        }),
+        this.prisma.comentarioScraped.count({
+          where: {
+            fechaClasificacion: {
+              gte: startOfMonth,
+              lte: endOfMonth,
             },
-          }),
-          this.prisma.comentarioScraped.count({
-            where: {
-              fechaClasificacion: {
-                gte: startOfMonth,
-                lte: endOfMonth,
-              },
-            },
-          }),
-          this.prisma.comentarioScraped.count(),
-        ]);
+          },
+        }),
+        this.prisma.comentarioScraped.count(),
+      ]);
 
       const approvalRateThisMonth =
-        totalCommentsThisMonth > 0 ? (acceptedCommentsThisMonth / totalCommentsThisMonth) * 100 : 0;
+        totalCommentsThisMonth > 0
+          ? (acceptedCommentsThisMonth / totalCommentsThisMonth) * 100
+          : 0;
 
       return {
         success: true,
@@ -420,19 +434,19 @@ class ResumenService {
           total_comentarios_analisados_mes: totalCommentsThisMonth,
           total_comentarios_aceptados_mes: acceptedCommentsThisMonth,
           tasa_de_aprobacion_mes: approvalRateThisMonth.toFixed(2),
-          comentarios_por_dia: dailyCounts,
+          comentarios_por_semana: weeklyCounts,
         },
-        msg: 'Operación exitosa',
+        msg: "Operación exitosa",
       };
     } catch (err) {
-      console.error('Error en getDataResumenMensual:', err);
       return {
         success: false,
         data: null,
-        msg: 'Error al obtener el resumen mensual',
+        msg: "Error al obtener el resumen semanal",
       };
     }
   };
+
 
   getCommentsCountInInterval = async (start: Date, end: Date) => {
     try {
