@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import { ThemeContext } from '../utils/ThemeContext';
+import Cargando from './Objects/Cargando';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -46,19 +47,19 @@ export default function Dashboard() {
   const [Semana, setSemana] = useState([]);
   const [Mes, setMes] = useState([]);
   const [Año, setAño] = useState([]);
-  const [Cargando, setCargando] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchResumen = async () => {
       try{
-        setCargando(true);
+        setIsLoading(true);
         const rutas = ["/resumen/get-daily","/resumen/get-week","/resumen/get-month","/resumen/get-anual"]
         const [resdiario,resSemana,resMes,resAño] = await Promise.all(rutas.map(async (ruta) => api.get(ruta)));
         setDiario(resdiario.data.data);
         setSemana(resSemana.data.data);
         setMes(resMes.data.data);
         setAño(resAño.data.data);
-        setCargando(false);
+        setIsLoading(false);
       }catch(e){
         console.log(e);
       }
@@ -327,8 +328,8 @@ const MesApr = Mes?.comentarios_por_semana?.map(m  => m.approvalRate.acceptedCou
     setTasaAprobacion(datos.tasaAprobacion);
   }, [periodo]);
 
-  if (Cargando){
-    return <div>Loading...</div>;
+  if (isLoading){
+    return <Cargando />;
   }
 
   const getChartData = () => {
