@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
-import api from "../services/axios";
+import Scrapi from "../services/axiosScrapingInstance";
 import { format, parseISO, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import Calendario, { DatePicker } from "./Objects/Calendario"; // Asegúrate de que la ruta es correcta
@@ -9,10 +9,19 @@ import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
 import { Toast, showSuccess, showError } from "./Objects/Toast";
 import { ThemeContext } from '../utils/ThemeContext';
+import { useNavigate } from 'react-router-dom';
+import api from "../services/axios";
+
 import { truncateComentario } from "../utils/truncarComentario";
 
+const useAccessToken = () => {
+  return localStorage.getItem('accessToken');
+};
+
 export default function ComentariosRecolectados() {
+  const [isCollecting, setIsCollecting] = useState(false);
   const [defaultComentarios] = useState([]);
+  const navigate = useNavigate();
   const [comentarios, setComentarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const { isDarkMode } = useContext(ThemeContext);
@@ -26,7 +35,7 @@ export default function ComentariosRecolectados() {
   const [fechaDesde, setFechaDesde] = useState(null);
   const [fechaHasta, setFechaHasta] = useState(null);
   const [paginaActual, setPaginaActual] = useState(1);
-///eliminado dado nuevo calendario implementado  
+  ///eliminado dado nuevo calendario implementado  
   const commentsPerPage = 10;
 
   const dropdownRef = useRef(null);
@@ -37,6 +46,41 @@ export default function ComentariosRecolectados() {
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
   const [comentarioAEliminar, setComentarioAEliminar] = useState(null);
   const [reason, setReason] = useState("");
+
+  const handleToggle = () => {
+    if (isCollecting) {
+      // Lógica para detener la recolección (solo cambia el estado)
+      console.log("Deteniendo recolección de comentarios...");
+      setIsCollecting(false);
+    } else {
+      handleStartScraping(); // Llama a la función de iniciar la recolección
+    }
+  };
+
+  const accessToken = useAccessToken();
+
+  const handleStartScraping = async () => {
+    //verificar si el token existe
+    if (!accessToken) {
+      showError("No estás autenticado");
+      navigate('/login');
+      return;
+    }
+
+    setIsCollecting(true);
+
+    try {
+      const response = await Scrapi.post("/start_scraping");
+
+      console.log("Scraping iniciado:", response.data);
+      showSuccess("Scraping iniciado exitosamente.");
+
+    } catch (error) {
+      console.error("Error al iniciar el scraping:", error);
+      showError("Error al iniciar el scraping: " + (error.response?.data?.msg || error.message));
+      setIsCollecting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchComentarios = async () => {
@@ -194,8 +238,8 @@ export default function ComentariosRecolectados() {
             <button
               onClick={limpiarSeleccion}
               className={`block w-full text-left px-4 py-2 text-sm 
-                ${isDarkMode 
-                  ? 'text-gray-400 hover:bg-gray-700' 
+                ${isDarkMode
+                  ? 'text-gray-400 hover:bg-gray-700'
                   : 'text-gray-500 hover:bg-gray-100'
                 }`}
             >
@@ -229,8 +273,8 @@ export default function ComentariosRecolectados() {
     const sitioWeb = comentario.sourceUrl;
     const fecha = isValid(parseISO(comentario.fechaScraping))
       ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy", {
-          locale: es,
-        })
+        locale: es,
+      })
       : "Fecha Inválida";
 
     return [comentarioTexto, estado, sitioWeb, fecha];
@@ -331,8 +375,8 @@ export default function ComentariosRecolectados() {
               type="button"
               onClick={manejarCancelarEliminar}
               className={`px-4 py-2 rounded-md 
-                ${isDarkMode 
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                ${isDarkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
             >
               Cancelar
@@ -340,8 +384,8 @@ export default function ComentariosRecolectados() {
             <button
               type="submit"
               className={`px-4 py-2 rounded-md 
-                ${isDarkMode 
-                  ? 'bg-red-700 text-white hover:bg-red-600' 
+                ${isDarkMode
+                  ? 'bg-red-700 text-white hover:bg-red-600'
                   : 'bg-red-600 text-white hover:bg-red-700'}`}
             >
               Eliminar
@@ -358,9 +402,27 @@ export default function ComentariosRecolectados() {
       <Toast />
 
       <div className="flex-grow">
-        <h2 className={`text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-          Comentarios recolectados
-        </h2>
+        <div className="flex flex-grow justify-between mb-4 sm:mb-6">
+          <h2 className={`text-xl sm:text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+            Comentarios recolectados
+          </h2>
+          <button
+            onClick={handleToggle}
+            className={`px-4 py-2 mb-2 rounded-full text-xs sm:text-sm font-medium transition 
+            ${isCollecting
+                ? // Clases para "Detener recolección"
+                isDarkMode
+                  ? "bg-red-600 text-white hover:bg-red-500 focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:outline-none"
+                  : "bg-red-500 text-white hover:bg-red-600 focus:ring-2 focus:ring-red-300 focus:ring-offset-2 focus:outline-none"
+                : // Clases para "Recolectar comentarios"
+                isDarkMode
+                  ? "bg-blue-600 text-white hover:bg-blue-500 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:outline-none"
+                  : "bg-blue-400 text-white hover:bg-blue-500 focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 focus:outline-none"
+              }`}
+          >
+            {isCollecting ? "Detener recolección" : "Recolectar comentarios"}
+          </button>
+        </div>
 
         <div className="flex flex-wrap items-center justify-between space-y-2 md:space-y-0 md:space-x-0">
           <div className="flex flex-row flex-wrap items-center space-x-2">
@@ -375,11 +437,10 @@ export default function ComentariosRecolectados() {
                   }`}
               >
                 <div className="flex items-center space-x-2">
-                  <PlusIcon className={`w-5 h-5 ${
-                    isDarkMode
-                      ? 'text-white group-hover:text-gray-200'
-                      : 'text-gray-500'
-                  }`} />
+                  <PlusIcon className={`w-5 h-5 ${isDarkMode
+                    ? 'text-white group-hover:text-gray-200'
+                    : 'text-gray-500'
+                    }`} />
                   <span>Fecha</span>
                 </div>
               </button>
@@ -388,9 +449,9 @@ export default function ComentariosRecolectados() {
                   ref={dateDropdownRef}
                   className={`absolute mt-2 w-48 rounded-md shadow-lg z-20 
                     ${isDarkMode
-                            ? "bg-gray-800 text-white"
-                            : "bg-white text-gray-700"
-                        }`}
+                      ? "bg-gray-800 text-white"
+                      : "bg-white text-gray-700"
+                    }`}
                   style={{ width: "220px" }} // Ajusta el ancho si es necesario
                 >
                   <div className="px-4 py-2">
@@ -413,17 +474,17 @@ export default function ComentariosRecolectados() {
                       />
                     </div>
                     <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <button
-                      onClick={() => {
-                        setFechaDesde(null);
-                        setFechaHasta(null);
-                      }}
-                      className={`w-full text-left px-4 py-2 text-sm
+                      <button
+                        onClick={() => {
+                          setFechaDesde(null);
+                          setFechaHasta(null);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm
                         ${isDarkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}
                       `}
-                    >
-                      Limpiar
-                    </button>
+                      >
+                        Limpiar
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -441,11 +502,10 @@ export default function ComentariosRecolectados() {
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}>
                 <div className="flex items-center space-x-2">
-                  <PlusIcon className={`w-5 h-5 ${
-                    isDarkMode
-                      ? 'text-white group-hover:text-gray-200'
-                      : 'text-gray-500'
-                  }`} />
+                  <PlusIcon className={`w-5 h-5 ${isDarkMode
+                    ? 'text-white group-hover:text-gray-200'
+                    : 'text-gray-500'
+                    }`} />
                   <span>Estado</span>
                 </div>
               </button>
@@ -542,11 +602,10 @@ export default function ComentariosRecolectados() {
                         className="text-gray-500 hover:text-red-600"
                         aria-label="Eliminar comentario"
                       >
-                        <TrashIcon className={`w-5 h-5 ${
-                          isDarkMode
-                            ? 'text-gray-400 hover:text-red-400'
-                            : 'text-gray-400 hover:text-red-500'
-                        } cursor-pointer`}
+                        <TrashIcon className={`w-5 h-5 ${isDarkMode
+                          ? 'text-gray-400 hover:text-red-400'
+                          : 'text-gray-400 hover:text-red-500'
+                          } cursor-pointer`}
                         />
                       </button>
                     </td>
@@ -594,11 +653,10 @@ export default function ComentariosRecolectados() {
                         className="text-gray-500 hover:text-red-600"
                         aria-label="Eliminar comentario"
                       >
-                        <TrashIcon className={`w-5 h-5 ${
-                          isDarkMode
-                            ? 'text-gray-400 hover:text-red-400'
-                            : 'text-gray-400 hover:text-red-500'
-                        } cursor-pointer`}
+                        <TrashIcon className={`w-5 h-5 ${isDarkMode
+                          ? 'text-gray-400 hover:text-red-400'
+                          : 'text-gray-400 hover:text-red-500'
+                          } cursor-pointer`}
                         />
                       </button>
                     </div>
