@@ -293,7 +293,7 @@ export default function Dashboard() {
     const datos = datosTemporalesPorPeriodo[periodo];
     setTotalComentarios(datos.totalComentarios);
     setTasaAprobacion(datos.tasaAprobacion);
-  }, [periodo]);
+  }, [periodo, diario, Semana, Mes, Año]);
 
   if (isLoading) {
     return <Cargando />;

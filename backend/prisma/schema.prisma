@@ -57,6 +57,8 @@ model ComentarioClasificado {
   @@index([comentarioScrapedId])
   @@index([clasificadorId])
   @@index([clasificacion])
+
+  @@unique([comentarioScrapedId])
 }
 
 model User {
