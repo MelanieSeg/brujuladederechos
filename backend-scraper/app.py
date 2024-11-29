@@ -2,8 +2,10 @@ import subprocess
 from flask import Flask, jsonify
 from celery import Celery
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/start_scraping": {"origins": "http://localhost:3000"}})
 app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL')
 app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND')
 

@@ -1,43 +1,86 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
-import api from "../services/axios";
+import Scrapi from "../services/axiosScrapingInstance";
 import { format, parseISO, isValid } from "date-fns";
-import { truncateComentario } from "../utils/truncarComentario";
-import Calendario from "./Objects/Calendario";
+import { es } from "date-fns/locale";
+import Calendario, { DatePicker } from "./Objects/Calendario"; // Asegúrate de que la ruta es correcta
 import Paginacion from "./Objects/Paginacion";
 import Formulario from "./Objects/Formulario";
 import Cargando from "./Objects/Cargando";
 import { Toast, showSuccess, showError } from "./Objects/Toast";
 import { ThemeContext } from '../utils/ThemeContext';
+import { useNavigate } from 'react-router-dom';
+import api from "../services/axios";
+
+import { truncateComentario } from "../utils/truncarComentario";
+
+const useAccessToken = () => {
+  return localStorage.getItem('accessToken');
+};
 
 export default function ComentariosRecolectados() {
+  const [isCollecting, setIsCollecting] = useState(false);
   const [defaultComentarios] = useState([]);
+  const navigate = useNavigate();
   const [comentarios, setComentarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const { isDarkMode } = useContext(ThemeContext);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  ///calendar open eliminado
   const [selectedEstado, setSelectedEstado] = useState({
     PENDIENTE_CLASIFICACION: true,
     CLASIFICADO: true,
   });
-  const [fechaDesde, setFechaDesde] = useState("");
-  const [fechaHasta, setFechaHasta] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedDateType, setSelectedDateType] = useState("");
+  const [fechaDesde, setFechaDesde] = useState(null);
+  const [fechaHasta, setFechaHasta] = useState(null);
+  const [paginaActual, setPaginaActual] = useState(1);
+  ///eliminado dado nuevo calendario implementado  
   const commentsPerPage = 10;
 
   const dropdownRef = useRef(null);
   const gravedadButtonRef = useRef(null);
   const dateDropdownRef = useRef(null);
-  const dateButtonRef = useRef(null);
-  const calendarRef = useRef(null);
 
   // Estados para manejar la eliminación
   const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
   const [comentarioAEliminar, setComentarioAEliminar] = useState(null);
   const [reason, setReason] = useState("");
+
+  const handleToggle = () => {
+    if (isCollecting) {
+      // Lógica para detener la recolección (solo cambia el estado)
+      console.log("Deteniendo recolección de comentarios...");
+      setIsCollecting(false);
+    } else {
+      handleStartScraping(); // Llama a la función de iniciar la recolección
+    }
+  };
+
+  const accessToken = useAccessToken();
+
+  const handleStartScraping = async () => {
+    //verificar si el token existe
+    if (!accessToken) {
+      showError("No estás autenticado");
+      navigate('/login');
+      return;
+    }
+
+    setIsCollecting(true);
+
+    try {
+      const response = await Scrapi.post("/start_scraping");
+
+      console.log("Scraping iniciado:", response.data);
+      showSuccess("Scraping iniciado exitosamente.");
+
+    } catch (error) {
+      console.error("Error al iniciar el scraping:", error);
+      showError("Error al iniciar el scraping: " + (error.response?.data?.msg || error.message));
+      setIsCollecting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchComentarios = async () => {
@@ -71,18 +114,9 @@ export default function ComentariosRecolectados() {
       if (
         isDateDropdownOpen &&
         dateDropdownRef.current &&
-        !dateDropdownRef.current.contains(event.target) &&
-        dateButtonRef.current &&
-        !dateButtonRef.current.contains(event.target)
+        !dateDropdownRef.current.contains(event.target)
       ) {
         setIsDateDropdownOpen(false);
-      }
-      if (
-        isCalendarOpen &&
-        calendarRef.current &&
-        !calendarRef.current.contains(event.target)
-      ) {
-        setIsCalendarOpen(false);
       }
     }
 
@@ -90,7 +124,7 @@ export default function ComentariosRecolectados() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isDropdownOpen, isDateDropdownOpen, isCalendarOpen]);
+  }, [isDropdownOpen, isDateDropdownOpen]);//se borra isCalendarOpenporque se utiliza otra forma ahora, para cuando hagas el merge
 
   const handleGravedadClick = () => {
     setDropdownOpen(!isDropdownOpen);
@@ -148,35 +182,13 @@ export default function ComentariosRecolectados() {
 
   const toggleDateDropdown = () => {
     setIsDateDropdownOpen(!isDateDropdownOpen);
-    setIsCalendarOpen(false);
   };
 
   const handlePageClick = (pageNumber) => {
-    setCurrentPage(pageNumber);
+    setPaginaActual(pageNumber);
   };
 
-  const handleDateOptionClick = (option) => {
-    if (option === "desde" || option === "hasta") {
-      setSelectedDateType(option);
-      setIsCalendarOpen(true);
-    } else if (option === "eliminar") {
-      setFechaDesde("");
-      setFechaHasta("");
-      setIsDateDropdownOpen(false);
-      setIsCalendarOpen(false);
-    }
-  };
-
-  const handleDateClick = (date) => {
-    const formattedDate = format(date, "yyyy-MM-dd");
-    if (selectedDateType === "desde") {
-      setFechaDesde(formattedDate);
-    } else if (selectedDateType === "hasta") {
-      setFechaHasta(formattedDate);
-    }
-    setIsCalendarOpen(false);
-  };
-
+  // Definir renderDropdown antes de usarlo en el JS
   const renderDropdown = () => {
     return isDropdownOpen && (
       <div
@@ -226,8 +238,8 @@ export default function ComentariosRecolectados() {
             <button
               onClick={limpiarSeleccion}
               className={`block w-full text-left px-4 py-2 text-sm 
-                ${isDarkMode 
-                  ? 'text-gray-400 hover:bg-gray-700' 
+                ${isDarkMode
+                  ? 'text-gray-400 hover:bg-gray-700'
                   : 'text-gray-500 hover:bg-gray-100'
                 }`}
             >
@@ -260,7 +272,9 @@ export default function ComentariosRecolectados() {
       comentario.estado === "PENDIENTE_CLASIFICACION" ? "Pendiente" : "Clasificado";
     const sitioWeb = comentario.sourceUrl;
     const fecha = isValid(parseISO(comentario.fechaScraping))
-      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy")
+      ? format(parseISO(comentario.fechaScraping), "dd-MM-yyyy", {
+        locale: es,
+      })
       : "Fecha Inválida";
 
     return [comentarioTexto, estado, sitioWeb, fecha];
@@ -269,13 +283,14 @@ export default function ComentariosRecolectados() {
   const filteredComments = comentarios.filter((comentario) => {
     const estadoMatch = selectedEstado[comentario.estado];
     const fechaComentario = parseISO(comentario.fechaScraping);
-    const dateMatch =
-      (!fechaDesde || (isValid(fechaComentario) && format(fechaComentario, "yyyy-MM-dd") >= fechaDesde)) &&
-      (!fechaHasta || (isValid(fechaComentario) && format(fechaComentario, "yyyy-MM-dd") <= fechaHasta));
-    return estadoMatch && dateMatch;
+
+    const desdeMatch = fechaDesde ? fechaComentario >= fechaDesde : true;
+    const hastaMatch = fechaHasta ? fechaComentario <= fechaHasta : true;
+
+    return estadoMatch && desdeMatch && hastaMatch;
   });
 
-  const indexOfLastComment = currentPage * commentsPerPage;
+  const indexOfLastComment = paginaActual * commentsPerPage;
   const indexOfFirstComment = indexOfLastComment - commentsPerPage;
   const currentComments = filteredComments.slice(
     indexOfFirstComment,
@@ -360,8 +375,8 @@ export default function ComentariosRecolectados() {
               type="button"
               onClick={manejarCancelarEliminar}
               className={`px-4 py-2 rounded-md 
-                ${isDarkMode 
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                ${isDarkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   : 'bg-gray-300 text-gray-700 hover:bg-gray-400'}`}
             >
               Cancelar
@@ -369,8 +384,8 @@ export default function ComentariosRecolectados() {
             <button
               type="submit"
               className={`px-4 py-2 rounded-md 
-                ${isDarkMode 
-                  ? 'bg-red-700 text-white hover:bg-red-600' 
+                ${isDarkMode
+                  ? 'bg-red-700 text-white hover:bg-red-600'
                   : 'bg-red-600 text-white hover:bg-red-700'}`}
             >
               Eliminar
@@ -387,16 +402,33 @@ export default function ComentariosRecolectados() {
       <Toast />
 
       <div className="flex-grow">
-        <h2 className={`text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-          Comentarios recolectados
-        </h2>
+        <div className="flex flex-grow justify-between mb-4 sm:mb-6">
+          <h2 className={`text-xl sm:text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+            Comentarios recolectados
+          </h2>
+          <button
+            onClick={handleToggle}
+            className={`px-4 py-2 mb-2 rounded-full text-xs sm:text-sm font-medium transition 
+            ${isCollecting
+                ? // Clases para "Detener recolección"
+                isDarkMode
+                  ? "bg-red-600 text-white hover:bg-red-500 focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:outline-none"
+                  : "bg-red-500 text-white hover:bg-red-600 focus:ring-2 focus:ring-red-300 focus:ring-offset-2 focus:outline-none"
+                : // Clases para "Recolectar comentarios"
+                isDarkMode
+                  ? "bg-blue-600 text-white hover:bg-blue-500 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:outline-none"
+                  : "bg-blue-400 text-white hover:bg-blue-500 focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 focus:outline-none"
+              }`}
+          >
+            {isCollecting ? "Detener recolección" : "Recolectar comentarios"}
+          </button>
+        </div>
 
         <div className="flex flex-wrap items-center justify-between space-y-2 md:space-y-0 md:space-x-0">
           <div className="flex flex-row flex-wrap items-center space-x-2">
             {/* Botón de Fecha con Dropdown */}
             <div className="relative">
               <button
-                ref={dateButtonRef}
                 onClick={toggleDateDropdown}
                 className={`px-4 py-2 mb-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
                   ${isDateDropdownOpen
@@ -405,11 +437,10 @@ export default function ComentariosRecolectados() {
                   }`}
               >
                 <div className="flex items-center space-x-2">
-                  <PlusIcon className={`w-5 h-5 ${
-                    isDarkMode
-                      ? 'text-white group-hover:text-gray-200'
-                      : 'text-gray-500'
-                  }`} />
+                  <PlusIcon className={`w-5 h-5 ${isDarkMode
+                    ? 'text-white group-hover:text-gray-200'
+                    : 'text-gray-500'
+                    }`} />
                   <span>Fecha</span>
                 </div>
               </button>
@@ -418,71 +449,44 @@ export default function ComentariosRecolectados() {
                   ref={dateDropdownRef}
                   className={`absolute mt-2 w-48 rounded-md shadow-lg z-20 
                     ${isDarkMode
-                      ? 'bg-gray-800 border border-gray-700 text-white'
-                      : 'bg-white text-gray-700'
+                      ? "bg-gray-800 text-white"
+                      : "bg-white text-gray-700"
                     }`}
+                  style={{ width: "220px" }} // Ajusta el ancho si es necesario
                 >
-                  <button
-                    className={`block w-full text-left px-4 py-2 text-base 
-                      ${isDarkMode
-                        ? 'hover:bg-gray-700 text-gray-300'
-                        : 'hover:bg-gray-100 text-gray-700'
-                      }`}
-                    onClick={() => handleDateOptionClick("desde")}
-                  >
-                    Desde
-                    {fechaDesde && (
-                      <span className={`ml-2 mx-2 text-sm px-2 py-1 rounded-full 
-                        ${isDarkMode
-                          ? 'bg-gray-700 text-gray-300'
-                          : 'bg-gray-100 text-gray-700'
-                        }`}
+                  <div className="px-4 py-2">
+                    {/* Fecha Desde */}
+                    <div className="mb-4">
+                      <DatePicker
+                        selectedDate={fechaDesde}
+                        onDateChange={setFechaDesde}
+                        placeholder="Selecciona desde"
+                        isDarkMode={isDarkMode}
+                      />
+                    </div>
+                    {/* Fecha Hasta */}
+                    <div className="mb-4">
+                      <DatePicker
+                        selectedDate={fechaHasta}
+                        onDateChange={setFechaHasta}
+                        placeholder="Selecciona hasta"
+                        isDarkMode={isDarkMode}
+                      />
+                    </div>
+                    <div className={`border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                      <button
+                        onClick={() => {
+                          setFechaDesde(null);
+                          setFechaHasta(null);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm
+                        ${isDarkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}
+                      `}
                       >
-                        {fechaDesde}
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    className={`block w-full text-left px-4 py-2 text-base 
-                      ${isDarkMode
-                        ? 'hover:bg-gray-700 text-gray-300'
-                        : 'hover:bg-gray-100 text-gray-700'
-                      }`}
-                    onClick={() => handleDateOptionClick("hasta")}
-                  >
-                    Hasta {fechaHasta && (
-                      <span className={`ml-2 text-sm px-2 py-1 rounded-full 
-                        ${isDarkMode
-                          ? 'bg-gray-700 text-gray-300'
-                          : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {fechaHasta}
-                      </span>
-                    )}
-                  </button>
-                  <div className={`border-t 
-                    ${isDarkMode
-                      ? 'border-gray-700'
-                      : 'border-gray-200'
-                    }`}>
-                    <button
-                      className={`block w-full text-left px-4 py-2 text-sm 
-                        ${isDarkMode
-                          ? 'text-gray-400 hover:bg-gray-700'
-                          : 'text-gray-500 hover:bg-gray-100'
-                        }`}
-                      onClick={() => handleDateOptionClick("eliminar")}
-                    >
-                      Limpiar
-                    </button>
+                        Limpiar
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {isCalendarOpen && (
-                <div ref={calendarRef} className="absolute left-0 mt-2 calendario-container z-50">
-                  <Calendario onDateSelect={handleDateClick} />
                 </div>
               )}
             </div>
@@ -498,11 +502,10 @@ export default function ComentariosRecolectados() {
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}>
                 <div className="flex items-center space-x-2">
-                  <PlusIcon className={`w-5 h-5 ${
-                    isDarkMode
-                      ? 'text-white group-hover:text-gray-200'
-                      : 'text-gray-500'
-                  }`} />
+                  <PlusIcon className={`w-5 h-5 ${isDarkMode
+                    ? 'text-white group-hover:text-gray-200'
+                    : 'text-gray-500'
+                    }`} />
                   <span>Estado</span>
                 </div>
               </button>
@@ -510,46 +513,40 @@ export default function ComentariosRecolectados() {
             </div>
           </div>
 
-          {/* Inputs de Fecha y Botón de Descarga */}
+          {/* Inputs de Fecha y Botón de Descarga AQUI SE IMPLEMENTARON LOS CAMBIOS DEL CALENDARIO NUEVO*/}
           <div className="flex flex-row items-center space-x-4">
             <div className="flex flex-row space-x-2 mb-2">
-            <input
-                type="date"
-                  value={fechaDesde}
-                    onChange={(e) => setFechaDesde(e.target.value)}
-                    className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
-                      w-24 sm:w-auto md:w-auto lg:w-auto
-                      text-xs md:text-base 
-                      ${isDarkMode
-                        ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                        : 'bg-white border-gray-300 focus:ring-blue-500'
-                      }`}
-                      />
-                      <span className={isDarkMode ? 'text-white mx-2' : 'text-gray-800 mx-2'}>-</span>
-                      <input
-                        type="date"
-                        value={fechaHasta}
-                        onChange={(e) => setFechaHasta(e.target.value)}
-                        className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 
-                          w-24 sm:w-auto md:w-auto lg:w-auto
-                          text-xs md:text-base 
-                          ${isDarkMode
-                            ? 'bg-gray-800 text-white border-gray-700 focus:ring-indigo-500'
-                            : 'bg-white border-gray-300 focus:ring-blue-500'
-                          }`}
-                      />
-
-                  </div>
-                  {/* Componente Formulario para descargar el PDF */}
-                  <Formulario
-                    comentariosFiltrados={filteredComments}
-                    columns={columnsPDF}
-                    formatData={formatData}
-                    fileName="comentarios_recolectados.pdf"
-                    className="w-auto"
-                  />
-                </div>
-              </div>
+              <DatePicker
+                selectedDate={fechaDesde}
+                onDateChange={setFechaDesde}
+                placeholder="Desde"
+                isDarkMode={isDarkMode}
+              />
+              <span
+                className={
+                  isDarkMode ? "text-white mx-2" : "text-gray-800 mx-2"
+                }
+              >
+                -
+              </span>
+              <DatePicker
+                selectedDate={fechaHasta}
+                onDateChange={setFechaHasta}
+                placeholder="Hasta"
+                isDarkMode={isDarkMode}
+              />
+            </div>
+            {/* Componente Formulario para descargar el PDF */}
+            <Formulario
+              comentariosFiltrados={filteredComments}
+              columns={columnsPDF}
+              formatData={formatData}
+              fileName="comentarios_recolectados.pdf"
+              pdfTitle="Comentarios Recolectados"///Para que el PDF tenga el titulo de su respectiva vista
+              className="w-auto"
+            />
+          </div>
+        </div>
 
         {/* Vista de tabla para pantallas grandes */}
         <div className="overflow-x-auto hidden sm:block">
@@ -605,11 +602,10 @@ export default function ComentariosRecolectados() {
                         className="text-gray-500 hover:text-red-600"
                         aria-label="Eliminar comentario"
                       >
-                        <TrashIcon className={`w-5 h-5 ${
-                          isDarkMode
-                            ? 'text-gray-400 hover:text-red-400'
-                            : 'text-gray-400 hover:text-red-500'
-                        } cursor-pointer`}
+                        <TrashIcon className={`w-5 h-5 ${isDarkMode
+                          ? 'text-gray-400 hover:text-red-400'
+                          : 'text-gray-400 hover:text-red-500'
+                          } cursor-pointer`}
                         />
                       </button>
                     </td>
@@ -657,11 +653,10 @@ export default function ComentariosRecolectados() {
                         className="text-gray-500 hover:text-red-600"
                         aria-label="Eliminar comentario"
                       >
-                        <TrashIcon className={`w-5 h-5 ${
-                          isDarkMode
-                            ? 'text-gray-400 hover:text-red-400'
-                            : 'text-gray-400 hover:text-red-500'
-                        } cursor-pointer`}
+                        <TrashIcon className={`w-5 h-5 ${isDarkMode
+                          ? 'text-gray-400 hover:text-red-400'
+                          : 'text-gray-400 hover:text-red-500'
+                          } cursor-pointer`}
                         />
                       </button>
                     </div>
@@ -677,7 +672,7 @@ export default function ComentariosRecolectados() {
         {/* Paginación centrada */}
         <div className="flex justify-center mt-4">
           <Paginacion
-            paginaActual={currentPage}
+            paginaActual={paginaActual}
             totalPaginas={totalPages}
             onPageChange={handlePageClick}
           />

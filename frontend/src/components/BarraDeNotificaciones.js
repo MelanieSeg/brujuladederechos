@@ -3,10 +3,22 @@ import { X as XMarkIcon, AlertTriangle, CheckCircle, BarChart2, MessageSquare, S
 import { useAuth } from "../hooks/useAuth";
 import userApi from '../services/axiosUserInstance';
 import { ThemeContext } from '../utils/ThemeContext';
-const Notificacion = ({ mensaje, tipo, icono: IconoComponente, onClose }) => {
+const Notificacion = ({ mensaje, tipo, icono: IconoComponente, onClose, notificationId }) => {
   const { isDarkMode } = useContext(ThemeContext);
+  const [isClosing, setIsClosing] = useState(false);
 
-
+  const handleClose = async () => {
+    try {
+      // Enviar solicitud al backend para marcar la notificación como leída
+      await userApi.post("/read-notification", { notificationId });
+      setIsClosing(true); // Inicia la animación de salida
+      setTimeout(() => {
+        onClose(notificationId); // Elimina la notificación después de la animación
+      }, 600);
+    } catch (error) {
+      console.error("Error al marcar la notificación como leída:", error);
+    }
+  };
 
   const getStyle = () => {
     if (isDarkMode) {
@@ -39,12 +51,16 @@ const Notificacion = ({ mensaje, tipo, icono: IconoComponente, onClose }) => {
   };
 
   return (
-    <div className={`flex items-start justify-between p-4 mb-3 border-l-4 rounded ${getStyle()}`}>
+    <div
+      className={`flex items-start justify-between p-4 mb-3 border-l-4 rounded transform transition-transform duration-300 ${
+        isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+      } ${getStyle()}`}
+    >
       <div className="flex items-start">
         <IconoComponente className={`h-5 w-5 mr-3 flex-shrink-0 ${isDarkMode ? 'text-white/70' : ''}`} />
         <span className="text-sm font-medium">{mensaje}</span>
       </div>
-      <button onClick={onClose} className= {`ml-2 ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>
+      <button onClick={handleClose} className= {`ml-2 ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`}>
         <XMarkIcon className="h-4 w-4" />
       </button>
     </div>
@@ -59,11 +75,8 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
 
 
   useEffect(() => {
-
-
     async function getUserNotifications() {
       try {
-
         const response = await userApi.post("get-user-notifications")
         console.log(response)
         setUserNotifications(response.data.data)
@@ -77,8 +90,6 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
 
 
   }, [])
-
-
 
 
   const [categoriaActiva, setCategoriaActiva] = useState('todas');
@@ -110,9 +121,23 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
     },
   ]);
 
-  const removeNotification = (index) => {
-    setNotifications(notifications.filter((_, i) => i !== index));
+  const removeNotification = async (id) => {
+    try {
+      // Llamar a la API para eliminar la notificación del backend
+      await userApi.post("/read-notification", { notificationId: id });
+      
+      // Actualizar el estado local para eliminar la notificación
+      setUserNotifications(prevNotifications => 
+        prevNotifications.filter(notification => notification.id !== id)
+      );
+
+  
+    } catch (error) {
+      console.error("Error al eliminar la notificación:", error);
+    }
   };
+
+  if (!visible) return null;
 
   const filteredNotifications = categoriaActiva === 'todas'
     ? notifications
@@ -135,16 +160,7 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
         <div className="flex justify-between items-center mb-4">
           <h2 className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Notificaciones</h2>
           {userNotifications.length > 0 && (
-            <span className={`
-              rounded-full 
-              px-2 
-              py-1 
-              text-xs 
-              ${isDarkMode 
-                ? 'bg-gray-700 text-gray-300' 
-                : 'bg-gray-200 text-gray-700'
-              }`}
-            >
+            <span className={`rounded-full px-2 py-1 text-xs ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
               {userNotifications.length}
             </span>
           )}
@@ -173,11 +189,12 @@ const BarraDeNotificaciones = ({ visible, onClose }) => {
           : 'scrollbar-thumb-gray-300 scrollbar-track-gray-100'}`}>
         {userNotifications.map((notification, index) => (
           <Notificacion
-            key={index}
+            key={notification.id}
             mensaje={notification.message}
             tipo={notification.tipoNotificacionApp}
             icono={MessageSquare}
-            onClose={() => removeNotification(index)}
+            onClose={() => removeNotification(notification.id)} 
+            notificationId={notification.id} // Asegúrate de pasar el ID de la notificación
           />
         ))}
       </div>
