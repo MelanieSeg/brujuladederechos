@@ -318,7 +318,7 @@ export default function HistorialDeCambios() {
       {/* Panel lateral de detalles */}
       {selectedChange && (
         <div
-          className={`fixed inset-0 ${isDarkMode ? 'bg-black' : 'bg-gray-600'} bg-opacity-50 z-50`}
+          className={`fixed inset-0 ${isDarkMode ? 'bg-black' : 'bg-gray-600'} bg-opacity-50 z-30`}
           onClick={handleCerrarDetalles}
         >
           <div

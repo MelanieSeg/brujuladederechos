@@ -17,6 +17,8 @@ export default function ComentariosClasificados() {
   const { isDarkMode } = useContext(ThemeContext);
   const [comentarios, setComentarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDetailedColumns, setShowDetailedColumns] = useState(false);
+
 
   // Estados para filtros
   const [isGravedadDropdownOpen, setGravedadDropdownOpen] = useState(false);
@@ -506,11 +508,11 @@ export default function ComentariosClasificados() {
       return 'bg-gray-500 text-white';
     }
     switch (gravedad.toUpperCase()) {
-      case 'ALTA':
+      case 'GRAVE':
         return 'bg-red-500 text-white';
       case 'MODERADA':
         return 'bg-yellow-500 text-white';
-      case 'BAJA':
+      case 'LEVE':
         return 'bg-green-500 text-white';
       default:
         return 'bg-gray-500 text-white';
@@ -523,11 +525,11 @@ export default function ComentariosClasificados() {
       return 'Desconocida';
     }
     switch (gravedadApi.toUpperCase()) {
-      case 'BAJA':
+      case 'LEVE':
         return 'Baja';
       case 'MODERADA':
         return 'Moderada';
-      case 'ALTA':
+      case 'GRAVE':
         return 'Alta';
       default:
         return 'Desconocida';
@@ -537,7 +539,7 @@ export default function ComentariosClasificados() {
   // Filtrar comentarios según gravedad y fechas
   const filteredComentarios = comentarios.filter((comentario) => {
     const gravedadMapeada = mapGravedad(
-      comentario.gravedad ? comentario.gravedad : 'Desconocida'
+      comentario.comentario.gravedad
     );
 
     const gravedadMatch =
@@ -592,7 +594,7 @@ export default function ComentariosClasificados() {
 
   const formatData = (comentario) => [
     comentario.comentario.comentario, // Texto del comentario
-    mapGravedad(comentario?.gravedad ? comentario.gravedad : 'Desconocida'), // Gravedad
+    mapGravedad(comentario.comentario.gravedad), // Gravedad
     comentario.comentario.sourceUrl || 'Sin sitio web', // Sitio web
     isValid(parseISO(comentario.fechaClasificacion))
       ? format(parseISO(comentario.fechaClasificacion), "dd-MM-yyyy", { locale: es })
@@ -615,7 +617,7 @@ export default function ComentariosClasificados() {
 
         {/* Controles de Filtro y Descarga */}
         <div className="flex flex-wrap items-center justify-between space-y-2 md:space-y-0 md:space-x-0">
-          <div className="flex flex-row flex-wrap items-center space-x-2">
+          <div className="flex flex-row flex-wrap items-center space-x-0 sm:space-x-2 lg:space-x-2">
             {/* Botón de Fecha con Dropdown */}
             <div className="relative">
               <button
@@ -674,6 +676,15 @@ export default function ComentariosClasificados() {
               <XMarkIcon className={`w-4 h-4 sm:w-5 sm:h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`} />
               <span>Quitar Filtros</span>
             </button>
+            <div className="relative">
+            <button
+            onClick={() => setShowDetailedColumns(!showDetailedColumns)}
+            className={`px-2 py-2 mb-2 sm:px-4 py-2 rounded-full text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 border 
+              bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center space-x-0 sm:space-x-0 lg:space-x-2`}
+          >
+            {showDetailedColumns ? 'Ocultar' : 'Mostrar variables'}
+          </button>
+            </div>
           </div>
 
           {/* Sección de Fechas y Descarga */}
@@ -716,6 +727,38 @@ export default function ComentariosClasificados() {
                 ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
                   Comentario
                 </th>
+                {showDetailedColumns && (
+                  <>
+                    <th className={`px-2 py-4 text-left font-medium border-b 
+                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
+                      PR
+                    </th>
+                    <th className={`px-2 py-4 text-left font-medium border-b 
+                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
+                      T
+                    </th>
+                    <th className={`px-2 py-4 text-left font-medium border-b 
+                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
+                      E.Privacidad
+                    </th>
+                    <th className={`px-2 py-4 text-left font-medium border-b 
+                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
+                      PI
+                    </th>
+                    <th className={`px-2 py-4 text-left font-medium border-b 
+                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
+                      PF
+                    </th>
+                    <th className={`px-2 py-4 text-left font-medium border-b 
+                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
+                      OI
+                    </th>
+                    <th className={`px-2 py-4 text-left font-medium border-b 
+                    ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>
+                      E.Libertad
+                    </th>
+                  </>
+                )}
                 <th className={`px-6 py-4 text-left font-medium border-b 
                   ${isDarkMode ? 'text-gray-300 border-gray-700' : 'text-gray-500 border-gray-200'}`}>Gravedad
                 </th>
@@ -754,16 +797,26 @@ export default function ComentariosClasificados() {
                       }`}>
                       {truncateComentario(comentario.comentario.comentario)}
                     </td>
+                    {showDetailedColumns && (
+                      <>
+                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.intensidadPrivacidad}</td>
+                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.elementoTiempo}</td>
+                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.empatiaPrivacidad}</td>
+                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.interesPublico}</td>
+                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.caracterPersonaPublico}</td>
+                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.origenInformacion}</td>
+                        <td className={`px-2 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>{comentario.comentario.empatiaExpresion}</td>
+                      </>
+                    )}
                     <td className={`px-6 py-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
                       <span
                         className={`
                         inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold 
-                        ${getBadgeColor(comentario?.gravedad)}
+                        ${getBadgeColor(comentario.comentario.gravedad)}
                         ${isDarkMode ? 'bg-opacity-20' : ''}
                       `}>
                         {mapGravedad(
-                          comentario?.gravedad ? comentario.gravedad : 'Desconocida'
-                        )}
+                          comentario.comentario.gravedad)}
                       </span>
                     </td>
                     <td className={`px-6 py-4 max-w-xs break-all ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
@@ -822,7 +875,7 @@ export default function ComentariosClasificados() {
                   <div className="flex flex-col space-y-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
-                        <div className={`w-4 h-4 rounded-full ${getBadgeColor(comentario?.gravedad)}`}></div>
+                        <div className={`w-4 h-4 rounded-full ${getBadgeColor(comentario.comentario.gravedad)}`}></div>
                         <span className="ml-2 font-medium truncate">{comentario.comentario.sourceUrl || 'Sin sitio web'}</span>
                       </div>
                       <div className="text-sm">
@@ -840,14 +893,46 @@ export default function ComentariosClasificados() {
                       <span
                         className={`
                         inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold 
-                        ${getBadgeColor(comentario?.gravedad)}
+                        ${getBadgeColor(comentario.comentario.gravedad)}
                         ${isDarkMode ? 'bg-opacity-20' : ''}
                       `}>
                         {mapGravedad(
-                          comentario?.gravedad ? comentario.gravedad : 'Desconocida'
+                          comentario.comentario.gravedad
                         )}
                       </span>
                     </div>
+                    {showDetailedColumns && (
+                      <div className="flex flex-col space-y-1">
+                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                          <span className="font-semibold">PR:</span>
+                          <span>{comentario.comentario.intensidadPrivacidad}</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                          <span className="font-semibold">T:</span>
+                          <span>{comentario.comentario.elementoTiempo}</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                          <span className="font-semibold">E.Privacidad:</span>
+                          <span>{comentario.comentario.empatiaPrivacidad}</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                          <span className="font-semibold">PI:</span>
+                          <span>{comentario.comentario.interesPublico}</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                          <span className="font-semibold">PF:</span>
+                          <span>{comentario.comentario.caracterPersonaPublico}</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                          <span className="font-semibold">OI:</span>
+                          <span>{comentario.comentario.origenInformacion}</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+                          <span className="font-semibold">E.Libertad:</span>
+                          <span>{comentario.comentario.empatiaExpresion}</span>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex justify-end space-x-2">
                       <button
                         onClick={() => confirmarEliminarComentario(comentario)}
