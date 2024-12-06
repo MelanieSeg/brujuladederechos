@@ -339,7 +339,6 @@ class CommentsService {
           fechaClasificacion: "desc"
         }
       });
-      //conversar el tema que es mejor implementar paginacion desde backend en la consulta que implementarla desde el front
 
       if (comments.length === 0) {
         return { data: null, msg: "No existen comentarios clasificados todavia." }
@@ -356,9 +355,14 @@ class CommentsService {
     try {
       const comments = await this.prisma.comentarioScraped.findMany({
         orderBy: {
-          fechaScraping: "desc"
+          createdAt: "desc"
         }
       });
+
+      const countall = await this.prisma.comentarioScraped.count()
+      const countClassall = await this.prisma.comentarioClasificado.count()
+
+      console.log({ countall, countClassall })
 
       return {
         data: comments,

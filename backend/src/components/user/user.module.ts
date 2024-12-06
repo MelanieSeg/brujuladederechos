@@ -19,3 +19,5 @@ const userRouter = new UserRouter(userController, authMiddleware);
 export default {
   router: userRouter.router,
 };
+
+

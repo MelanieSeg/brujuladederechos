@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, TipoAccion } from "@prisma/client";
 import { changeScrapingConfigDTO, ScrapingConfigDTO } from "../../schemas/scraping-config";
 
 
@@ -20,9 +20,18 @@ class UserConfigurationService {
    5 = 12 horas
    6 = 24 horas
   */
+
+
+
   getConfiguration = async () => {
     try {
       const config = await this.prisma.configScraping.findMany()
+
+      return {
+        success: true,
+        data: config,
+        msg: "Operacion exitosa"
+      }
 
     } catch (err) {
       return {
@@ -35,9 +44,6 @@ class UserConfigurationService {
 
   changeScrapingConfig = async (changeScrapingConfig: changeScrapingConfigDTO, adminId: string) => {
     try {
-
-
-
 
       const config = await this.prisma.configScraping.findFirst({
         where: {
@@ -62,18 +68,6 @@ class UserConfigurationService {
         }
       })
 
-      /*
-      const logAuditoria = await this.prisma.auditoria.create({
-        data: {
-          usuarioId: adminId,
-          tipoAccion://TODO:: agregar enum de cambio de configuracion,
-            entidad: "ConfigScraping",
-          entidadId: updatedConfg.id,
-          detalles: "Cambio en configuracion de scraping"
-        }
-      })
-      */
-
       return {
         success: true,
         data: updatedConfg,
@@ -89,3 +83,8 @@ class UserConfigurationService {
     }
   }
 }
+
+
+
+
+export default UserConfigurationService;

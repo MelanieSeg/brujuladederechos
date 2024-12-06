@@ -1,15 +1,43 @@
 import subprocess
-from flask import Flask, jsonify
+from flask import Flask, jsonify,request
 from celery import Celery
 import os
 from flask_cors import CORS
+import jwt  
+from functools import wraps
 
 app = Flask(__name__)
 CORS(app, resources={r"/start_scraping": {"origins": "http://localhost:3000"}})
 app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL')
 app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND')
 
-# Configuración de Celery
+JWT_SECRET = os.getenv('JWT_SECRET',)
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            parts = auth_header.split()
+            if len(parts) == 2 and parts[0] == 'Bearer':
+                token = parts[1]
+
+        if not token:
+            return jsonify({'error': 'Token de autenticación requerido'}), 401
+
+        try:
+            decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            request.user = decoded
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'El token ha expirado'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Token inválido'}), 401
+
+        return f(*args, **kwargs)
+    return decorated
+
+
 def make_celery(app):
     celery = Celery(
         app.import_name,
@@ -37,6 +65,7 @@ def run_spider_task():
 
 # Endpoint para iniciar el scraping
 @app.route('/start_scraping', methods=['POST'])
+@token_required
 def start_scraping():
     task = run_spider_task.delay()
     return jsonify({"message": "Scraping iniciado", "task_id": task.id}), 200

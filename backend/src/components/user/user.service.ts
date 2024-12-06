@@ -481,6 +481,9 @@ class UserService {
                 userId: userId,
               }
             }
+          },
+          orderBy: {
+            createdAt: "desc"
           }
         }),
         this.prisma.userNotifications.findMany({
@@ -489,6 +492,9 @@ class UserService {
             userId: userId
           }, include: {
             notification: true
+          },
+          orderBy: {
+            createdAt: 'desc'
           }
         })
 
